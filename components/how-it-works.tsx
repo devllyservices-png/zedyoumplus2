@@ -1,0 +1,49 @@
+import { UserPlus, Search, CreditCard } from "lucide-react"
+
+export function HowItWorks() {
+  const steps = [
+    {
+      icon: UserPlus,
+      title: "أنشئ حسابك",
+      description: "سجّل كمشتري أو مقدم خدمة في دقائق معدودة",
+    },
+    {
+      icon: Search,
+      title: "اختر ما تريد",
+      description: "استعرض الخدمات أو المنتجات الرقمية المتاحة",
+    },
+    {
+      icon: CreditCard,
+      title: "ادفع بسهولة",
+      description: "بوسائل دفع جزائرية موثوقة ومضمونة",
+    },
+  ]
+
+  return (
+    <section className="py-20 bg-gray-50">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">كيف تعمل المنصة</h2>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">ثلاث خطوات بسيطة للبدء في استخدام منصتنا</p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          {steps.map((step, index) => (
+            <div key={index} className="text-center group">
+              <div className="relative mb-6">
+                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-cyan-400 to-violet-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <step.icon className="w-10 h-10 text-white" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                  {index + 1}
+                </div>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">{step.title}</h3>
+              <p className="text-gray-600 text-lg leading-relaxed">{step.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
