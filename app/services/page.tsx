@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Search, Star, Clock, Heart, Grid, List } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { Header } from "@/components/header"
 
 export default function ServicesPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -45,7 +46,8 @@ export default function ServicesPage() {
         level: "مستوى متقدم",
         isVerified: true,
       },
-      image: "/services/design/logo-design.svg",
+            image: "https://fiverr-res.cloudinary.com/t_gig_cards_web_x2,q_auto,f_auto/gigs/403884315/original/c6bf2f6539934edd8a8c13a4d5b4ce9e3dfef512.jpg",
+
       category: "design",
       tags: ["شعار", "هوية بصرية", "تصميم"],
       featured: true,
@@ -182,6 +184,7 @@ export default function ServicesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Header />
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-6">

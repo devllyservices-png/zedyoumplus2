@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import type React from "react"
@@ -138,6 +139,7 @@ function CreateServiceForm() {
 
       // Redirect to service page or dashboard
       router.push("/dashboard")
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       setError("حدث خطأ أثناء إنشاء الخدمة")
     } finally {

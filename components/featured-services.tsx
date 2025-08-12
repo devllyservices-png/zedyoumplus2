@@ -1,16 +1,17 @@
 "use client"
 
-import { useState } from "react"
+// import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent } from "@/components/ui/card"
 import { Star, Clock, User } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 
 export function FeaturedServices() {
-  const [selectedCategory, setSelectedCategory] = useState("all")
-  const [selectedPrice, setSelectedPrice] = useState("all")
-  const [selectedDelivery, setSelectedDelivery] = useState("all")
+  // const [selectedCategory, setSelectedCategory] = useState("all")
+  // const [selectedPrice, setSelectedPrice] = useState("all")
+  // const [selectedDelivery, setSelectedDelivery] = useState("all")
 
   const services = [
     {
@@ -85,7 +86,7 @@ export function FeaturedServices() {
           </p>
         </div>
 
-        {/* Filters */}
+        {/* Filters
         <div className="flex flex-wrap gap-4 mb-12 justify-center">
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
             <SelectTrigger className="w-48">
@@ -123,7 +124,7 @@ export function FeaturedServices() {
               <SelectItem value="long">أكثر من 5 أيام</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </div> */}
 
         {/* Services Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -162,7 +163,9 @@ export function FeaturedServices() {
 
                 <div className="flex items-center justify-between">
                   <div className="text-2xl font-bold gradient-brand-text">{service.price} دج</div>
-                  <Button className="btn-gradient text-white px-6 py-2 rounded-lg">اطلب الآن</Button>
+                  <Link href={`/services/${service.id}`}>
+                    <Button className="btn-gradient text-white px-6 py-2 rounded-lg">اطلب الآن</Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>

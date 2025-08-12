@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,11 +11,29 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Star, User, Shield, MessageCircle, Heart, Share2, ArrowRight, Check } from "lucide-react"
+import { Header } from "@/components/header"
+import { LoginPopup } from "@/components/login-popup"
 
 export default function ServiceDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const [selectedPackage, setSelectedPackage] = useState("basic")
   const [orderNotes, setOrderNotes] = useState("")
+  const [showLoginPopup, setShowLoginPopup] = useState(false)
+
+  const handleOrderClick = () => {
+    // Check if user is logged in by looking for user data in localStorage
+    const userData = localStorage.getItem("user")
+
+    if (!userData) {
+      // Show login popup if user is not logged in
+      setShowLoginPopup(true)
+    } else {
+      // User is logged in, proceed to checkout
+      // const user = JSON.parse(userData)
+      router.push(`/checkout?serviceId=${params.id}&package=${selectedPackage}&notes=${encodeURIComponent(orderNotes)}`)
+    }
+  }
 
   // Mock service data - in real app, fetch based on params.id
   const service = {
@@ -24,9 +42,9 @@ export default function ServiceDetailPage() {
     description:
       "سأقوم بتصميم شعار احترافي وفريد لعلامتك التجارية مع تقديم الهوية البصرية الكاملة. أضمن لك تصميماً مبتكراً يعكس شخصية علامتك التجارية ويجذب عملاءك المستهدفين.",
     images: [
-      "/placeholder.svg?height=400&width=600",
-      "/placeholder.svg?height=400&width=600",
-      "/placeholder.svg?height=400&width=600",
+      "https://fiverr-res.cloudinary.com/t_gig_cards_web_x2,q_auto,f_auto/gigs/403884315/original/c6bf2f6539934edd8a8c13a4d5b4ce9e3dfef512.jpg",
+      "https://fiverr-res.cloudinary.com/t_gig_cards_web_x2,q_auto,f_auto/gigs/403884315/original/c6bf2f6539934edd8a8c13a4d5b4ce9e3dfef512.jpg",
+      "https://fiverr-res.cloudinary.com/t_gig_cards_web_x2,q_auto,f_auto/gigs/403884315/original/c6bf2f6539934edd8a8c13a4d5b4ce9e3dfef512.jpg",
     ],
     rating: 4.9,
     reviews: 127,
@@ -129,12 +147,13 @@ export default function ServiceDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Header />
       <div className="container mx-auto px-4 py-8">
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Service Images */}
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden pt-0">
               <div className="relative">
                 <Image
                   src={service.images[0] || "/placeholder.svg"}
@@ -402,8 +421,10 @@ export default function ServiceDetailPage() {
                   />
                 </div>
 
-                {/* Order Button */}
-                <Button className="w-full btn-gradient text-white h-12 text-lg font-medium">
+                <Button
+                  onClick={handleOrderClick}
+                  className="w-full btn-gradient hover:bg-blue-700 text-white h-12 text-lg font-medium"
+                >
                   اطلب الآن - {service.packages[selectedPackage as keyof typeof service.packages].price} دج
                   <ArrowRight className="w-5 h-5 mr-2" />
                 </Button>
@@ -417,6 +438,8 @@ export default function ServiceDetailPage() {
           </div>
         </div>
       </div>
+
+      <LoginPopup isOpen={showLoginPopup} onClose={() => setShowLoginPopup(false)} />
     </div>
   )
 }
