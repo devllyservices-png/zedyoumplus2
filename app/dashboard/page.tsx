@@ -7,7 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import Link from "next/link"
 import { Mail, Phone, MapPin, Calendar, ShoppingBag, Package, Star, DollarSign } from "lucide-react"
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
 
 export default function DashboardPage() {
   const { user, logout } = useAuth()
@@ -83,6 +86,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Header />
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-4">
@@ -210,10 +214,14 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-2 gap-4">
-                  <Button className="btn-gradient text-white h-12">تصفح الخدمات</Button>
-                  <Button variant="outline" className="h-12 bg-transparent">
-                    المنتجات الرقمية
-                  </Button>
+                  <Link href="/services">
+                    <Button className="btn-gradient w-full text-white h-12">تصفح الخدمات</Button>
+                  </Link>
+                  <Link href="/digital-products">
+                    <Button variant="outline" className="h-12 w-full bg-transparent">
+                      المنتجات الرقمية
+                    </Button>
+                  </Link>
                   {user.userType === "seller" && (
                     <>
                       <Button variant="outline" className="h-12 bg-transparent">
@@ -230,6 +238,7 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Star, User, Shield, MessageCircle, Heart, Share2, ArrowRight, Check } from "lucide-react"
 import { Header } from "@/components/header"
 import { LoginPopup } from "@/components/login-popup"
+import { Footer } from "@/components/footer"
 
 export default function ServiceDetailPage() {
   const params = useParams()
@@ -440,6 +441,7 @@ export default function ServiceDetailPage() {
       </div>
 
       <LoginPopup isOpen={showLoginPopup} onClose={() => setShowLoginPopup(false)} />
+      <Footer />
     </div>
   )
 }

@@ -173,12 +173,14 @@ export function FeaturedServices() {
         </div>
 
         <div className="text-center mt-12">
-          <Button
-            variant="outline"
-            className="px-8 py-3 text-lg border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white bg-transparent"
-          >
-            عرض المزيد من الخدمات
-          </Button>
+          <Link href="/services">
+            <Button
+              variant="outline"
+              className="px-8 py-3 text-lg border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white bg-transparent"
+            >
+              عرض المزيد من الخدمات
+            </Button>
+          </Link>
         </div>
       </div>
     </section>

@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Header } from "@/components/header"
 import { CheckCircle, Home, Download, MessageCircle, Calendar, Package, Sparkles } from "lucide-react"
+import { Footer } from "@/components/footer"
 
 export default function CheckoutSuccessPage() {
   const searchParams = useSearchParams()
@@ -210,6 +211,7 @@ export default function CheckoutSuccessPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

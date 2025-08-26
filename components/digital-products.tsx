@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Zap, Shield, Clock } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 
 export function DigitalProducts() {
   const products = [
@@ -88,8 +89,9 @@ export function DigitalProducts() {
                   <div className="text-2xl font-bold gradient-brand-text">{product.price} دج</div>
                   <div className="text-lg text-gray-500 line-through">{product.originalPrice} دج</div>
                 </div>
-
-                <Button className="btn-gradient text-white w-full py-2 rounded-lg font-medium">اشتري الآن</Button>
+                <Link href={`/digital-products/${product.id}`}>
+                  <Button className="btn-gradient text-white w-full py-2 rounded-lg font-medium">اشتري الآن</Button>
+                </Link>
               </CardContent>
             </Card>
           ))}

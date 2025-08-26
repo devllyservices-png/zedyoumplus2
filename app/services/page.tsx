@@ -10,6 +10,7 @@ import { Search, Star, Clock, Heart, Grid, List } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
 
 export default function ServicesPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -30,129 +31,134 @@ export default function ServicesPage() {
     { value: "music", label: "الموسيقى والصوتيات" },
   ]
 
-  const services = [
-    {
-      id: "1",
-      title: "تصميم شعار احترافي مع هوية بصرية كاملة",
-      description: "سأقوم بتصميم شعار احترافي وفريد لعلامتك التجارية مع تقديم الهوية البصرية الكاملة",
-      price: "5000",
-      originalPrice: "7000",
-      rating: 4.9,
-      reviews: 127,
-      deliveryTime: "3 أيام",
-      seller: {
-        name: "أحمد محمد",
-        avatar: "/placeholder.svg?height=40&width=40",
-        level: "مستوى متقدم",
-        isVerified: true,
-      },
-            image: "https://fiverr-res.cloudinary.com/t_gig_cards_web_x2,q_auto,f_auto/gigs/403884315/original/c6bf2f6539934edd8a8c13a4d5b4ce9e3dfef512.jpg",
+ const services = [
+  {
+    id: "1",
+    title: "تصميم شعار احترافي مع هوية بصرية كاملة",
+    description: "سأقوم بتصميم شعار احترافي وفريد لعلامتك التجارية مع تقديم الهوية البصرية الكاملة",
+    price: "5000",
+    originalPrice: "7000",
+    rating: 4.9,
+    reviews: 127,
+    deliveryTime: "3 أيام",
+    seller: {
+      name: "أحمد محمد",
+      avatar: "https://i.pravatar.cc/40?u=ahmed-mohamed",
+      level: "مستوى متقدم",
+      isVerified: true,
+    },
+          image: "https://fiverr-res.cloudinary.com/t_gig_cards_web_x2,q_auto,f_auto/gigs/403884315/original/c6bf2f6539934edd8a8c13a4d5b4ce9e3dfef512.jpg",
 
-      category: "design",
-      tags: ["شعار", "هوية بصرية", "تصميم"],
-      featured: true,
+    category: "design",
+    tags: ["شعار", "هوية بصرية", "تصميم"],
+    featured: true,
+  },
+  {
+    id: "2",
+    title: "تطوير موقع ووردبريس متجاوب ومحسن للسيو",
+    description: "تطوير موقع ووردبريس احترافي متجاوب مع جميع الأجهزة ومحسن لمحركات البحث",
+    price: "15000",
+    originalPrice: "20000",
+    rating: 4.8,
+    reviews: 89,
+    deliveryTime: "7 أيام",
+    seller: {
+      name: "فاطمة بن علي",
+      avatar: "https://i.pravatar.cc/40?u=fatma-ben-ali",
+      level: "مستوى خبير",
+      isVerified: true,
     },
-    {
-      id: "2",
-      title: "تطوير موقع ووردبريس متجاوب ومحسن للسيو",
-      description: "تطوير موقع ووردبريس احترافي متجاوب مع جميع الأجهزة ومحسن لمحركات البحث",
-      price: "15000",
-      originalPrice: "20000",
-      rating: 4.8,
-      reviews: 89,
-      deliveryTime: "7 أيام",
-      seller: {
-        name: "فاطمة بن علي",
-        avatar: "/placeholder.svg?height=40&width=40",
-        level: "مستوى خبير",
-        isVerified: true,
-      },
-      image: "/services/programming/wordpress-development.svg",
-      category: "programming",
-      tags: ["ووردبريس", "تطوير مواقع", "سيو"],
-      featured: false,
+      image: "https://khamsat.hsoubcdn.com/images/services/715359/8fc01e88cf1dd7d66219f020e365f2a6.jpg?s=small",
+    category: "programming",
+    tags: ["ووردبريس", "تطوير مواقع", "سيو"],
+    featured: false,
+  },
+  {
+    id: "3",
+    title: "إدارة حسابات التواصل الاجتماعي لمدة شهر",
+    description: "إدارة شاملة لحساباتك على منصات التواصل الاجتماعي مع إنشاء محتوى جذاب",
+    price: "8000",
+    originalPrice: "10000",
+    rating: 4.7,
+    reviews: 156,
+    deliveryTime: "1 يوم",
+    seller: {
+      name: "يوسف الجزائري",
+      avatar: "https://i.pravatar.cc/40?u=youssef-algerie",
+      level: "مستوى متوسط",
+      isVerified: false,
     },
-    {
-      id: "3",
-      title: "إدارة حسابات التواصل الاجتماعي لمدة شهر",
-      description: "إدارة شاملة لحساباتك على منصات التواصل الاجتماعي مع إنشاء محتوى جذاب",
-      price: "8000",
-      originalPrice: "10000",
-      rating: 4.7,
-      reviews: 156,
-      deliveryTime: "1 يوم",
-      seller: {
-        name: "يوسف الجزائري",
-        avatar: "/placeholder.svg?height=40&width=40",
-        level: "مستوى متوسط",
-        isVerified: false,
-      },
-      image: "/services/marketing/social-media-management.svg",
-      category: "marketing",
-      tags: ["سوشيال ميديا", "إدارة حسابات", "محتوى"],
-      featured: true,
+         image: "https://eshhar.net/wp-content/uploads/2020/10/%D8%A5%D8%AF%D8%A7%D8%B1%D8%A9-%D8%B5%D9%81%D8%AD%D8%A7%D8%AA-%D8%A7%D9%84%D8%AA%D9%88%D8%A7%D8%B5%D9%84-%D8%A7%D9%84%D8%A7%D8%AC%D8%AA%D9%85%D8%A7%D8%B9%D9%8A0.jpg",
+
+    category: "marketing",
+    tags: ["سوشيال ميديا", "إدارة حسابات", "محتوى"],
+    featured: true,
+  },
+  {
+    id: "4",
+    title: "كتابة محتوى تسويقي وإعلاني احترافي",
+    description: "كتابة محتوى تسويقي مقنع وجذاب لموقعك أو حملاتك الإعلانية",
+    price: "3000",
+    originalPrice: "4000",
+    rating: 4.9,
+    reviews: 203,
+    deliveryTime: "2 أيام",
+    seller: {
+      name: "سارة قاسمي",
+      avatar: "https://i.pravatar.cc/40?u=sara-qasimi",
+      level: "مستوى متقدم",
+      isVerified: true,
     },
-    {
-      id: "4",
-      title: "كتابة محتوى تسويقي وإعلاني احترافي",
-      description: "كتابة محتوى تسويقي مقنع وجذاب لموقعك أو حملاتك الإعلانية",
-      price: "3000",
-      originalPrice: "4000",
-      rating: 4.9,
-      reviews: 203,
-      deliveryTime: "2 أيام",
-      seller: {
-        name: "سارة قاسمي",
-        avatar: "/placeholder.svg?height=40&width=40",
-        level: "مستوى متقدم",
-        isVerified: true,
-      },
-      image: "/services/writing/content-writing.svg",
-      category: "writing",
-      tags: ["كتابة", "محتوى تسويقي", "إعلانات"],
-      featured: false,
+         image: "https://blog.khamsat.com/wp-content/uploads/2021/11/%D8%A3%D8%B3%D8%B1%D8%A7%D8%B1-%D9%84%D8%AA%D8%AD%D8%AA%D8%B1%D9%81-%D9%83%D8%AA%D8%A7%D8%A8%D8%A9-%D8%A7%D9%84%D9%85%D8%AD%D8%AA%D9%88%D9%89-%D8%A7%D9%84%D8%A5%D8%A8%D8%AF%D8%A7%D8%B9%D9%8A.png",
+
+    category: "writing",
+    tags: ["كتابة", "محتوى تسويقي", "إعلانات"],
+    featured: false,
+  },
+  {
+    id: "5",
+    title: "مونتاج فيديو احترافي مع مؤثرات بصرية",
+    description: "مونتاج احترافي لفيديوهاتك مع إضافة المؤثرات البصرية والصوتية",
+    price: "12000",
+    originalPrice: "15000",
+    rating: 4.8,
+    reviews: 74,
+    deliveryTime: "5 أيام",
+    seller: {
+      name: "كريم بوعلام",
+      avatar: "https://i.pravatar.cc/40?u=karim-boualam",
+      level: "مستوى خبير",
+      isVerified: true,
     },
-    {
-      id: "5",
-      title: "مونتاج فيديو احترافي مع مؤثرات بصرية",
-      description: "مونتاج احترافي لفيديوهاتك مع إضافة المؤثرات البصرية والصوتية",
-      price: "12000",
-      originalPrice: "15000",
-      rating: 4.8,
-      reviews: 74,
-      deliveryTime: "5 أيام",
-      seller: {
-        name: "كريم بوعلام",
-        avatar: "/placeholder.svg?height=40&width=40",
-        level: "مستوى خبير",
-        isVerified: true,
-      },
-      image: "/services/video/video-editing.svg",
-      category: "video",
-      tags: ["مونتاج", "فيديو", "مؤثرات"],
-      featured: true,
+    image: "https://picsum.photos/seed/video-editing/800/600",
+    category: "video",
+    tags: ["مونتاج", "فيديو", "مؤثرات"],
+    featured: true,
+  },
+  {
+    id: "6",
+    title: "ترجمة نصوص متخصصة عربي-إنجليزي",
+    description: "ترجمة احترافية ودقيقة للنصوص المتخصصة في مختلف المجالات",
+    price: "2500",
+    originalPrice: "3500",
+    rating: 4.9,
+    reviews: 312,
+    deliveryTime: "1 يوم",
+    seller: {
+      name: "نادية حمدي",
+      avatar: "https://i.pravatar.cc/40?u=nadia-hamdi",
+      level: "مستوى متقدم",
+      isVerified: true,
     },
-    {
-      id: "6",
-      title: "ترجمة نصوص متخصصة عربي-إنجليزي",
-      description: "ترجمة احترافية ودقيقة للنصوص المتخصصة في مختلف المجالات",
-      price: "2500",
-      originalPrice: "3500",
-      rating: 4.9,
-      reviews: 312,
-      deliveryTime: "1 يوم",
-      seller: {
-        name: "نادية حمدي",
-        avatar: "/placeholder.svg?height=40&width=40",
-        level: "مستوى متقدم",
-        isVerified: true,
-      },
-      image: "/services/writing/translation-services.svg",
-      category: "writing",
-      tags: ["ترجمة", "عربي", "إنجليزي"],
-      featured: false,
-    },
-  ]
+         image: "https://blog.khamsat.com/wp-content/uploads/2022/05/%D8%AF%D9%84%D9%8A%D9%84%D9%83-%D8%A5%D9%84%D9%89-%D8%AA%D8%B1%D8%AC%D9%85%D8%A9-%D8%A7%D9%84%D9%86%D8%B5%D9%88%D8%B5-%D8%A7%D9%84%D9%85%D8%B1%D8%A6%D9%8A%D8%A9-%D9%88%D8%A7%D9%84%D9%85%D8%B3%D9%85%D9%88%D8%B9%D8%A9.png",
+
+    category: "writing",
+    tags: ["ترجمة", "عربي", "إنجليزي"],
+    featured: false,
+  },
+];
+
+
 
   const filteredServices = services.filter((service) => {
     const matchesSearch =
@@ -188,12 +194,12 @@ export default function ServicesPage() {
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col space-y-4 items-center  justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">استعرض الخدمات</h1>
+              <h1 className="text-3xl font-bold gradient-brand-text text-center">استعرض الخدمات</h1>
               <p className="text-gray-600 mt-2">اكتشف أفضل الخدمات من المستقلين الجزائريين المحترفين</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full">
               <Button
                 variant={viewMode === "grid" ? "default" : "outline"}
                 size="sm"
@@ -214,7 +220,7 @@ export default function ServicesPage() {
           {/* Search and Filters */}
           <div className="space-y-4">
             {/* Search Bar */}
-            <div className="relative max-w-2xl">
+            <div className="relative  w-full">
               <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
               <Input
                 type="text"
@@ -226,9 +232,9 @@ export default function ServicesPage() {
             </div>
 
             {/* Filters */}
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-4 ">
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="الفئة" />
                 </SelectTrigger>
                 <SelectContent>
@@ -241,7 +247,7 @@ export default function ServicesPage() {
               </Select>
 
               <Select value={selectedPrice} onValueChange={setSelectedPrice}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="السعر" />
                 </SelectTrigger>
                 <SelectContent>
@@ -253,7 +259,7 @@ export default function ServicesPage() {
               </Select>
 
               <Select value={selectedDelivery} onValueChange={setSelectedDelivery}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="وقت التسليم" />
                 </SelectTrigger>
                 <SelectContent>
@@ -265,7 +271,7 @@ export default function ServicesPage() {
               </Select>
 
               <Select value={selectedRating} onValueChange={setSelectedRating}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="التقييم" />
                 </SelectTrigger>
                 <SelectContent>
@@ -304,7 +310,7 @@ export default function ServicesPage() {
           {filteredServices.map((service) => (
             <Card
               key={service.id}
-              className={`group hover:shadow-xl transition-all duration-300 overflow-hidden ${
+              className={`group hover:shadow-xl transition-all duration-300 overflow-hidden pt-0 ${
                 viewMode === "list" ? "flex" : ""
               }`}
             >
@@ -417,6 +423,7 @@ export default function ServicesPage() {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   )
 }
