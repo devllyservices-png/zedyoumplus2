@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -10,14 +10,14 @@ import { CheckCircle, Home, Download, MessageCircle, Calendar, Package, Sparkles
 import { Footer } from "@/components/footer"
 
 export default function CheckoutSuccessPage() {
-  const searchParams = useSearchParams()
+  const params = useParams()
   const router = useRouter()
   const [showConfetti, setShowConfetti] = useState(true)
 
-  const orderId = searchParams.get("orderId")
-  const serviceTitle = searchParams.get("serviceTitle")
-  const packageName = searchParams.get("package")
-  const price = searchParams.get("price")
+  const orderId = params.orderId as string | undefined
+  const serviceTitle = params.serviceTitle as string | undefined
+  const packageName = params.package as string | undefined
+  const price = params.price as string | undefined
 
   useEffect(() => {
     // Hide confetti after 5 seconds
