@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { supabase } from "@/lib/supabaseClient"
 
 interface User {
   id: string
@@ -18,7 +19,7 @@ interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<boolean>
   register: (userData: RegisterData) => Promise<boolean>
-  logout: () => void
+  logout: () => Promise<void>
   isLoading: boolean
 }
 
@@ -37,39 +38,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  // Check existing session and load profile
   useEffect(() => {
-    // Check for existing session
-    const savedUser = localStorage.getItem("user")
-    if (savedUser) {
-      setUser(JSON.parse(savedUser))
+    const getSession = async () => {
+      const { data: sessionData } = await supabase.auth.getSession()
+      if (sessionData.session?.user) {
+        await loadUser(sessionData.session.user.id, sessionData.session.user.email!)
+      }
+      setIsLoading(false)
     }
-    setIsLoading(false)
+    getSession()
   }, [])
+
+  const loadUser = async (id: string, email: string) => {
+    const { data: profile } = await supabase.from("profiles").select("*").eq("id", id).single()
+    if (profile) {
+      setUser({
+        id,
+        name: profile.name,
+        email,
+        userType: profile.user_type,
+        phone: profile.phone,
+        location: profile.location,
+        joinedDate: profile.joined_date,
+        isVerified: profile.is_verified,
+      })
+    }
+  }
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true)
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error || !data.user) return false
 
-      // Mock user data
-      const mockUser: User = {
-        id: "1",
-        name: "أحمد محمد",
-        email,
-        avatar: "/placeholder.svg?height=100&width=100",
-        userType: email.includes("admin") ? "admin" : "buyer",
-        phone: "+213 555 123 456",
-        location: "الجزائر العاصمة",
-        joinedDate: "2024-01-15",
-        isVerified: true,
-      }
-
-      setUser(mockUser)
-      localStorage.setItem("user", JSON.stringify(mockUser))
+      await loadUser(data.user.id, data.user.email!)
       return true
-    } catch (error) {
-      return false
     } finally {
       setIsLoading(false)
     }
@@ -78,36 +82,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (userData: RegisterData): Promise<boolean> => {
     setIsLoading(true)
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      const newUser: User = {
-        id: Date.now().toString(),
-        name: userData.name,
+      const { data, error } = await supabase.auth.signUp({
         email: userData.email,
-        userType: userData.userType,
+        password: userData.password,
+      })
+
+      if (error || !data.user) return false
+
+      // Insert into profiles table
+      const { error: profileError } = await supabase.from("profiles").insert({
+        id: data.user.id,
+        name: userData.name,
+        user_type: userData.userType,
         phone: userData.phone,
         location: userData.location,
-        joinedDate: new Date().toISOString().split("T")[0],
-        isVerified: false,
-      }
+        is_verified: false,
+      })
 
-      setUser(newUser)
-      localStorage.setItem("user", JSON.stringify(newUser))
+      if (profileError) return false
+
+      await loadUser(data.user.id, userData.email)
       return true
-    } catch (error) {
-      return false
     } finally {
       setIsLoading(false)
     }
   }
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut()
     setUser(null)
-    localStorage.removeItem("user")
   }
 
-  return <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {

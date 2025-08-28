@@ -1,9 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @next/next/no-img-element */
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -14,18 +11,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Upload, X, Plus, ArrowRight, Save, ImageIcon, HelpCircle, CheckCircle } from "lucide-react"
+import {
+  Upload,
+  X,
+  Plus,
+  ArrowRight,
+  Save,
+  ImageIcon,
+  HelpCircle,
+  Download,
+  Smartphone,
+  Monitor,
+  Gamepad2,
+} from "lucide-react"
 import { ProtectedRoute } from "@/components/protected-route"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { supabase } from "@/lib/supabaseClient"
-import { useAuth } from "@/contexts/auth-context"
 
-interface ServicePackage {
+interface DigitalProductPackage {
   name: string
   price: string
-  deliveryTime: string
-  revisions: string
+  duration: string
+  users: string
   features: string[]
 }
 
@@ -34,8 +41,7 @@ interface FAQ {
   answer: string
 }
 
-function CreateServiceForm() {
-  const { user } = useAuth()
+function CreateDigitalProductForm() {
   const router = useRouter()
   const [formData, setFormData] = useState({
     title: "",
@@ -44,15 +50,21 @@ function CreateServiceForm() {
     tags: [] as string[],
     mainImage: null as File | null,
     additionalImages: [] as File[],
+    platforms: [] as string[],
+    systemRequirements: {
+      web: "",
+      mobile: "",
+      desktop: "",
+    },
     packages: [
       {
         name: "الباقة الأساسية",
         price: "",
-        deliveryTime: "",
-        revisions: "",
+        duration: "",
+        users: "",
         features: [""],
       },
-    ] as ServicePackage[],
+    ] as DigitalProductPackage[],
     faqs: [
       {
         question: "",
@@ -63,20 +75,49 @@ function CreateServiceForm() {
   const [currentTag, setCurrentTag] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [showSuccessPopup, setShowSuccessPopup] = useState(false)
 
   const categories = [
-    { value: "design", label: "التصميم والجرافيك" },
-    { value: "programming", label: "البرمجة والتطوير" },
-    { value: "marketing", label: "التسويق الرقمي" },
-    { value: "writing", label: "الكتابة والترجمة" },
-    { value: "video", label: "المونتاج والفيديو" },
-    { value: "business", label: "الأعمال والاستشارات" },
-    { value: "music", label: "الموسيقى والصوتيات" },
+    { value: "subscriptions", label: "اشتراكات" },
+    { value: "gaming", label: "ألعاب" },
+    { value: "software", label: "برمجيات" },
+    { value: "entertainment", label: "ترفيه" },
+    { value: "education", label: "تعليم" },
+    { value: "productivity", label: "إنتاجية" },
+    { value: "design", label: "تصميم" },
+  ]
+
+  const availablePlatforms = [
+    "التلفزيون الذكي",
+    "الجوال",
+    "الكمبيوتر",
+    "التابلت",
+    "PlayStation",
+    "Xbox",
+    "Nintendo Switch",
+    "متصفح الويب",
   ]
 
   const updateFormData = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const updateSystemRequirement = (platform: string, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      systemRequirements: {
+        ...prev.systemRequirements,
+        [platform]: value,
+      },
+    }))
+  }
+
+  const togglePlatform = (platform: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      platforms: prev.platforms.includes(platform)
+        ? prev.platforms.filter((p) => p !== platform)
+        : [...prev.platforms, platform],
+    }))
   }
 
   const updatePackage = (packageIndex: number, field: string, value: any) => {
@@ -87,11 +128,11 @@ function CreateServiceForm() {
   }
 
   const addPackage = () => {
-    const newPackage: ServicePackage = {
+    const newPackage: DigitalProductPackage = {
       name: `باقة مخصصة ${formData.packages.length + 1}`,
       price: "",
-      deliveryTime: "",
-      revisions: "",
+      duration: "",
+      users: "",
       features: [""],
     }
     setFormData((prev) => ({
@@ -107,10 +148,6 @@ function CreateServiceForm() {
         packages: prev.packages.filter((_, index) => index !== packageIndex),
       }))
     }
-  }
-
-  const updatePackageName = (packageIndex: number, name: string) => {
-    updatePackage(packageIndex, "name", name)
   }
 
   const addTag = () => {
@@ -183,7 +220,7 @@ function CreateServiceForm() {
     const files = Array.from(e.target.files || [])
     setFormData((prev) => ({
       ...prev,
-      additionalImages: [...prev.additionalImages, ...files].slice(0, 5), // Max 5 additional images
+      additionalImages: [...prev.additionalImages, ...files].slice(0, 5),
     }))
   }
 
@@ -199,98 +236,65 @@ function CreateServiceForm() {
     setError("")
     setIsLoading(true)
 
-    // Validation
     if (!formData.title || !formData.description || !formData.category) {
       setError("يرجى ملء جميع الحقول المطلوبة")
       setIsLoading(false)
       return
     }
 
-    if (!formData.packages[0].price || !formData.packages[0].deliveryTime) {
+    if (!formData.packages[0].price || !formData.packages[0].duration) {
       setError("يجب ملء بيانات الباقة الأساسية على الأقل")
       setIsLoading(false)
       return
     }
 
-   const serviceData = {
-  profile_id: user?.id, // from session.user.id
-  title: formData.title,
-  description: formData.description,
-  category: formData.category,
-  tags: formData.tags,
-
-  images: {
-    mainImage: formData.mainImage?.name || "No main image",
-    additionalImages: formData.additionalImages.map((img) => img.name),
-    totalImages: 1 + formData.additionalImages.length,
-  },
-
-  packages: formData.packages.map((pkg, index) => ({
-    packageNumber: index + 1,
-    name: pkg.name,
-    price: pkg.price,
-    deliveryTime: pkg.deliveryTime,
-    revisions: pkg.revisions,
-    features: pkg.features.filter((f) => f.trim() !== ""),
-  })),
-
-  faqs: formData.faqs.filter(
-    (faq) => faq.question.trim() !== "" && faq.answer.trim() !== ""
-  ),
-
-  total_packages: formData.packages.length,
-  total_faqs: formData.faqs.filter(
-    (faq) => faq.question.trim() !== "" && faq.answer.trim() !== ""
-  ).length,
-};
-
+    console.log("[v0] Digital Product Creation Data:", {
+      basicInfo: {
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        tags: formData.tags,
+        platforms: formData.platforms,
+      },
+      images: {
+        mainImage: formData.mainImage?.name || "No main image",
+        additionalImages: formData.additionalImages.map((img) => img.name),
+        totalImages: 1 + formData.additionalImages.length,
+      },
+      systemRequirements: formData.systemRequirements,
+      packages: formData.packages.map((pkg, index) => ({
+        packageNumber: index + 1,
+        name: pkg.name,
+        price: pkg.price,
+        duration: pkg.duration,
+        users: pkg.users,
+        features: pkg.features.filter((f) => f.trim() !== ""),
+      })),
+      faqs: formData.faqs.filter((faq) => faq.question.trim() !== "" && faq.answer.trim() !== ""),
+      totalPackages: formData.packages.length,
+      totalFAQs: formData.faqs.filter((faq) => faq.question.trim() !== "" && faq.answer.trim() !== "").length,
+    })
 
     try {
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      // Redirect to service page or dashboard
-      // router.push("/dashboard")
-      const { data, error } = await supabase.from("services").insert([serviceData]);
-      console.log("Service Creation Response:", { data, error });
-      if (!error) {
-        setShowSuccessPopup(true)
-      }
-      
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      router.push("/dashboard")
     } catch (error) {
-      setError("حدث خطأ أثناء إنشاء الخدمة")
+      setError("حدث خطأ أثناء إنشاء المنتج الرقمي")
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleSuccessOk = () => {
-    setShowSuccessPopup(false)
-    router.push("/dashboard")
-  }
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-        {showSuccessPopup && (
-        <div className="fixed inset-0 bg-black/10 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-md mx-4 text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-green-600" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">تم بنجاح!</h3>
-            <p className="text-gray-600 mb-6">تم إنشاء خدمتك بنجاح وهي الآن متاحة للعملاء</p>
-            <Button onClick={handleSuccessOk} className="btn-gradient text-white w-full">
-              موافق
-            </Button>
-          </div>
-        </div>
-      )}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        <Header />
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold gradient-brand-text mb-2">إضافة خدمة جديدة</h1>
-            <p className="text-gray-600">أنشئ خدمتك وابدأ في استقبال الطلبات</p>
+            <h1 className="text-3xl font-bold gradient-brand-text bg-clip-text text-transparent mb-2">
+              إضافة منتج رقمي جديد
+            </h1>
+            <p className="text-gray-600">أنشئ منتجك الرقمي وابدأ في استقبال الطلبات</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
@@ -301,20 +305,23 @@ function CreateServiceForm() {
             )}
 
             {/* Basic Information */}
-            <Card>
+            <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle>المعلومات الأساسية</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Download className="w-5 h-5 text-blue-600" />
+                  المعلومات الأساسية
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
                   <Label htmlFor="title" className="text-sm font-medium">
-                    عنوان الخدمة *
+                    اسم المنتج الرقمي *
                   </Label>
                   <Input
                     id="title"
                     value={formData.title}
                     onChange={(e) => updateFormData("title", e.target.value)}
-                    placeholder="مثال: تصميم شعار احترافي مع هوية بصرية كاملة"
+                    placeholder="مثال: اشتراك نتفليكس - شهر واحد"
                     className="mt-2"
                     required
                   />
@@ -322,13 +329,13 @@ function CreateServiceForm() {
 
                 <div>
                   <Label htmlFor="description" className="text-sm font-medium">
-                    وصف الخدمة *
+                    وصف المنتج *
                   </Label>
                   <Textarea
                     id="description"
                     value={formData.description}
                     onChange={(e) => updateFormData("description", e.target.value)}
-                    placeholder="اكتب وصفاً مفصلاً عن خدمتك..."
+                    placeholder="اكتب وصفاً مفصلاً عن منتجك الرقمي..."
                     rows={5}
                     className="mt-2"
                     required
@@ -341,7 +348,7 @@ function CreateServiceForm() {
                   </Label>
                   <Select value={formData.category} onValueChange={(value) => updateFormData("category", value)}>
                     <SelectTrigger className="mt-2">
-                      <SelectValue placeholder="اختر فئة الخدمة" />
+                      <SelectValue placeholder="اختر فئة المنتج" />
                     </SelectTrigger>
                     <SelectContent>
                       {categories.map((category) => (
@@ -382,15 +389,15 @@ function CreateServiceForm() {
               </CardContent>
             </Card>
 
-            <Card>
+            {/* Images */}
+            <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <ImageIcon className="w-5 h-5" />
-                  صور الخدمة
+                  <ImageIcon className="w-5 h-5 text-purple-600" />
+                  صور المنتج
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Main Image */}
                 <div>
                   <Label className="text-sm font-medium mb-2 block">الصورة الرئيسية *</Label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
@@ -416,7 +423,7 @@ function CreateServiceForm() {
                     ) : (
                       <div>
                         <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-600 mb-2">اختر الصورة الرئيسية للخدمة</p>
+                        <p className="text-gray-600 mb-2">اختر الصورة الرئيسية للمنتج</p>
                         <p className="text-sm text-gray-500">PNG, JPG حتى 10MB</p>
                         <input
                           type="file"
@@ -435,7 +442,6 @@ function CreateServiceForm() {
                   </div>
                 </div>
 
-                {/* Additional Images */}
                 <div>
                   <Label className="text-sm font-medium mb-2 block">صور إضافية (اختيارية)</Label>
                   <div className="space-y-4">
@@ -487,10 +493,84 @@ function CreateServiceForm() {
               </CardContent>
             </Card>
 
-            <Card>
+            {/* Platform Support */}
+            <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Monitor className="w-5 h-5 text-green-600" />
+                  المنصات المدعومة
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <Label className="text-sm font-medium mb-3 block">اختر المنصات التي يدعمها المنتج</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {availablePlatforms.map((platform) => (
+                      <div
+                        key={platform}
+                        className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                          formData.platforms.includes(platform)
+                            ? "border-blue-500 bg-blue-50 text-blue-700"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                        onClick={() => togglePlatform(platform)}
+                      >
+                        <div className="flex items-center gap-2">
+                          {platform.includes("الجوال") && <Smartphone className="w-4 h-4" />}
+                          {platform.includes("الكمبيوتر") && <Monitor className="w-4 h-4" />}
+                          {(platform.includes("PlayStation") || platform.includes("Xbox")) && (
+                            <Gamepad2 className="w-4 h-4" />
+                          )}
+                          <span className="text-sm">{platform}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="text-sm font-medium">متطلبات النظام</Label>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div>
+                      <Label className="text-xs text-gray-600">متصفح الويب</Label>
+                      <Textarea
+                        value={formData.systemRequirements.web}
+                        onChange={(e) => updateSystemRequirement("web", e.target.value)}
+                        placeholder="متصفح حديث، اتصال إنترنت 5 ميجا"
+                        rows={2}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-600">تطبيق الجوال</Label>
+                      <Textarea
+                        value={formData.systemRequirements.mobile}
+                        onChange={(e) => updateSystemRequirement("mobile", e.target.value)}
+                        placeholder="iOS 12+ أو Android 5+"
+                        rows={2}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-600">سطح المكتب</Label>
+                      <Textarea
+                        value={formData.systemRequirements.desktop}
+                        onChange={(e) => updateSystemRequirement("desktop", e.target.value)}
+                        placeholder="Windows 10+ أو macOS 10.10+"
+                        rows={2}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Packages */}
+            <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                  باقات الخدمة
+                  باقات المنتج
                   <Button type="button" onClick={addPackage} variant="outline" size="sm">
                     <Plus className="w-4 h-4 mr-2" />
                     إضافة باقة
@@ -500,7 +580,10 @@ function CreateServiceForm() {
               <CardContent>
                 <div className="space-y-6">
                   {formData.packages.map((packageData, packageIndex) => (
-                    <div key={packageIndex} className="border rounded-lg p-6 relative">
+                    <div
+                      key={packageIndex}
+                      className="border rounded-lg p-6 relative bg-gray-50"
+                    >
                       {formData.packages.length > 1 && (
                         <Button
                           type="button"
@@ -518,38 +601,38 @@ function CreateServiceForm() {
                           <Label className="text-sm font-medium">اسم الباقة</Label>
                           <Input
                             value={packageData.name}
-                            onChange={(e) => updatePackageName(packageIndex, e.target.value)}
-                            placeholder="مثال: الباقة الذهبية"
+                            onChange={(e) => updatePackage(packageIndex, "name", e.target.value)}
+                            placeholder="مثال: اشتراك 3 أشهر"
                             className="mt-1"
                           />
                         </div>
 
-                        <div className="grid md:grid-cols-3 gap-4">
+                        <div className="grid md:grid-cols-4 gap-4">
                           <div>
                             <Label className="text-sm">السعر (دج) *</Label>
                             <Input
                               value={packageData.price}
                               onChange={(e) => updatePackage(packageIndex, "price", e.target.value)}
-                              placeholder="5000"
+                              placeholder="1500"
                               type="number"
                               className="mt-1"
                             />
                           </div>
                           <div>
-                            <Label className="text-sm">وقت التسليم *</Label>
+                            <Label className="text-sm">المدة *</Label>
                             <Input
-                              value={packageData.deliveryTime}
-                              onChange={(e) => updatePackage(packageIndex, "deliveryTime", e.target.value)}
-                              placeholder="3 أيام"
+                              value={packageData.duration}
+                              onChange={(e) => updatePackage(packageIndex, "duration", e.target.value)}
+                              placeholder="شهر واحد"
                               className="mt-1"
                             />
                           </div>
                           <div>
-                            <Label className="text-sm">عدد التعديلات</Label>
+                            <Label className="text-sm">عدد المستخدمين</Label>
                             <Input
-                              value={packageData.revisions}
-                              onChange={(e) => updatePackage(packageIndex, "revisions", e.target.value)}
-                              placeholder="2"
+                              value={packageData.users}
+                              onChange={(e) => updatePackage(packageIndex, "users", e.target.value)}
+                              placeholder="حساب واحد"
                               className="mt-1"
                             />
                           </div>
@@ -563,7 +646,7 @@ function CreateServiceForm() {
                                 <Input
                                   value={feature}
                                   onChange={(e) => updateFeature(packageIndex, featureIndex, e.target.value)}
-                                  placeholder="مميزة الخدمة"
+                                  placeholder="مميزة المنتج"
                                 />
                                 <Button
                                   type="button"
@@ -595,11 +678,12 @@ function CreateServiceForm() {
               </CardContent>
             </Card>
 
-            <Card>
+            {/* FAQ */}
+            <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <HelpCircle className="w-5 h-5" />
+                    <HelpCircle className="w-5 h-5 text-orange-600" />
                     الأسئلة الشائعة
                   </div>
                   <Button type="button" onClick={addFAQ} variant="outline" size="sm">
@@ -630,7 +714,7 @@ function CreateServiceForm() {
                           <Input
                             value={faq.question}
                             onChange={(e) => updateFAQ(faqIndex, "question", e.target.value)}
-                            placeholder="مثال: كم يستغرق تسليم التصميم؟"
+                            placeholder="مثال: كم من الوقت يستغرق تفعيل الاشتراك؟"
                             className="mt-1"
                           />
                         </div>
@@ -661,7 +745,7 @@ function CreateServiceForm() {
                 حفظ كمسودة
               </Button>
               <Button type="submit" disabled={isLoading} className="btn-gradient text-white">
-                {isLoading ? "جاري النشر..." : "نشر الخدمة"}
+                {isLoading ? "جاري النشر..." : "نشر المنتج"}
                 <ArrowRight className="w-4 h-4 mr-2" />
               </Button>
             </div>
@@ -673,10 +757,10 @@ function CreateServiceForm() {
   )
 }
 
-export default function CreateServicePage() {
+export default function CreateDigitalProductPage() {
   return (
     <ProtectedRoute requiredUserType="seller">
-      <CreateServiceForm />
+      <CreateDigitalProductForm />
     </ProtectedRoute>
   )
 }

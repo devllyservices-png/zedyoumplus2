@@ -224,13 +224,17 @@ export default function DashboardPage() {
                   </Link>
                   {user.userType === "seller" && (
                     <>
-                      <Button variant="outline" className="h-12 bg-transparent">
+                    <Link href="/services/create">
+                      <Button variant="outline" className="h-12 w-full bg-transparent">
                         إضافة خدمة جديدة
                       </Button>
-                      <Button variant="outline" className="h-12 bg-transparent">
+                    </Link>
+                    <Link href="/services/khadamti">
+                      <Button variant="outline" className="h-12 w-full bg-transparent">
                         إدارة خدماتي
                       </Button>
-                    </>
+                    </Link>
+                  </>
                   )}
                 </div>
               </CardContent>
