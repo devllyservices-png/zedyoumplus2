@@ -2,8 +2,8 @@
 
 import type React from "react"
 import { Suspense } from "react"
-import { useState, useEffect } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
+import { useState, useEffect  } from "react"
+import {  useParams , useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -26,7 +26,7 @@ import {
 } from "lucide-react"
 
 export default function CheckoutPage() {
-  const searchParams = useSearchParams()
+  const { serviceId } = useParams()
   const router = useRouter()
   const [paymentMethod, setPaymentMethod] = useState("manual")
   const [receiptFile, setReceiptFile] = useState<File | null>(null)
@@ -41,9 +41,7 @@ export default function CheckoutPage() {
     additionalNotes: "",
   })
 
-//   const serviceId = searchParams.get("serviceId")
-  const packageType = searchParams.get("package") || "basic"
-  const notes = searchParams.get("notes") || ""
+const { package: packageType = "basic", notes = "" } = useParams()
 
   // Mock service data - in real app, fetch based on serviceId
   const serviceData = {
