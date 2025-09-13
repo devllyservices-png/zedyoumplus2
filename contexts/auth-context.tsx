@@ -5,75 +5,154 @@ import { supabase } from "@/lib/supabaseClient"
 
 interface User {
   id: string
-  name: string
   email: string
-  avatar?: string
-  userType: "buyer" | "seller" | "admin"
-  phone?: string
+  role: "buyer" | "seller" | "admin"
+  created_at: string
+}
+
+interface Profile {
+  id: string
+  user_id: string
+  display_name: string
+  bio?: string
+  avatar_url?: string
   location?: string
-  joinedDate: string
-  isVerified: boolean
+  phone?: string
+  is_verified: boolean
+  rating: number
+  completed_orders: number
+  member_since: string
+  response_time?: string
+  support_rate?: string
+  languages?: string[]
+  created_at: string
 }
 
 interface AuthContextType {
   user: User | null
+  profile: Profile | null
   login: (email: string, password: string) => Promise<boolean>
   register: (userData: RegisterData) => Promise<boolean>
   logout: () => Promise<void>
   isLoading: boolean
+  hasPermission: (resource: string, action: 'create' | 'read' | 'update' | 'delete') => boolean
 }
 
 interface RegisterData {
-  name: string
   email: string
   password: string
-  userType: "buyer" | "seller"
-  phone?: string
+  role: "buyer" | "seller"
+  display_name: string
+  bio?: string
   location?: string
+  phone?: string
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [permissions, setPermissions] = useState<Record<string, any>>({})
 
-  // Check existing session and load profile
+  // Check existing session and load user + profile
   useEffect(() => {
     const getSession = async () => {
-      const { data: sessionData } = await supabase.auth.getSession()
-      if (sessionData.session?.user) {
-        await loadUser(sessionData.session.user.id, sessionData.session.user.email!)
+      try {
+        const response = await fetch("/api/profile/me", {
+          credentials: 'include', // Important for cookies
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setUser(data.user)
+          setProfile(data.profile)
+          
+          // Load permissions based on user role
+          if (data.user?.role) {
+            const userPermissions = getPermissionsForRole(data.user.role)
+            setPermissions(userPermissions)
+          }
+        } else {
+          console.log("No valid session found")
+        }
+      } catch (error) {
+        console.error("Session check error:", error)
+      } finally {
+        setIsLoading(false)
       }
-      setIsLoading(false)
     }
     getSession()
   }, [])
 
-  const loadUser = async (id: string, email: string) => {
-    const { data: profile } = await supabase.from("profiles").select("*").eq("id", id).single()
-    if (profile) {
-      setUser({
-        id,
-        name: profile.name,
-        email,
-        userType: profile.user_type,
-        phone: profile.phone,
-        location: profile.location,
-        joinedDate: profile.joined_date,
-        isVerified: profile.is_verified,
-      })
+  // Helper function to get permissions for a role
+  const getPermissionsForRole = (role: string) => {
+    const permissions: Record<string, boolean> = {}
+    
+    if (role === 'seller') {
+      permissions['service_create'] = true
+      permissions['service_read'] = true
+      permissions['service_update'] = true
+      permissions['service_delete'] = true
+      permissions['digital_product_create'] = false
+      permissions['digital_product_read'] = true
+      permissions['digital_product_update'] = false
+      permissions['digital_product_delete'] = false
+    } else if (role === 'buyer') {
+      permissions['service_create'] = false
+      permissions['service_read'] = true
+      permissions['service_update'] = false
+      permissions['service_delete'] = false
+      permissions['digital_product_create'] = false
+      permissions['digital_product_read'] = true
+      permissions['digital_product_update'] = false
+      permissions['digital_product_delete'] = false
+    } else if (role === 'admin') {
+      permissions['service_create'] = true
+      permissions['service_read'] = true
+      permissions['service_update'] = true
+      permissions['service_delete'] = true
+      permissions['digital_product_create'] = true
+      permissions['digital_product_read'] = true
+      permissions['digital_product_update'] = true
+      permissions['digital_product_delete'] = true
     }
+    
+    return permissions
   }
+
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true)
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error || !data.user) return false
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: 'include', // Important for cookies
+        body: JSON.stringify({ email, password }),
+      })
 
-      await loadUser(data.user.id, data.user.email!)
-      return true
+      if (!response.ok) return false
+
+      const data = await response.json()
+      if (data.success) {
+        setUser(data.user)
+        setProfile(data.profile)
+        
+        // Set permissions based on user role
+        if (data.user?.role) {
+          const userPermissions = getPermissionsForRole(data.user.role)
+          setPermissions(userPermissions)
+        }
+        
+        return true
+      }
+      return false
+    } catch (error) {
+      console.error("Login error:", error)
+      return false
     } finally {
       setIsLoading(false)
     }
@@ -82,39 +161,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (userData: RegisterData): Promise<boolean> => {
     setIsLoading(true)
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: userData.email,
-        password: userData.password,
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userData),
       })
 
-      if (error || !data.user) return false
+      if (!response.ok) return false
 
-      // Insert into profiles table
-      const { error: profileError } = await supabase.from("profiles").insert({
-        id: data.user.id,
-        name: userData.name,
-        user_type: userData.userType,
-        phone: userData.phone,
-        location: userData.location,
-        is_verified: false,
-      })
-
-      if (profileError) return false
-
-      await loadUser(data.user.id, userData.email)
-      return true
+      const data = await response.json()
+      if (data.success) {
+        setUser(data.user)
+        // Profile will be loaded on next login
+        return true
+      }
+      return false
+    } catch (error) {
+      console.error("Register error:", error)
+      return false
     } finally {
       setIsLoading(false)
     }
   }
 
   const logout = async () => {
-    await supabase.auth.signOut()
+    // Clear the auth cookie by setting it to expire
+    document.cookie = "auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
     setUser(null)
+    setProfile(null)
+    setPermissions({})
+  }
+
+  const hasPermission = (resource: string, action: 'create' | 'read' | 'update' | 'delete'): boolean => {
+    return permissions[`${resource}_${action}`] || false
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, profile, login, register, logout, isLoading, hasPermission }}>
       {children}
     </AuthContext.Provider>
   )

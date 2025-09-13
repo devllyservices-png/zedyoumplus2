@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "../styles/confetti.css";
 
 /* Fixed dark mode variant syntax for Tailwind CSS v4 */
 @variant dark (.dark &);

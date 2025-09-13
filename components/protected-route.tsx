@@ -22,7 +22,7 @@ export function ProtectedRoute({ children, requiredUserType }: ProtectedRoutePro
         return
       }
 
-      if (requiredUserType && user.userType !== requiredUserType) {
+      if (requiredUserType && user.role !== requiredUserType) {
         router.push("/dashboard")
         return
       }
@@ -44,7 +44,7 @@ export function ProtectedRoute({ children, requiredUserType }: ProtectedRoutePro
     return null
   }
 
-  if (requiredUserType && user.userType !== requiredUserType) {
+  if (requiredUserType && user.role !== requiredUserType) {
     return null
   }
 

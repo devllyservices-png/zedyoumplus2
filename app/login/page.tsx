@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -21,6 +21,8 @@ export default function LoginPage() {
   const [error, setError] = useState("")
   const { login, isLoading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirectUrl = searchParams.get("redirect")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,8 +34,11 @@ export default function LoginPage() {
     }
 
     const success = await login(email, password)
+
     if (success) {
-      router.push("/dashboard")
+      // Redirect to the intended page or default to dashboard
+      const destination = redirectUrl || "/dashboard/profile"
+      router.push(destination)
     } else {
       setError("البريد الإلكتروني أو كلمة المرور غير صحيحة")
     }

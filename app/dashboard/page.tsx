@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -11,46 +11,87 @@ import Link from "next/link"
 import { Mail, Phone, MapPin, Calendar, ShoppingBag, Package, Star, DollarSign } from "lucide-react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import SellerServices from "@/components/seller-services"
 
 export default function DashboardPage() {
-  const { user, logout } = useAuth()
+  const { user, profile, logout, hasPermission } = useAuth()
   const router = useRouter()
+  const [stats, setStats] = useState({
+    activeServices: 0,
+    completedOrders: 0,
+    averageRating: 0,
+    totalEarnings: 0
+  })
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!user) {
       router.push("/login")
+    } else {
+      fetchDashboardData()
     }
   }, [user, router])
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true)
+      
+      // Fetch seller's services to calculate stats
+      if (user?.role === 'seller') {
+        const response = await fetch(`/api/services?seller_id=${user.id}`)
+        const data = await response.json()
+        
+        if (response.ok && data.services) {
+          const services = data.services
+          const totalOrders = services.reduce((sum: number, service: any) => sum + (service.total_orders || 0), 0)
+          const avgRating = services.length > 0 
+            ? services.reduce((sum: number, service: any) => sum + (service.average_rating || 0), 0) / services.length
+            : 0
+          
+          setStats({
+            activeServices: services.length,
+            completedOrders: totalOrders,
+            averageRating: Math.round(avgRating * 10) / 10,
+            totalEarnings: totalOrders * 100 // Mock calculation - replace with real earnings
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (!user) {
     return <div>جاري التحميل...</div>
   }
 
-  const stats = [
+  const statsData = [
     {
-      title: "إجمالي الطلبات",
-      value: "24",
-      icon: ShoppingBag,
+      title: "الخدمات النشطة",
+      value: stats.activeServices.toString(),
+      icon: Package,
       color: "text-blue-600",
       bgColor: "bg-blue-100",
     },
     {
       title: "الطلبات المكتملة",
-      value: "18",
-      icon: Package,
+      value: stats.completedOrders.toString(),
+      icon: ShoppingBag,
       color: "text-green-600",
       bgColor: "bg-green-100",
     },
     {
-      title: "التقييم",
-      value: "4.8",
+      title: "التقييم المتوسط",
+      value: stats.averageRating.toFixed(1),
       icon: Star,
       color: "text-yellow-600",
       bgColor: "bg-yellow-100",
     },
     {
-      title: "إجمالي الإنفاق",
-      value: "125,000 دج",
+      title: "إجمالي الأرباح",
+      value: `${stats.totalEarnings.toLocaleString()} دج`,
       icon: DollarSign,
       color: "text-purple-600",
       bgColor: "bg-purple-100",
@@ -106,23 +147,23 @@ export default function DashboardPage() {
             <Card className="shadow-lg border-0">
               <CardContent className="p-6 text-center">
                 <Avatar className="w-24 h-24 mx-auto mb-4">
-                  <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
+                  <AvatarImage src={profile?.avatar_url || "/images/avatar-fallback.svg"} alt={profile?.display_name || user.email} />
                   <AvatarFallback className="text-2xl bg-gradient-to-br from-cyan-400 to-violet-600 text-white">
-                    {user.name.charAt(0)}
+                    {(profile?.display_name || user.email).charAt(0)}
                   </AvatarFallback>
                 </Avatar>
 
-                <h2 className="text-xl font-bold text-gray-900 mb-2">{user.name}</h2>
+                <h2 className="text-xl font-bold text-gray-900 mb-2">{profile?.display_name || user.email}</h2>
                 <Badge
                   className={`mb-4 ${
-                    user.userType === "seller"
+                    user.role === "seller"
                       ? "bg-green-100 text-green-800"
-                      : user.userType === "admin"
+                      : user.role === "admin"
                         ? "bg-purple-100 text-purple-800"
                         : "bg-blue-100 text-blue-800"
                   }`}
                 >
-                  {user.userType === "seller" ? "مقدم خدمة" : user.userType === "admin" ? "مدير" : "مشتري"}
+                  {user.role === "seller" ? "مقدم خدمة" : user.role === "admin" ? "مدير" : "مشتري"}
                 </Badge>
 
                 <div className="space-y-3 text-right">
@@ -130,25 +171,27 @@ export default function DashboardPage() {
                     <Mail className="w-4 h-4 text-gray-500" />
                     <span className="text-sm text-gray-600">{user.email}</span>
                   </div>
-                  {user.phone && (
+                  {profile?.phone && (
                     <div className="flex items-center gap-3">
                       <Phone className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm text-gray-600">{user.phone}</span>
+                      <span className="text-sm text-gray-600">{profile.phone}</span>
                     </div>
                   )}
-                  {user.location && (
+                  {profile?.location && (
                     <div className="flex items-center gap-3">
                       <MapPin className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm text-gray-600">{user.location}</span>
+                      <span className="text-sm text-gray-600">{profile.location}</span>
                     </div>
                   )}
                   <div className="flex items-center gap-3">
                     <Calendar className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">انضم في {user.joinedDate}</span>
+                    <span className="text-sm text-gray-600">انضم في {profile?.member_since || user.created_at}</span>
                   </div>
                 </div>
 
-                <Button className="w-full mt-6 btn-gradient text-white">تعديل الملف الشخصي</Button>
+                <Link href="/dashboard/profile">
+                  <Button className="w-full mt-6 btn-gradient text-white">تعديل الملف الشخصي</Button>
+                </Link>
               </CardContent>
             </Card>
           </div>
@@ -157,7 +200,7 @@ export default function DashboardPage() {
           <div className="lg:col-span-3 space-y-8">
             {/* Stats Cards */}
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {stats.map((stat, index) => (
+              {statsData.map((stat, index) => (
                 <Card key={index} className="shadow-lg border-0">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
@@ -222,25 +265,32 @@ export default function DashboardPage() {
                       المنتجات الرقمية
                     </Button>
                   </Link>
-                  {user.userType === "seller" && (
-                    <>
+                  {hasPermission('service', 'create') && (
                     <Link href="/services/create">
                       <Button variant="outline" className="h-12 w-full bg-transparent">
                         إضافة خدمة جديدة
                       </Button>
                     </Link>
-                    <Link href="/services/khadamti">
+                  )}
+                  {hasPermission('digital_product', 'create') && (
+                    <Link href="/digital-products/create">
                       <Button variant="outline" className="h-12 w-full bg-transparent">
-                        إدارة خدماتي
+                        إضافة منتج رقمي
                       </Button>
                     </Link>
-                  </>
                   )}
                 </div>
               </CardContent>
             </Card>
           </div>
         </div>
+
+        {/* Seller Services Section */}
+        {user?.role === 'seller' && (
+          <div className="mt-8">
+            <SellerServices />
+          </div>
+        )}
       </div>
       <Footer />
     </div>

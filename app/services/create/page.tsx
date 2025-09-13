@@ -4,7 +4,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,7 +20,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { supabase } from "@/lib/supabaseClient"
 import { useAuth } from "@/contexts/auth-context"
-
+import { useEffect } from "react"
 interface ServicePackage {
   name: string
   price: string
@@ -44,6 +44,8 @@ function CreateServiceForm() {
     tags: [] as string[],
     mainImage: null as File | null,
     additionalImages: [] as File[],
+    mainImageUrl: null as string | null,
+    additionalImageUrls: [] as string[],
     packages: [
       {
         name: "الباقة الأساسية",
@@ -64,6 +66,14 @@ function CreateServiceForm() {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [showSuccessPopup, setShowSuccessPopup] = useState(false)
+
+  // Debug popup state changes
+  useEffect(() => {
+    console.log("Popup state changed:", showSuccessPopup)
+  }, [showSuccessPopup])
+  const [isUploading, setIsUploading] = useState(false)
+  const mainImageInputRef = useRef<HTMLInputElement | null>(null)
+  const additionalImagesInputRef = useRef<HTMLInputElement | null>(null)
 
   const categories = [
     { value: "design", label: "التصميم والجرافيك" },
@@ -172,25 +182,81 @@ function CreateServiceForm() {
     }
   }
 
-  const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMainImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isUploading) {
+      console.log("[services] main upload skipped: already uploading")
+      return
+    }
+    console.log("[services] handleMainImageChange fired")
     const file = e.target.files?.[0]
-    if (file) {
-      setFormData((prev) => ({ ...prev, mainImage: file }))
+    if (!file) return
+    setError("")
+    setIsUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append("files", file)
+      const res = await fetch("/api/upload", { method: "POST", body: fd })
+      console.log("[services] main upload status", res.status)
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err?.message || "فشل رفع الصورة الرئيسية")
+      }
+      const data = await res.json()
+      console.log("[services] main upload response", data)
+      const url: string | undefined = data?.files?.[0]?.url
+      if (!url) throw new Error("لم يتم استلام رابط الصورة")
+      setFormData((prev) => ({ ...prev, mainImageUrl: url, mainImage: null }))
+    } catch (err: any) {
+      setError(err?.message || "تعذر رفع الصورة الرئيسية")
+    } finally {
+      setIsUploading(false)
+      if (mainImageInputRef.current) {
+        mainImageInputRef.current.value = ""
+      }
     }
   }
 
-  const handleAdditionalImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAdditionalImagesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isUploading) {
+      console.log("[services] gallery upload skipped: already uploading")
+      return
+    }
+    console.log("[services] handleAdditionalImagesChange fired")
     const files = Array.from(e.target.files || [])
-    setFormData((prev) => ({
-      ...prev,
-      additionalImages: [...prev.additionalImages, ...files].slice(0, 5), // Max 5 additional images
-    }))
+    if (files.length === 0) return
+    setError("")
+    setIsUploading(true)
+    try {
+      const fd = new FormData()
+      files.forEach((f) => fd.append("files", f))
+      const res = await fetch("/api/upload", { method: "POST", body: fd })
+      console.log("[services] gallery upload status", res.status)
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err?.message || "فشل رفع الصور الإضافية")
+      }
+      const data = await res.json()
+      console.log("[services] gallery upload response", data)
+      const urls: string[] = (data?.files || []).map((f: any) => f.url)
+      setFormData((prev) => ({
+        ...prev,
+        additionalImageUrls: [...prev.additionalImageUrls, ...urls].slice(0, 5),
+        additionalImages: [],
+      }))
+    } catch (err: any) {
+      setError(err?.message || "تعذر رفع الصور الإضافية")
+    } finally {
+      setIsUploading(false)
+      if (additionalImagesInputRef.current) {
+        additionalImagesInputRef.current.value = ""
+      }
+    }
   }
 
   const removeAdditionalImage = (imageIndex: number) => {
     setFormData((prev) => ({
       ...prev,
-      additionalImages: prev.additionalImages.filter((_, index) => index !== imageIndex),
+      additionalImageUrls: prev.additionalImageUrls.filter((_, index) => index !== imageIndex),
     }))
   }
 
@@ -212,53 +278,60 @@ function CreateServiceForm() {
       return
     }
 
+    if (!formData.mainImageUrl) {
+      setError("يرجى رفع الصورة الرئيسية أولاً")
+      setIsLoading(false)
+      return
+    }
+
    const serviceData = {
-  profile_id: user?.id, // from session.user.id
   title: formData.title,
   description: formData.description,
   category: formData.category,
   tags: formData.tags,
-
-  images: {
-    mainImage: formData.mainImage?.name || "No main image",
-    additionalImages: formData.additionalImages.map((img) => img.name),
-    totalImages: 1 + formData.additionalImages.length,
-  },
-
-  packages: formData.packages.map((pkg, index) => ({
-    packageNumber: index + 1,
+  packages: formData.packages.map((pkg) => ({
     name: pkg.name,
-    price: pkg.price,
-    deliveryTime: pkg.deliveryTime,
+    price: parseFloat(pkg.price) || 0,
+    delivery_time: pkg.deliveryTime,
     revisions: pkg.revisions,
     features: pkg.features.filter((f) => f.trim() !== ""),
   })),
-
-  faqs: formData.faqs.filter(
+  faq: formData.faqs.filter(
     (faq) => faq.question.trim() !== "" && faq.answer.trim() !== ""
   ),
-
-  total_packages: formData.packages.length,
-  total_faqs: formData.faqs.filter(
-    (faq) => faq.question.trim() !== "" && faq.answer.trim() !== ""
-  ).length,
+  images: [
+    ...(formData.mainImageUrl ? [{ url: formData.mainImageUrl }] : []),
+    ...formData.additionalImageUrls.map(url => ({ url }))
+  ]
 };
 
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      console.log("Creating service with data:", serviceData)
+      
+      const response = await fetch("/api/services", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: 'include',
+        body: JSON.stringify(serviceData),
+      })
 
-      // Redirect to service page or dashboard
-      // router.push("/dashboard")
-      const { data, error } = await supabase.from("services").insert([serviceData]);
-      console.log("Service Creation Response:", { data, error });
-      if (!error) {
+      const result = await response.json()
+      console.log("Service creation response:", { status: response.status, result })
+      
+      if (response.ok) {
+        console.log("Service created successfully, showing popup")
         setShowSuccessPopup(true)
+        console.log("Popup state set to true")
+      } else {
+        console.error("Service creation failed:", result.error)
+        setError(result.error || "حدث خطأ أثناء إنشاء الخدمة")
       }
       
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
+      console.error("Service creation error:", error)
       setError("حدث خطأ أثناء إنشاء الخدمة")
     } finally {
       setIsLoading(false)
@@ -266,34 +339,38 @@ function CreateServiceForm() {
   }
 
   const handleSuccessOk = () => {
+    console.log("Success OK clicked, redirecting to dashboard")
     setShowSuccessPopup(false)
-    router.push("/dashboard")
+    setTimeout(() => {
+      router.push("/dashboard")
+    }, 100)
   }
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <Header />
         {showSuccessPopup && (
-        <div className="fixed inset-0 bg-black/10 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-md mx-4 text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-green-600" />
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl p-8 max-w-md mx-4 text-center shadow-2xl border border-white/20">
+            <div className="w-16 h-16 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">تم بنجاح!</h3>
-            <p className="text-gray-600 mb-6">تم إنشاء خدمتك بنجاح وهي الآن متاحة للعملاء</p>
-            <Button onClick={handleSuccessOk} className="btn-gradient text-white w-full">
-              موافق
+            <h3 className="text-xl font-semibold bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent mb-2">تم إنشاء الخدمة بنجاح!</h3>
+            <p className="text-gray-600 mb-6">تم حفظ خدمتك ويمكنك الآن استقبال الطلبات</p>
+            <Button onClick={handleSuccessOk} className="w-full btn-gradient text-white">
+              <ArrowRight className="w-4 h-4 ml-2" />
+              الذهاب إلى لوحة التحكم
             </Button>
           </div>
         </div>
       )}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 sm:py-8">
         <div className="max-w-4xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold gradient-brand-text mb-2">إضافة خدمة جديدة</h1>
-            <p className="text-gray-600">أنشئ خدمتك وابدأ في استقبال الطلبات</p>
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">إضافة خدمة جديدة</h1>
+            <p className="text-gray-600 text-sm sm:text-base">أنشئ خدمتك وابدأ في استقبال الطلبات</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
             {error && (
               <Alert className="border-red-200 bg-red-50">
                 <AlertDescription className="text-red-700">{error}</AlertDescription>
@@ -301,9 +378,9 @@ function CreateServiceForm() {
             )}
 
             {/* Basic Information */}
-            <Card>
+            <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle>المعلومات الأساسية</CardTitle>
+                <CardTitle className="text-lg sm:text-xl">المعلومات الأساسية</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
@@ -382,9 +459,9 @@ function CreateServiceForm() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                   <ImageIcon className="w-5 h-5" />
                   صور الخدمة
                 </CardTitle>
@@ -394,41 +471,54 @@ function CreateServiceForm() {
                 <div>
                   <Label className="text-sm font-medium mb-2 block">الصورة الرئيسية *</Label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                    {formData.mainImage ? (
+                    {formData.mainImageUrl ? (
                       <div className="space-y-2">
                         <div className="w-32 h-32 mx-auto bg-gray-100 rounded-lg overflow-hidden">
                           <img
-                            src={URL.createObjectURL(formData.mainImage) || "/placeholder.svg"}
+                            src={formData.mainImageUrl || "/placeholder.svg"}
                             alt="Main preview"
                             className="w-full h-full object-cover"
                           />
                         </div>
-                        <p className="text-sm text-gray-600">{formData.mainImage.name}</p>
+                        {/* hide URL */}
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => setFormData((prev) => ({ ...prev, mainImage: null }))}
+                          onClick={() => setFormData((prev) => ({ ...prev, mainImageUrl: null }))}
                         >
                           إزالة
                         </Button>
                       </div>
                     ) : (
-                      <div>
+                      <div
+                        className="cursor-pointer"
+                        onClick={() => {
+                          console.log("[services] main dropzone clicked")
+                          mainImageInputRef.current?.click()
+                        }}
+                      >
                         <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                         <p className="text-gray-600 mb-2">اختر الصورة الرئيسية للخدمة</p>
                         <p className="text-sm text-gray-500">PNG, JPG حتى 10MB</p>
                         <input
+                          ref={mainImageInputRef}
                           type="file"
                           accept="image/*"
                           onChange={handleMainImageChange}
                           className="hidden"
-                          id="main-image"
                         />
-                        <Button type="button" variant="outline" className="mt-4 bg-transparent" asChild>
-                          <label htmlFor="main-image" className="cursor-pointer">
-                            اختر الصورة الرئيسية
-                          </label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="mt-4 bg-transparent"
+                          disabled={isUploading}
+                          onClick={() => {
+                            console.log("[services] main trigger clicked")
+                            mainImageInputRef.current?.click()
+                          }}
+                        >
+                          {isUploading ? "جاري الرفع..." : "اختر الصورة الرئيسية"}
                         </Button>
                       </div>
                     )}
@@ -442,33 +532,39 @@ function CreateServiceForm() {
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
                       <p className="text-gray-600 mb-2">أضف صور إضافية (حتى 5 صور)</p>
                       <input
+                        ref={additionalImagesInputRef}
                         type="file"
                         accept="image/*"
                         multiple
                         onChange={handleAdditionalImagesChange}
                         className="hidden"
-                        id="additional-images"
                       />
-                      <Button type="button" variant="outline" size="sm" asChild>
-                        <label htmlFor="additional-images" className="cursor-pointer">
-                          <Plus className="w-4 h-4 mr-2" />
-                          إضافة صور
-                        </label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          console.log("[services] gallery trigger clicked")
+                          additionalImagesInputRef.current?.click()
+                        }}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        إضافة صور
                       </Button>
                     </div>
 
-                    {formData.additionalImages.length > 0 && (
+                    {formData.additionalImageUrls.length > 0 && (
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {formData.additionalImages.map((image, index) => (
+                        {formData.additionalImageUrls.map((url, index) => (
                           <div key={index} className="relative border rounded-lg p-2">
                             <div className="w-full h-24 bg-gray-100 rounded overflow-hidden mb-2">
                               <img
-                                src={URL.createObjectURL(image) || "/placeholder.svg"}
-                                alt={`Additional preview ${index + 1}`}
+                                src={url || "/placeholder.svg"}
+                                alt={`Additional image ${index + 1}`}
                                 className="w-full h-full object-cover"
                               />
                             </div>
-                            <p className="text-xs text-gray-600 truncate">{image.name}</p>
+                            <p className="text-xs text-gray-600 truncate">{url}</p>
                             <Button
                               type="button"
                               variant="outline"
@@ -487,9 +583,9 @@ function CreateServiceForm() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
+                <CardTitle className="flex items-center justify-between text-lg sm:text-xl">
                   باقات الخدمة
                   <Button type="button" onClick={addPackage} variant="outline" size="sm">
                     <Plus className="w-4 h-4 mr-2" />
@@ -595,9 +691,9 @@ function CreateServiceForm() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
+                <CardTitle className="flex items-center justify-between text-lg sm:text-xl">
                   <div className="flex items-center gap-2">
                     <HelpCircle className="w-5 h-5" />
                     الأسئلة الشائعة
@@ -660,10 +756,11 @@ function CreateServiceForm() {
                 <Save className="w-4 h-4 mr-2" />
                 حفظ كمسودة
               </Button>
-              <Button type="submit" disabled={isLoading} className="btn-gradient text-white">
+              <Button type="submit" disabled={isLoading || isUploading} className="btn-gradient text-white">
                 {isLoading ? "جاري النشر..." : "نشر الخدمة"}
                 <ArrowRight className="w-4 h-4 mr-2" />
               </Button>
+              
             </div>
           </form>
         </div>

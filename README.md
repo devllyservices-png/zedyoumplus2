@@ -1,30 +1,5 @@
-# Arabic e commerce platform
-
-*Automatically synced with your [v0.app](https://v0.app) deployments*
-
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/devlly-agencys-projects/v0-arabic-e-commerce-platform)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/projects/7kBxUSpTVv8)
-
-## Overview
-
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
-
-## Deployment
-
-Your project is live at:
-
-**[https://vercel.com/devlly-agencys-projects/v0-arabic-e-commerce-platform](https://vercel.com/devlly-agencys-projects/v0-arabic-e-commerce-platform)**
-
-## Build your app
-
-Continue building your app on:
-
-**[https://v0.app/chat/projects/7kBxUSpTVv8](https://v0.app/chat/projects/7kBxUSpTVv8)**
-
-## How It Works
-
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+let's create a TODO 
+- the buyer dashboard so you can check the status of  your orders and its results 
+- the dashboard of the seller so he can receive the rorderes and change their status and delver its results 
+- notifications system 
+- email system ( maybe after styding it ) 

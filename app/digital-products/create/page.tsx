@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,6 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { supabase } from "@/lib/supabaseClient"
 import {
   Upload,
   X,
@@ -50,6 +52,8 @@ function CreateDigitalProductForm() {
     tags: [] as string[],
     mainImage: null as File | null,
     additionalImages: [] as File[],
+    mainImageUrl: null as string | null,
+    additionalImageUrls: [] as string[],
     platforms: [] as string[],
     systemRequirements: {
       web: "",
@@ -75,6 +79,10 @@ function CreateDigitalProductForm() {
   const [currentTag, setCurrentTag] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [isSuccessOpen, setIsSuccessOpen] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const mainImageInputRef = useRef<HTMLInputElement | null>(null)
+  const additionalImagesInputRef = useRef<HTMLInputElement | null>(null)
 
   const categories = [
     { value: "subscriptions", label: "اشتراكات" },
@@ -209,26 +217,77 @@ function CreateDigitalProductForm() {
     }
   }
 
-  const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMainImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("[input] handleMainImageChange fired")
     const file = e.target.files?.[0]
-    if (file) {
-      setFormData((prev) => ({ ...prev, mainImage: file }))
+    if (!file) return
+    setError("")
+    setIsUploading(true)
+    try {
+      console.log("[upload] main: start")
+      const fd = new FormData()
+      fd.append("files", file)
+      const res = await fetch("/api/upload", { method: "POST", body: fd })
+      console.log("[upload] main: status", res.status)
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err?.message || "فشل رفع الصورة الرئيسية")
+      }
+      const data = await res.json()
+      console.log("[upload] main: response", data)
+      const url: string | undefined = data?.files?.[0]?.url
+      if (!url) throw new Error("لم يتم استلام رابط الصورة")
+      setFormData((prev) => ({ ...prev, mainImageUrl: url, mainImage: null }))
+    } catch (err: any) {
+      setError(err?.message || "تعذر رفع الصورة الرئيسية")
+    } finally {
+      setIsUploading(false)
+      e.currentTarget.value = ""
     }
   }
 
-  const handleAdditionalImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAdditionalImagesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("[input] handleAdditionalImagesChange fired")
     const files = Array.from(e.target.files || [])
-    setFormData((prev) => ({
-      ...prev,
-      additionalImages: [...prev.additionalImages, ...files].slice(0, 5),
-    }))
+    if (files.length === 0) return
+    setError("")
+    setIsUploading(true)
+    try {
+      console.log("[upload] gallery: start", { count: files.length })
+      const fd = new FormData()
+      files.forEach((f) => fd.append("files", f))
+      const res = await fetch("/api/upload", { method: "POST", body: fd })
+      console.log("[upload] gallery: status", res.status)
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err?.message || "فشل رفع الصور الإضافية")
+      }
+      const data = await res.json()
+      console.log("[upload] gallery: response", data)
+      const newUrls: string[] = (data?.files || []).map((f: any) => f.url)
+      setFormData((prev) => ({
+        ...prev,
+        additionalImageUrls: [...prev.additionalImageUrls, ...newUrls].slice(0, 5),
+        additionalImages: [],
+      }))
+    } catch (err: any) {
+      setError(err?.message || "تعذر رفع الصور الإضافية")
+    } finally {
+      setIsUploading(false)
+      e.currentTarget.value = ""
+    }
   }
 
   const removeAdditionalImage = (imageIndex: number) => {
     setFormData((prev) => ({
       ...prev,
-      additionalImages: prev.additionalImages.filter((_, index) => index !== imageIndex),
+      additionalImageUrls: prev.additionalImageUrls.filter((_, index) => index !== imageIndex),
     }))
+  }
+
+  const uploadImages = async (): Promise<{ mainImageUrl: string | null; additionalImageUrls: string[] }> => {
+    // Images are uploaded on selection. Just return current URLs.
+    return { mainImageUrl: formData.mainImageUrl, additionalImageUrls: formData.additionalImageUrls }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -248,7 +307,13 @@ function CreateDigitalProductForm() {
       return
     }
 
-    console.log("[v0] Digital Product Creation Data:", {
+    if (!formData.mainImageUrl) {
+      setError("يرجى رفع الصورة الرئيسية أولاً")
+      setIsLoading(false)
+      return
+    }
+
+    console.log("[create] payload preview:", {
       basicInfo: {
         title: formData.title,
         description: formData.description,
@@ -257,9 +322,9 @@ function CreateDigitalProductForm() {
         platforms: formData.platforms,
       },
       images: {
-        mainImage: formData.mainImage?.name || "No main image",
-        additionalImages: formData.additionalImages.map((img) => img.name),
-        totalImages: 1 + formData.additionalImages.length,
+        mainImage: formData.mainImageUrl,
+        additionalImages: formData.additionalImageUrls,
+        totalImages: (formData.mainImageUrl ? 1 : 0) + formData.additionalImageUrls.length,
       },
       systemRequirements: formData.systemRequirements,
       packages: formData.packages.map((pkg, index) => ({
@@ -276,10 +341,46 @@ function CreateDigitalProductForm() {
     })
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-      router.push("/dashboard")
-    } catch (error) {
-      setError("حدث خطأ أثناء إنشاء المنتج الرقمي")
+      const { mainImageUrl, additionalImageUrls } = await uploadImages()
+
+      const packagesClean = formData.packages.map((pkg) => ({
+        name: pkg.name,
+        price: pkg.price,
+        duration: pkg.duration,
+        users: pkg.users,
+        features: pkg.features.filter((f) => f.trim() !== ""),
+      }))
+      const faqsClean = formData.faqs
+        .filter((f) => f.question.trim() && f.answer.trim())
+        .map((f) => ({ question: f.question, answer: f.answer }))
+
+      const images = {
+        mainImage: mainImageUrl,
+        additionalImages: additionalImageUrls,
+        totalImages: (mainImageUrl ? 1 : 0) + additionalImageUrls.length,
+      }
+
+      const { data: session } = await supabase.auth.getSession()
+      const profileId = session.session?.user?.id || null
+
+      const { error: insertError } = await supabase.from("services").insert({
+        profile_id: profileId,
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        tags: formData.tags,
+        images,
+        packages: packagesClean,
+        faqs: faqsClean,
+        total_packages: packagesClean.length,
+        total_faqs: faqsClean.length,
+      })
+
+      if (insertError) throw new Error(insertError.message)
+
+      setIsSuccessOpen(true)
+    } catch (error: any) {
+      setError(error?.message || "حدث خطأ أثناء إنشاء المنتج الرقمي")
     } finally {
       setIsLoading(false)
     }
@@ -401,41 +502,55 @@ function CreateDigitalProductForm() {
                 <div>
                   <Label className="text-sm font-medium mb-2 block">الصورة الرئيسية *</Label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                    {formData.mainImage ? (
+                    {formData.mainImageUrl ? (
                       <div className="space-y-2">
                         <div className="w-32 h-32 mx-auto bg-gray-100 rounded-lg overflow-hidden">
                           <img
-                            src={URL.createObjectURL(formData.mainImage) || "/placeholder.svg"}
+                            src={formData.mainImageUrl || "/placeholder.svg"}
                             alt="Main preview"
                             className="w-full h-full object-cover"
                           />
                         </div>
-                        <p className="text-sm text-gray-600">{formData.mainImage.name}</p>
+                        <p className="text-sm text-gray-600 truncate">{formData.mainImageUrl}</p>
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => setFormData((prev) => ({ ...prev, mainImage: null }))}
+                          onClick={() => setFormData((prev) => ({ ...prev, mainImageUrl: null }))}
                         >
                           إزالة
                         </Button>
                       </div>
                     ) : (
-                      <div>
+                      <div
+                        className="cursor-pointer"
+                        onClick={() => {
+                          console.log("[ui] dropzone main clicked")
+                          mainImageInputRef.current?.click()
+                        }}
+                      >
                         <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                         <p className="text-gray-600 mb-2">اختر الصورة الرئيسية للمنتج</p>
                         <p className="text-sm text-gray-500">PNG, JPG حتى 10MB</p>
                         <input
+                          ref={mainImageInputRef}
                           type="file"
                           accept="image/*"
                           onChange={handleMainImageChange}
+                          onInput={handleMainImageChange}
                           className="hidden"
-                          id="main-image"
                         />
-                        <Button type="button" variant="outline" className="mt-4 bg-transparent" asChild>
-                          <label htmlFor="main-image" className="cursor-pointer">
-                            اختر الصورة الرئيسية
-                          </label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="mt-4 bg-transparent"
+                          disabled={isUploading}
+                          onClick={() => {
+                            console.log("[ui] main trigger clicked")
+                            mainImageInputRef.current?.click()
+                          }}
+                        >
+                          {isUploading ? "جاري الرفع..." : "اختر الصورة الرئيسية"}
                         </Button>
                       </div>
                     )}
@@ -448,33 +563,40 @@ function CreateDigitalProductForm() {
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
                       <p className="text-gray-600 mb-2">أضف صور إضافية (حتى 5 صور)</p>
                       <input
+                        ref={additionalImagesInputRef}
                         type="file"
                         accept="image/*"
                         multiple
                         onChange={handleAdditionalImagesChange}
+                        onInput={handleAdditionalImagesChange}
                         className="hidden"
-                        id="additional-images"
                       />
-                      <Button type="button" variant="outline" size="sm" asChild>
-                        <label htmlFor="additional-images" className="cursor-pointer">
-                          <Plus className="w-4 h-4 mr-2" />
-                          إضافة صور
-                        </label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          console.log("[ui] gallery trigger clicked")
+                          additionalImagesInputRef.current?.click()
+                        }}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        إضافة صور
                       </Button>
                     </div>
 
-                    {formData.additionalImages.length > 0 && (
+                    {formData.additionalImageUrls.length > 0 && (
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {formData.additionalImages.map((image, index) => (
+                        {formData.additionalImageUrls.map((imageUrl, index) => (
                           <div key={index} className="relative border rounded-lg p-2">
                             <div className="w-full h-24 bg-gray-100 rounded overflow-hidden mb-2">
                               <img
-                                src={URL.createObjectURL(image) || "/placeholder.svg"}
-                                alt={`Additional preview ${index + 1}`}
+                                src={imageUrl || "/placeholder.svg"}
+                                alt={`Additional image ${index + 1}`}
                                 className="w-full h-full object-cover"
                               />
                             </div>
-                            <p className="text-xs text-gray-600 truncate">{image.name}</p>
+                            <p className="text-xs text-gray-600 truncate">{imageUrl}</p>
                             <Button
                               type="button"
                               variant="outline"
@@ -744,12 +866,49 @@ function CreateDigitalProductForm() {
                 <Save className="w-4 h-4 mr-2" />
                 حفظ كمسودة
               </Button>
-              <Button type="submit" disabled={isLoading} className="btn-gradient text-white">
+              <Button type="submit" disabled={isLoading || isUploading} className="btn-gradient text-white">
                 {isLoading ? "جاري النشر..." : "نشر المنتج"}
                 <ArrowRight className="w-4 h-4 mr-2" />
               </Button>
             </div>
           </form>
+          <Dialog open={isSuccessOpen} onOpenChange={setIsSuccessOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>تم إنشاء الخدمة بنجاح</DialogTitle>
+                <DialogDescription>يمكنك الرجوع للوحة التحكم أو إضافة خدمة أخرى.</DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    // reset form for another entry
+                    setFormData({
+                      title: "",
+                      description: "",
+                      category: "",
+                      tags: [],
+                      mainImage: null,
+                      additionalImages: [],
+                      mainImageUrl: null,
+                      additionalImageUrls: [],
+                      platforms: [],
+                      systemRequirements: { web: "", mobile: "", desktop: "" },
+                      packages: [
+                        { name: "الباقة الأساسية", price: "", duration: "", users: "", features: [""] },
+                      ],
+                      faqs: [{ question: "", answer: "" }],
+                    })
+                    setIsSuccessOpen(false)
+                  }}
+                >
+                  إضافة خدمة أخرى
+                </Button>
+                <Button type="button" onClick={() => router.push("/dashboard")}>الذهاب للوحة التحكم</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
       <Footer />

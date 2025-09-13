@@ -9,6 +9,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -18,13 +19,14 @@ import { useAuth } from "@/contexts/auth-context"
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
-    name: "",
+    display_name: "",
     email: "",
     password: "",
     confirmPassword: "",
-    userType: "" as "buyer" | "seller" | "",
+    role: "" as "buyer" | "seller" | "",
     phone: "",
     location: "",
+    bio: "",
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -37,7 +39,7 @@ export default function RegisterPage() {
     e.preventDefault()
     setError("")
 
-    if (!formData.name || !formData.email || !formData.password || !formData.userType) {
+    if (!formData.display_name || !formData.email || !formData.password || !formData.role) {
       setError("يرجى ملء جميع الحقول المطلوبة")
       return
     }
@@ -58,12 +60,13 @@ export default function RegisterPage() {
     }
 
     const success = await register({
-      name: formData.name,
+      display_name: formData.display_name,
       email: formData.email,
       password: formData.password,
-      userType: formData.userType,
+      role: formData.role,
       phone: formData.phone,
       location: formData.location,
+      bio: formData.bio,
     })
 
     if (success) {
@@ -102,17 +105,17 @@ export default function RegisterPage() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-sm font-medium">
-                  الاسم الكامل *
+                <Label htmlFor="display_name" className="text-sm font-medium">
+                  الاسم المعروض *
                 </Label>
                 <div className="relative">
                   <User className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <Input
-                    id="name"
+                    id="display_name"
                     type="text"
-                    value={formData.name}
-                    onChange={(e) => updateFormData("name", e.target.value)}
-                    placeholder="أدخل اسمك الكامل"
+                    value={formData.display_name}
+                    onChange={(e) => updateFormData("display_name", e.target.value)}
+                    placeholder="أدخل اسمك المعروض"
                     className="pr-10 h-12"
                     required
                   />
@@ -138,10 +141,10 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="userType" className="text-sm font-medium">
+                <Label htmlFor="role" className="text-sm font-medium">
                   نوع الحساب *
                 </Label>
-                <Select value={formData.userType} onValueChange={(value) => updateFormData("userType", value)}>
+                <Select value={formData.role} onValueChange={(value) => updateFormData("role", value)}>
                   <SelectTrigger className="h-12">
                     <SelectValue placeholder="اختر نوع حسابك" />
                   </SelectTrigger>
@@ -202,6 +205,20 @@ export default function RegisterPage() {
                     </button>
                   </div>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bio" className="text-sm font-medium">
+                  نبذة عنك
+                </Label>
+                <Textarea
+                  id="bio"
+                  value={formData.bio}
+                  onChange={(e) => updateFormData("bio", e.target.value)}
+                  placeholder="اكتب نبذة مختصرة عنك..."
+                  rows={3}
+                  className="h-20"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
