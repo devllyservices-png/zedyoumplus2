@@ -34,6 +34,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>
   register: (userData: RegisterData) => Promise<boolean>
   logout: () => Promise<void>
+  refreshProfile: () => Promise<void>
+  refreshSession: () => Promise<void>
   isLoading: boolean
   hasPermission: (resource: string, action: 'create' | 'read' | 'update' | 'delete') => boolean
 }
@@ -60,11 +62,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const getSession = async () => {
       try {
+        console.log('Checking session...')
         const response = await fetch("/api/profile/me", {
           credentials: 'include', // Important for cookies
         })
+        
+        console.log('Session check response:', response.status)
+        
         if (response.ok) {
           const data = await response.json()
+          console.log('Session data:', data)
           setUser(data.user)
           setProfile(data.profile)
           
@@ -73,11 +80,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const userPermissions = getPermissionsForRole(data.user.role)
             setPermissions(userPermissions)
           }
+        } else if (response.status === 401) {
+          console.log('Session expired, clearing data')
+          // Clear any stale data on unauthorized
+          setUser(null)
+          setProfile(null)
+          setPermissions({})
         } else {
           console.log("No valid session found")
         }
       } catch (error) {
         console.error("Session check error:", error)
+        // On error, clear any stale data
+        setUser(null)
+        setProfile(null)
+        setPermissions({})
       } finally {
         setIsLoading(false)
       }
@@ -122,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string; suspended?: boolean }> => {
     setIsLoading(true)
     try {
       const response = await fetch("/api/auth/login", {
@@ -134,9 +151,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ email, password }),
       })
 
-      if (!response.ok) return false
-
       const data = await response.json()
+
+      if (!response.ok) {
+        return { 
+          success: false, 
+          error: data.error || "حدث خطأ في تسجيل الدخول",
+          suspended: data.suspended || false
+        }
+      }
+
       if (data.success) {
         setUser(data.user)
         setProfile(data.profile)
@@ -147,12 +171,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setPermissions(userPermissions)
         }
         
-        return true
+        return { success: true, user: data.user }
       }
-      return false
+      return { success: false, error: data.error || "حدث خطأ في تسجيل الدخول" }
     } catch (error) {
       console.error("Login error:", error)
-      return false
+      return { success: false, error: "حدث خطأ في الاتصال" }
     } finally {
       setIsLoading(false)
     }
@@ -186,12 +210,75 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const refreshProfile = async () => {
+    if (!user) return
+    
+    try {
+      const response = await fetch("/api/profile/me", {
+        credentials: 'include',
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setProfile(data.profile)
+      }
+    } catch (error) {
+      console.error("Profile refresh error:", error)
+    }
+  }
+
+  const refreshSession = async () => {
+    try {
+      const response = await fetch("/api/profile/me", {
+        credentials: 'include',
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setUser(data.user)
+        setProfile(data.profile)
+        
+        // Load permissions based on user role
+        if (data.user?.role) {
+          const userPermissions = getPermissionsForRole(data.user.role)
+          setPermissions(userPermissions)
+        }
+      } else if (response.status === 401) {
+        // Clear any stale data on unauthorized
+        setUser(null)
+        setProfile(null)
+        setPermissions({})
+      }
+    } catch (error) {
+      console.error("Session refresh error:", error)
+      // On error, clear any stale data
+      setUser(null)
+      setProfile(null)
+      setPermissions({})
+    }
+  }
+
   const logout = async () => {
-    // Clear the auth cookie by setting it to expire
-    document.cookie = "auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
-    setUser(null)
-    setProfile(null)
-    setPermissions({})
+    try {
+      // Call logout API to properly clear server-side session
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: 'include',
+      })
+    } catch (error) {
+      console.error("Logout API error:", error)
+    } finally {
+      // Clear client-side state regardless of API call result
+      setUser(null)
+      setProfile(null)
+      setPermissions({})
+      
+      // Also clear the cookie on client side as backup
+      document.cookie = "auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+      
+      // Redirect to login page
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login'
+      }
+    }
   }
 
   const hasPermission = (resource: string, action: 'create' | 'read' | 'update' | 'delete'): boolean => {
@@ -199,7 +286,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, login, register, logout, isLoading, hasPermission }}>
+    <AuthContext.Provider value={{ user, profile, login, register, logout, refreshProfile, refreshSession, isLoading, hasPermission }}>
       {children}
     </AuthContext.Provider>
   )

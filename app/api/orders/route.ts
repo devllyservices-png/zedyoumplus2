@@ -1,8 +1,40 @@
+
 import { NextRequest, NextResponse } from "next/server"
 import { supabase } from "@/lib/supabaseClient"
 import jwt from "jsonwebtoken"
+import { put } from "@vercel/blob"
+import sharp from "sharp"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
+
+// Image optimization function with fallback
+async function convertImageToPreferredFormat(input: Buffer, contentType: string): Promise<{ data: Buffer; contentType: string; extension: string }> {
+  // Only optimize image files, not PDFs
+  if (!contentType.startsWith('image/')) {
+    return { data: input, contentType, extension: contentType.split('/')[1] || 'bin' }
+  }
+
+  // Try to use Sharp for optimization, fallback to original if not available
+  try {
+    const sharp = require('sharp')
+    const image = sharp(input, { failOn: "none" })
+    const isLarge = input.byteLength > 1_500_000
+    const quality = isLarge ? 65 : 75
+
+    try {
+      const avifBuffer = await image.avif({ quality }).toBuffer()
+      return { data: avifBuffer, contentType: "image/avif", extension: "avif" }
+    } catch {
+      const webpBuffer = await sharp(input, { failOn: "none" }).webp({ quality }).toBuffer()
+      return { data: webpBuffer, contentType: "image/webp", extension: "webp" }
+    }
+  } catch (sharpError) {
+    console.warn('Sharp not available, using original file:', sharpError.message)
+    // Fallback to original file if Sharp is not available
+    const extension = contentType.split('/')[1] || 'bin'
+    return { data: input, contentType, extension }
+  }
+}
 
 async function getCurrentUser(request: NextRequest) {
   const token = request.cookies.get("auth-token")?.value
@@ -27,91 +59,234 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData()
     const serviceId = formData.get("service_id") as string
+    const productId = formData.get("product_id") as string
     const packageId = formData.get("package_id") as string
     const sellerId = formData.get("seller_id") as string
     const amount = parseFloat(formData.get("amount") as string)
     const paymentMethod = formData.get("payment_method") as string
     const paymentProof = formData.get("payment_proof") as File | null
+    const additionalNotes = formData.get("additional_notes") as string
 
-    // Validate required fields
-    if (!serviceId || !packageId || !sellerId || !amount || !paymentMethod) {
+    // Validate required fields - either service or product must be provided
+    if ((!serviceId && !productId) || !amount) {
       return NextResponse.json({ 
-        error: 'جميع الحقول مطلوبة' 
+        error: 'معرف الخدمة أو المنتج والمبلغ مطلوبان' 
       }, { status: 400 })
     }
 
-    // Get seller ID from service
-    const { data: service, error: serviceError } = await supabase
-      .from('services')
-      .select('seller_id')
-      .eq('id', serviceId)
-      .single()
-
-    if (serviceError || !service) {
-      return NextResponse.json({ error: 'الخدمة غير موجودة' }, { status: 404 })
+    // If service order, package is required
+    if (serviceId && !packageId) {
+      return NextResponse.json({ 
+        error: 'معرف الباقة مطلوب للخدمات' 
+      }, { status: 400 })
     }
 
-    // Create order
+    // Validate payment method
+    if (!paymentMethod) {
+      return NextResponse.json({ 
+        error: 'طريقة الدفع مطلوبة' 
+      }, { status: 400 })
+    }
+
+    // Validate payment proof for methods that require it
+    if ((paymentMethod === "bank_transfer" || paymentMethod === "card_payment") && !paymentProof) {
+      return NextResponse.json({ 
+        error: 'إيصال الدفع مطلوب لهذه الطريقة' 
+      }, { status: 400 })
+    }
+
+    let finalSellerId = sellerId
+    let finalAmount = amount
+
+    // Handle service orders
+    if (serviceId) {
+      const { data: service, error: serviceError } = await supabase
+        .from('services')
+        .select('id, seller_id, title')
+        .eq('id', serviceId)
+        .single()
+
+      if (serviceError || !service) {
+        console.error('Service not found:', serviceError)
+        return NextResponse.json({ error: 'الخدمة غير موجودة' }, { status: 404 })
+      }
+
+      // Verify the package exists and belongs to the service
+      const { data: packageData, error: packageError } = await supabase
+        .from('service_packages')
+        .select('id, name, price, service_id')
+        .eq('id', packageId)
+        .eq('service_id', serviceId)
+        .single()
+
+      if (packageError || !packageData) {
+        console.error('Package not found or does not belong to service:', packageError)
+        return NextResponse.json({ error: 'الباقة غير موجودة أو لا تنتمي لهذه الخدمة' }, { status: 404 })
+      }
+
+      finalSellerId = service.seller_id
+      finalAmount = packageData.price
+    }
+
+    // Handle product orders
+    if (productId) {
+      const { data: product, error: productError } = await supabase
+        .from('digital_products')
+        .select('id, seller_id, title, price')
+        .eq('id', productId)
+        .single()
+
+      if (productError || !product) {
+        console.error('Product not found:', productError)
+        return NextResponse.json({ error: 'المنتج غير موجود' }, { status: 404 })
+      }
+
+      finalSellerId = product.seller_id
+      finalAmount = product.price
+    }
+
+    // Create order with all details
+    const orderData = {
+      buyer_id: user.userId,
+      seller_id: finalSellerId,
+      service_id: serviceId || null,
+      product_id: productId || null,
+      package_id: packageId || null,
+      amount: finalAmount,
+      status: 'pending',
+      payment_method: paymentMethod,
+      additional_notes: additionalNotes || null
+    }
+
+    console.log('Creating order with data:', orderData)
+
     const { data: order, error: orderError } = await supabase
       .from('orders')
-      .insert({
-        buyer_id: user.userId,
-        seller_id: service.seller_id,
-        service_id: serviceId,
-        package_id: packageId,
-        amount: amount,
-        status: 'pending'
-      })
+      .insert(orderData)
       .select()
       .single()
 
     if (orderError) {
       console.error('Error creating order:', orderError)
-      return NextResponse.json({ error: 'فشل في إنشاء الطلب' }, { status: 500 })
+      console.error('Order data that failed:', orderData)
+      
+      // Provide more specific error messages
+      if (orderError.code === '23505') {
+        return NextResponse.json({ error: 'الطلب موجود مسبقاً' }, { status: 409 })
+      } else if (orderError.code === '23503') {
+        return NextResponse.json({ error: 'الخدمة أو الباقة غير موجودة' }, { status: 400 })
+      } else if (orderError.code === '23514') {
+        return NextResponse.json({ error: 'قيمة غير صحيحة في أحد الحقول' }, { status: 400 })
+      } else {
+        return NextResponse.json({ 
+          error: 'فشل في إنشاء الطلب: ' + (orderError.message || 'خطأ غير معروف'),
+          details: orderError
+        }, { status: 500 })
+      }
     }
 
+    // Log order creation on server
+    console.log('=== NEW ORDER CREATED ===')
+    console.log('Order ID:', order.id)
+    console.log('Buyer ID:', order.buyer_id)
+    console.log('Seller ID:', order.seller_id)
+    console.log('Service ID:', order.service_id)
+    console.log('Product ID:', order.product_id)
+    console.log('Package ID:', order.package_id)
+    console.log('Amount:', order.amount)
+    console.log('Payment Method:', paymentMethod)
+    console.log('Status:', order.status)
+    console.log('Additional Notes:', additionalNotes)
+    console.log('Created At:', order.created_at)
+    console.log('========================')
+
     // Handle payment proof upload if provided
+    let paymentProofUrl = null
     if (paymentProof && paymentProof.size > 0) {
       try {
-        // Upload payment proof to Supabase Storage
-        const fileName = `payment-proofs/${order.id}/${paymentProof.name}`
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('payment-proofs')
-          .upload(fileName, paymentProof)
+        console.log('Processing payment proof upload...')
+        console.log('Original file:', {
+          name: paymentProof.name,
+          size: paymentProof.size,
+          type: paymentProof.type
+        })
 
-        if (uploadError) {
-          console.error('Error uploading payment proof:', uploadError)
-          // Continue without payment proof
+        // Convert File to Buffer
+        const arrayBuffer = await paymentProof.arrayBuffer()
+        const inputBuffer = Buffer.from(arrayBuffer)
+
+        // Use the same optimization logic as upload API
+        const { data: optimizedBuffer, contentType: finalMimeType, extension } = await convertImageToPreferredFormat(inputBuffer, paymentProof.type)
+        
+        // Generate filename with proper extension
+        const timestamp = Date.now()
+        const fileName = `payment-proofs/${order.id}-${timestamp}.${extension}`
+        
+        console.log('File processed:', {
+          originalSize: inputBuffer.length,
+          optimizedSize: optimizedBuffer.length,
+          originalType: paymentProof.type,
+          finalType: finalMimeType,
+          extension
+        })
+
+        // Calculate size reduction for images
+        if (paymentProof.type.startsWith('image/')) {
+          const sizeReduction = ((inputBuffer.length - optimizedBuffer.length) / inputBuffer.length * 100).toFixed(1)
+          const sizeReductionKB = ((inputBuffer.length - optimizedBuffer.length) / 1024).toFixed(1)
+          console.log(`🖼️ Image optimized: ${(inputBuffer.length / 1024).toFixed(1)}KB → ${(optimizedBuffer.length / 1024).toFixed(1)}KB (${sizeReduction}% reduction, saved ${sizeReductionKB}KB)`)
         } else {
-          // Update order with payment proof URL
-          const { data: publicUrl } = supabase.storage
-            .from('payment-proofs')
-            .getPublicUrl(fileName)
+          console.log('📄 PDF file - no optimization needed')
+        }
 
-          await supabase
-            .from('orders')
-            .update({ 
-              payment_proof_url: publicUrl.publicUrl,
-              payment_method: paymentMethod
+        // Upload to Vercel Blob (same as existing upload system)
+        const token = process.env.BLOB_READ_WRITE_TOKEN
+        if (!token) {
+          console.error('Missing BLOB_READ_WRITE_TOKEN for payment proof upload')
+        } else {
+          try {
+            const { url } = await put(fileName, optimizedBuffer, {
+              access: "public",
+              contentType: finalMimeType,
+              token,
             })
-            .eq('id', order.id)
+
+            paymentProofUrl = url
+
+            // Update order with payment proof URL
+            const { error: updateError } = await supabase
+              .from('orders')
+              .update({ payment_proof_url: paymentProofUrl })
+              .eq('id', order.id)
+
+            if (updateError) {
+              console.error('Error updating order with payment proof URL:', updateError)
+            } else {
+              console.log('Payment proof uploaded successfully:', {
+                url: paymentProofUrl,
+                fileName,
+                mimeType: finalMimeType,
+                size: optimizedBuffer.length
+              })
+            }
+          } catch (uploadError) {
+            console.error('Error uploading payment proof to Vercel Blob:', uploadError)
+            // Continue without payment proof - don't fail the order
+          }
         }
       } catch (uploadErr) {
-        console.error('Error handling payment proof:', uploadErr)
-        // Continue without payment proof
+        console.error('Error handling payment proof upload:', uploadErr)
+        // Continue without payment proof - don't fail the order
       }
-    } else {
-      // Update order with payment method only
-      await supabase
-        .from('orders')
-        .update({ payment_method: paymentMethod })
-        .eq('id', order.id)
     }
 
     return NextResponse.json({
       success: true,
       message: 'تم إنشاء الطلب بنجاح',
-      order
+      order: {
+        ...order,
+        payment_proof_url: paymentProofUrl
+      }
     })
 
   } catch (error) {

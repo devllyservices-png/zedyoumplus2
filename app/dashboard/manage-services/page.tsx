@@ -267,7 +267,7 @@ async function getServices() {
                   }`}
                 />
                 {service.featured && <Badge className="absolute top-3 right-3 bg-red-500 text-white">مميز</Badge>}
-                <button className="absolute top-3 left-3 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors">
+                <button className="absolute top-3 left-3 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors cursor-pointer">
                   <Heart className="w-4 h-4 text-gray-600" />
                 </button>
               </div>

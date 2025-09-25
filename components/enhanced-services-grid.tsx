@@ -329,7 +329,7 @@ export default function EnhancedServicesGrid({
               return (
                 <button
                   key={pageNum}
-                  className={`w-8 h-8 rounded-full transition-all duration-300 text-sm font-medium ${
+                  className={`w-8 h-8 rounded-full transition-all duration-300 text-sm font-medium cursor-pointer ${
                     currentPage === pageNum
                       ? "bg-blue-600 text-white scale-110"
                       : "bg-gray-200 hover:bg-gray-300 text-gray-700"

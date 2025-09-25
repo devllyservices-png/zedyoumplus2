@@ -10,14 +10,29 @@ import { CheckCircle, Home, Download, MessageCircle, Calendar, Package, Sparkles
 import { Footer } from "@/components/footer"
 
 export default function CheckoutSuccessPage() {
-  const params = useParams()
   const router = useRouter()
   const [showConfetti, setShowConfetti] = useState(true)
+  const [orderData, setOrderData] = useState({
+    orderId: '',
+    serviceTitle: '',
+    packageName: '',
+    price: ''
+  })
+  const [isLoading, setIsLoading] = useState(true)
 
-  const orderId = params.orderId as string | undefined
-  const serviceTitle = params.serviceTitle as string | undefined
-  const packageName = params.package as string | undefined
-  const price = params.price as string | undefined
+  // Get URL parameters from query string
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search)
+      setOrderData({
+        orderId: searchParams.get('orderId') || '',
+        serviceTitle: searchParams.get('serviceTitle') || '',
+        packageName: searchParams.get('package') || '',
+        price: searchParams.get('price') || ''
+      })
+      setIsLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     // Hide confetti after 5 seconds
@@ -44,6 +59,17 @@ export default function CheckoutSuccessPage() {
       )
     }
     return confettiElements
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">جاري تحميل تفاصيل الطلب...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -83,21 +109,25 @@ export default function CheckoutSuccessPage() {
                     </div>
                     <div>
                       <h2 className="text-2xl font-bold text-gray-900">تفاصيل الطلب</h2>
-                      <p className="text-gray-600">رقم الطلب: #{orderId}</p>
+                      <p className="text-gray-600">رقم الطلب: #{orderData.orderId}</p>
                     </div>
                   </div>
 
                   <div className="space-y-6">
                     <div>
                       <h3 className="font-semibold text-gray-900 mb-2">الخدمة المطلوبة:</h3>
-                      <p className="text-gray-700 text-lg">{decodeURIComponent(serviceTitle || "")}</p>
+                      <p className="text-gray-700 text-lg">
+                        {orderData.serviceTitle ? decodeURIComponent(orderData.serviceTitle) : "خدمة مطلوبة"}
+                      </p>
                     </div>
 
                     <div className="flex items-center gap-4">
                       <Badge className="gradient-bg text-white border-0 px-4 py-2 text-sm">
-                        {decodeURIComponent(packageName || "")}
+                        {orderData.packageName ? decodeURIComponent(orderData.packageName) : "الباقة المختارة"}
                       </Badge>
-                      <span className="text-2xl font-bold gradient-brand-text">{price} دج</span>
+                      <span className="text-2xl font-bold gradient-brand-text">
+                        {orderData.price || "0"} دج
+                      </span>
                     </div>
 
                     <div className="bg-green-50 border border-green-200 rounded-lg p-6">

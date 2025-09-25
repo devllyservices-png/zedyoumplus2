@@ -46,8 +46,8 @@ export default function OrderConfirmationDialog({
 
   const handleConfirmOrder = () => {
     setIsConfirming(true)
-    // Redirect to checkout page
-    window.location.href = `/checkout?service_id=${serviceId}&service=${encodeURIComponent(serviceTitle)}&package=${selectedPackage.id}&seller=${sellerId}&price=${selectedPackage.price}`
+    // Redirect to checkout page with correct parameters
+    window.location.href = `/checkout?serviceId=${serviceId}&package=${selectedPackage.name}&notes=&serviceTitle=${encodeURIComponent(serviceTitle)}&price=${selectedPackage.price}&sellerId=${sellerId}`
   }
 
   return (

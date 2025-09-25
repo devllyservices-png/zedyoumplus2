@@ -479,7 +479,7 @@ function CreateDigitalProductForm() {
                       {formData.tags.map((tag, index) => (
                         <Badge key={index} variant="secondary" className="flex items-center gap-1">
                           {tag}
-                          <button type="button" onClick={() => removeTag(tag)} className="hover:text-red-600">
+                          <button type="button" onClick={() => removeTag(tag)} className="hover:text-red-600 cursor-pointer">
                             <X className="w-3 h-3" />
                           </button>
                         </Badge>

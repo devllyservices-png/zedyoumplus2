@@ -18,7 +18,7 @@ import { Footer } from "@/components/footer"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export default function ProfileSettingsPage() {
-  const { user, logout } = useAuth()
+  const { user, logout, refreshProfile } = useAuth()
   const { logAction } = useActivityLog()
   const router = useRouter()
   const [error, setError] = useState("")
@@ -116,6 +116,7 @@ export default function ProfileSettingsPage() {
       }
 
       await logAction("profile.update", { id: user.id })
+      await refreshProfile() // Refresh profile data in context
       setSuccess("تم حفظ بيانات الملف الشخصي بنجاح")
       setTimeout(() => setSuccess(""), 2500)
     } catch (e: any) {
@@ -271,7 +272,7 @@ export default function ProfileSettingsPage() {
                       {lang}
                       <button
                         onClick={() => setProfile((p) => ({ ...p, languages: p.languages?.filter((_, idx) => idx !== i) || [] }))}
-                        className="mr-1 text-red-500 hover:text-red-700 text-lg leading-none p-1 -m-1 touch-manipulation"
+                        className="mr-1 text-red-500 hover:text-red-700 text-lg leading-none p-1 -m-1 touch-manipulation cursor-pointer"
                         aria-label={`حذف ${lang}`}
                       >
                         ×

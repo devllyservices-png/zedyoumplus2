@@ -354,7 +354,7 @@ export function ServicesCarousel() {
               {Array.from({ length: Math.ceil(services.length / itemsPerView) }).map((_, index) => (
                 <button
                   key={index}
-                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                  className={`w-3 h-3 rounded-full transition-all duration-300 cursor-pointer ${
                     Math.floor(currentIndex / itemsPerView) === index
                       ? "bg-blue-600 scale-110"
                       : "bg-gray-300 hover:bg-gray-400"

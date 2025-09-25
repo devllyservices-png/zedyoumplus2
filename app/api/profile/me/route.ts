@@ -18,6 +18,7 @@ async function getCurrentUser(request: NextRequest) {
     return { userId: decoded.userId, email: decoded.email, role: decoded.role }
   } catch (error) {
     console.error("JWT verification failed:", error)
+    // If token is invalid, return null to force re-authentication
     return null
   }
 }

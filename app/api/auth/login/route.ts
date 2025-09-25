@@ -31,6 +31,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if account is suspended
+    if (user.suspended) {
+      return NextResponse.json(
+        { 
+          error: "تم تعليق حسابك. يرجى التواصل مع فريق الدعم على support@zedyoumplus.com للمساعدة",
+          suspended: true 
+        },
+        { status: 403 }
+      )
+    }
+
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password_hash)
     if (!isValidPassword) {
