@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabase } from "@/lib/supabaseClient"
 import jwt from "jsonwebtoken"
+import { NotificationTriggers } from "@/lib/notifications"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
 
@@ -54,7 +55,13 @@ export async function POST(request: NextRequest) {
     // Check if order exists and belongs to user
     const { data: order, error: orderError } = await supabase
       .from('orders')
-      .select('buyer_id, seller_id')
+      .select(`
+        buyer_id, 
+        seller_id,
+        amount,
+        services!orders_service_id_fkey(title),
+        digital_products!orders_product_id_fkey(title)
+      `)
       .eq('id', order_id)
       .single()
 
@@ -104,6 +111,22 @@ export async function POST(request: NextRequest) {
     if (paymentError) {
       console.error('Error creating payment:', paymentError)
       return NextResponse.json({ error: 'فشل في إنشاء سجل الدفع' }, { status: 500 })
+    }
+
+    // Trigger notification for payment received
+    try {
+      const serviceTitle = order.services?.title || order.digital_products?.title || 'خدمة غير محددة'
+      
+      await NotificationTriggers.onPaymentReceived({
+        orderId: parseInt(order_id),
+        buyerId: order.buyer_id,
+        sellerId: order.seller_id,
+        amount: order.amount,
+        serviceTitle
+      })
+    } catch (notificationError) {
+      console.error('Error sending notification for payment:', notificationError)
+      // Don't fail the payment creation if notifications fail
     }
 
     return NextResponse.json({

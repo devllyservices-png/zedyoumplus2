@@ -15,6 +15,7 @@ import {
   FileText,
   Video,
 } from "lucide-react"
+import { motion } from "framer-motion"
 
 const categories = [
   {
@@ -95,30 +96,41 @@ export function CategoriesSection() {
   return (
     <section className="py-16 lg:py-24 bg-gray-50">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          viewport={{ once: true, margin: "-100px" }}
+          className="text-center mb-12"
+        >
           <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">استكشف التصنيفات</h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             اكتشف مجموعة واسعة من الخدمات المتخصصة من أفضل المستقلين في الجزائر
           </p>
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 lg:gap-6">
-          {categories.map((category) => {
+          {categories.map((category, index) => {
             const IconComponent = category.icon
             return (
-              <Card
+              <motion.div
                 key={category.id}
-                className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl bg-white/70 backdrop-blur-sm border-0 shadow-lg"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.05, ease: "easeOut" }}
+                viewport={{ once: true, margin: "-50px" }}
               >
-                <CardContent className="p-6 text-center">
-                  <div
-                    className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${category.gradient} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}
-                  >
-                    <IconComponent className="w-8 h-8 text-white" />
-                  </div>
-                  <h3 className="font-bold text-gray-900 text-sm lg:text-base leading-tight">{category.name}</h3>
-                </CardContent>
-              </Card>
+                <Card className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl bg-white/70 backdrop-blur-sm border-0 shadow-lg">
+                  <CardContent className="p-6 text-center">
+                    <div
+                      className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${category.gradient} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}
+                    >
+                      <IconComponent className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="font-bold text-gray-900 text-sm lg:text-base leading-tight">{category.name}</h3>
+                  </CardContent>
+                </Card>
+              </motion.div>
             )
           })}
         </div>

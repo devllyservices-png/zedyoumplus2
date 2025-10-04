@@ -220,22 +220,55 @@ export default function AdminDashboard() {
 
   const handleOrderStatusChange = async (orderId: string, newStatus: string) => {
     try {
+      console.log('=== ADMIN DASHBOARD: CHANGING ORDER STATUS ===')
+      console.log('Order ID:', orderId)
+      console.log('New Status:', newStatus)
+      
       const response = await fetch(`/api/admin/orders/${orderId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
       })
 
+      console.log('Response status:', response.status)
+      console.log('Response ok:', response.ok)
+
       if (response.ok) {
+        const result = await response.json()
+        console.log('Response data:', result)
+        
         // Update local state
         setOrders(orders.map(order => 
           order.id === orderId 
             ? { ...order, status: newStatus }
             : order
         ))
+        
+        console.log('Order status updated successfully')
+      } else {
+        const errorData = await response.json()
+        console.error('Error response:', errorData)
       }
     } catch (error) {
       console.error('Error updating order status:', error)
+    }
+  }
+
+  const testNotification = async () => {
+    try {
+      console.log('Testing notification system...')
+      const response = await fetch('/api/test-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ testType: 'direct' })
+      })
+
+      const result = await response.json()
+      console.log('Test notification result:', result)
+      alert(result.message)
+    } catch (error) {
+      console.error('Error testing notification:', error)
+      alert('Error testing notification')
     }
   }
 
@@ -430,7 +463,15 @@ export default function AdminDashboard() {
           <TabsContent value="orders">
             <Card className="bg-gray-800 border-gray-700">
               <CardHeader>
-                <CardTitle className="text-white">إدارة الطلبات</CardTitle>
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-white">إدارة الطلبات</CardTitle>
+                  <button
+                    onClick={testNotification}
+                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                  >
+                    اختبار الإشعارات
+                  </button>
+                </div>
               </CardHeader>
               <CardContent>
                 {/* Mobile Cards View */}

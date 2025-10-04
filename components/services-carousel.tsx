@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ChevronLeft, ChevronRight, Star, Clock, Shield, ShoppingCart } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { motion } from "framer-motion"
 
 interface ServiceWithSeller {
   id: string
@@ -186,23 +187,30 @@ export function ServicesCarousel() {
           
           {/* Services Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-500 ease-in-out">
-            {visibleServices.map((service) => {
+            {visibleServices.map((service, index) => {
               const firstPackage = service.service_packages?.[0]
               const price = firstPackage?.price || 0
               const delivery = firstPackage?.delivery_time || "غير محدد"
               const seller = service.seller_profile
 
               return (
-                <Card key={service.id} className="group border-0 shadow-xl bg-white/80 backdrop-blur-sm hover:shadow-2xl transition-all duration-500 ease-in-out overflow-hidden pt-0 animate-in fade-in-0 slide-in-from-bottom-4">
-                  {/* Service Image */}
-                  <div className="relative">
-                    <Image
-                      src={service.primary_image || "/placeholder.svg"}
-                      alt={service.title}
-                      width={300}
-                      height={200}
-                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+                <motion.div
+                  key={service.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1, ease: "easeOut" }}
+                >
+                  <Link href={`/services/${service.id}`}>
+                    <Card className="group border-0 shadow-xl bg-white/80 backdrop-blur-sm hover:shadow-2xl transition-all duration-500 ease-in-out overflow-hidden pt-0 cursor-pointer">
+                    {/* Service Image */}
+                    <div className="relative">
+                      <Image
+                        src={service.primary_image || "/placeholder.svg"}
+                        alt={service.title}
+                        width={300}
+                        height={250}
+                        className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
                     <div className="absolute top-3 left-3">
                       <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0">
                         {service.category}
@@ -211,6 +219,10 @@ export function ServicesCarousel() {
                     <div className="absolute top-3 right-3 flex items-center gap-1 bg-black/50 text-white px-2 py-1 rounded-full text-sm">
                       <Star className="w-3 h-3 fill-current" />
                       <span>{service.average_rating.toFixed(1)}</span>
+                    </div>
+                    {/* Price Badge */}
+                    <div className="absolute bottom-3 right-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                      يبدأ من {price} دج
                     </div>
                   </div>
 
@@ -310,25 +322,14 @@ export function ServicesCarousel() {
                     </div>
 
                     {/* Service Details */}
-                    <div className="flex items-center gap-2 mb-4 text-gray-600">
+                    <div className="flex items-center gap-2 text-gray-600">
                       <Clock className="w-4 h-4" />
                       <span className="text-sm">{delivery}</span>
                     </div>
-
-                    {/* Price and Order Button */}
-                    <div className="flex items-center justify-between">
-                      <div className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                        ${price} دج
-                      </div>
-                      <Link href={`/services/${service.id}`}>
-                        <Button className="btn-gradient text-white px-4 py-2 text-sm rounded-lg flex items-center gap-1">
-                          <ShoppingCart className="w-3 h-3" />
-                          طلب الآن
-                        </Button>
-                      </Link>
-                    </div>
                   </CardContent>
-                </Card>
+                    </Card>
+                  </Link>
+                </motion.div>
               )
             })}
           </div>

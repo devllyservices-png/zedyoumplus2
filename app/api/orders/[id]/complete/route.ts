@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabase } from "@/lib/supabaseClient"
 import jwt from "jsonwebtoken"
+import { NotificationTriggers } from "@/lib/notifications"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
 
@@ -36,7 +37,14 @@ export async function PATCH(
     // First, verify that this order belongs to the seller
     const { data: order, error: orderError } = await supabase
       .from('orders')
-      .select('id, seller_id, status')
+      .select(`
+        id, 
+        seller_id, 
+        buyer_id,
+        status,
+        services!orders_service_id_fkey(title),
+        digital_products!orders_product_id_fkey(title)
+      `)
       .eq('id', orderId)
       .single()
 
@@ -61,6 +69,22 @@ export async function PATCH(
     if (updateError) {
       console.error('Error updating order status:', updateError)
       return NextResponse.json({ error: "Failed to update order status" }, { status: 500 })
+    }
+
+    // Trigger notification for order completion
+    try {
+      const serviceTitle = order.services?.title || order.digital_products?.title || 'خدمة غير محددة'
+      
+      await NotificationTriggers.onOrderStatusChange({
+        orderId: parseInt(orderId),
+        buyerId: order.buyer_id,
+        sellerId: order.seller_id,
+        newStatus: 'completed',
+        serviceTitle
+      })
+    } catch (notificationError) {
+      console.error('Error sending notification for order completion:', notificationError)
+      // Don't fail the order completion if notifications fail
     }
 
     return NextResponse.json({ 

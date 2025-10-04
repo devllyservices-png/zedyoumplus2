@@ -1,4 +1,7 @@
+"use client"
+
 import { Shield, Headphones, Globe, Award } from "lucide-react"
+import { motion } from "framer-motion"
 
 export function WhyChooseUs() {
   const features = [
@@ -27,20 +30,33 @@ export function WhyChooseUs() {
   return (
     <section className="py-20 gradient-brand">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          viewport={{ once: true, margin: "-100px" }}
+          className="text-center mb-16"
+        >
           <h2 className="text-4xl font-bold text-white mb-4">لماذا تختار منصتنا؟</h2>
           <p className="text-xl text-white/90 max-w-2xl mx-auto">نحن نقدم تجربة فريدة ومميزة للمستخدمين الجزائريين</p>
-        </div>
+        </motion.div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, index) => (
-            <div key={index} className="text-center group">
+            <motion.div 
+              key={index} 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: index * 0.1, ease: "easeOut" }}
+              viewport={{ once: true, margin: "-50px" }}
+              className="text-center group"
+            >
               <div className="w-20 h-20 mx-auto bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mb-6 group-hover:bg-white/30 transition-all duration-300">
                 <feature.icon className="w-10 h-10 text-white" />
               </div>
               <h3 className="text-xl font-bold text-white mb-4 leading-tight">{feature.title}</h3>
               <p className="text-white/80 leading-relaxed">{feature.description}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
 

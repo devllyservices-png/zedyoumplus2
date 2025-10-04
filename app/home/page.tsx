@@ -1,4 +1,4 @@
-import { Header } from "@/components/header"
+import { HomeHeader } from "@/components/home-header"
 import { HeroSection } from "@/components/hero-section"
 import { CategoriesSection } from "@/components/categories-section"
 import { HowItWorks } from "@/components/how-it-works"
@@ -12,7 +12,7 @@ import { Footer } from "@/components/footer"
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-white">
-      <Header />
+      <HomeHeader />
       <main>
         <HeroSection />
         <CategoriesSection />

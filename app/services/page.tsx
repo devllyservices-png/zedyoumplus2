@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -9,20 +9,22 @@ import { Search } from "lucide-react"
 import EnhancedServicesGrid from "@/components/enhanced-services-grid"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import { useSearchParams } from "next/navigation"
 
 const categories = [
   { value: "all", label: "جميع الفئات" },
-  { value: "web-development", label: "تطوير المواقع" },
-  { value: "mobile-development", label: "تطوير التطبيقات" },
   { value: "design", label: "التصميم" },
-  { value: "marketing", label: "التسويق" },
-  { value: "writing", label: "الكتابة" },
+  { value: "programming", label: "البرمجة" },
   { value: "translation", label: "الترجمة" },
-  { value: "video", label: "الفيديو" },
-  { value: "audio", label: "الصوت" },
-  { value: "business", label: "الأعمال" },
-  { value: "lifestyle", label: "نمط الحياة" },
-  { value: "other", label: "أخرى" }
+  { value: "marketing", label: "التسويق" },
+  { value: "education", label: "التعليم" },
+  { value: "audio", label: "الصوتيات" },
+  { value: "photography", label: "التصوير" },
+  { value: "illustration", label: "الرسم" },
+  { value: "mobile", label: "تطبيقات الجوال" },
+  { value: "seo", label: "تحسين محركات البحث" },
+  { value: "content", label: "كتابة المحتوى" },
+  { value: "video", label: "المونتاج والفيديو" }
 ]
 
 const sortOptions = [
@@ -35,9 +37,24 @@ const sortOptions = [
 ]
 
 export default function ServicesPage() {
+  const searchParams = useSearchParams()
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState<string | undefined>(undefined)
   const [sortBy, setSortBy] = useState("newest")
+
+  // Initialize state from URL parameters
+  useEffect(() => {
+    const searchParam = searchParams.get('search')
+    const categoryParam = searchParams.get('category')
+    
+    if (searchParam) {
+      setSearch(searchParam)
+    }
+    
+    if (categoryParam) {
+      setCategory(categoryParam)
+    }
+  }, [searchParams])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabase } from "@/lib/supabaseClient"
 import jwt from "jsonwebtoken"
+import { NotificationTriggers } from "@/lib/notifications"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
 
@@ -101,7 +102,7 @@ export async function POST(
     // Check if service exists
     const { data: service, error: serviceError } = await supabase
       .from('services')
-      .select('id, seller_id')
+      .select('id, seller_id, title')
       .eq('id', id)
       .single()
 
@@ -166,6 +167,20 @@ export async function POST(
           total_orders: allReviews.length
         })
         .eq('id', id)
+    }
+
+    // Trigger notification for new review
+    try {
+      await NotificationTriggers.onReviewReceived({
+        reviewId: review.id,
+        reviewerId: user.userId,
+        sellerId: service.seller_id,
+        rating: rating,
+        serviceTitle: service.title
+      })
+    } catch (notificationError) {
+      console.error('Error sending notification for new review:', notificationError)
+      // Don't fail the review creation if notifications fail
     }
 
     return NextResponse.json({

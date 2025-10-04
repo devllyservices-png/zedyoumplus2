@@ -6,6 +6,8 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Menu, X, Plus, User, LogOut, Bell, Settings } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
+import { useNotifications } from "@/contexts/notification-context"
+import { NotificationsModal } from "@/components/notifications-modal"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 
@@ -14,45 +16,9 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
+  const [showNotificationsModal, setShowNotificationsModal] = useState(false)
   const { user, profile, logout } = useAuth()
-
-  // Mock notification data
-  const notifications = [
-    {
-      id: 1,
-      title: "طلب جديد",
-      message: "لديك طلب جديد لخدمة تصميم شعار",
-      time: "منذ 5 دقائق",
-      type: "order",
-      unread: true
-    },
-    {
-      id: 2,
-      title: "تقييم جديد",
-      message: "حصلت على تقييم 5 نجوم من عميل",
-      time: "منذ ساعة",
-      type: "review",
-      unread: true
-    },
-    {
-      id: 3,
-      title: "رسالة جديدة",
-      message: "رسالة من عميل حول مشروعك",
-      time: "منذ 3 ساعات",
-      type: "message",
-      unread: false
-    },
-    {
-      id: 4,
-      title: "تحديث النظام",
-      message: "تم إضافة ميزات جديدة للمنصة",
-      time: "منذ يوم",
-      type: "system",
-      unread: false
-    }
-  ]
-
-  const unreadCount = notifications.filter(n => n.unread).length
+  const { notifications, unreadCount, markAsRead } = useNotifications()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -81,7 +47,7 @@ export function Header() {
       className={`sticky top-0 z-50 transition-all duration-300 ${
         isScrolled
           ? "bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-lg"
-          : "bg-white/95 backdrop-blur-sm border-b border-gray-100"
+          : "bg-transparent"
       }`}
     >
       <div className="container mx-auto px-4">
@@ -105,7 +71,7 @@ export function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-8 space-x-reverse">
+          <nav className="hidden lg:flex items-center gap-12">
             <Link
               href="/services"
               className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-300 relative group"
@@ -118,13 +84,6 @@ export function Header() {
               className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-300 relative group"
             >
               المنتجات الرقمية
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
-            </Link>
-            <Link
-              href="#categories"
-              className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-300 relative group"
-            >
-              التصنيفات
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
             </Link>
             <Link
@@ -185,6 +144,11 @@ export function Header() {
                         {notifications.map((notification) => (
                           <div
                             key={notification.id}
+                            onClick={() => {
+                              if (notification.unread) {
+                                markAsRead(notification.id)
+                              }
+                            }}
                             className={`px-4 py-3 hover:bg-gray-50 cursor-pointer border-r-4 ${
                               notification.unread 
                                 ? 'border-blue-500 bg-blue-50/30' 
@@ -215,7 +179,13 @@ export function Header() {
                       </div>
                       
                       <div className="px-4 py-2 border-t border-gray-100">
-                        <button className="text-sm text-blue-600 hover:text-blue-800 font-medium cursor-pointer">
+                        <button 
+                          onClick={() => {
+                            setShowNotifications(false)
+                            setShowNotificationsModal(true)
+                          }}
+                          className="text-sm text-blue-600 hover:text-blue-800 font-medium cursor-pointer"
+                        >
                           عرض جميع الإشعارات
                         </button>
                       </div>
@@ -338,6 +308,11 @@ export function Header() {
                       {notifications.map((notification) => (
                         <div
                           key={notification.id}
+                          onClick={() => {
+                            if (notification.unread) {
+                              markAsRead(notification.id)
+                            }
+                          }}
                           className={`px-4 py-3 hover:bg-gray-50 cursor-pointer border-r-4 ${
                             notification.unread 
                               ? 'border-blue-500 bg-blue-50/30' 
@@ -368,7 +343,13 @@ export function Header() {
                     </div>
                     
                     <div className="px-4 py-2 border-t border-gray-100">
-                      <button className="text-sm text-blue-600 hover:text-blue-800 font-medium cursor-pointer">
+                      <button 
+                        onClick={() => {
+                          setShowNotifications(false)
+                          setShowNotificationsModal(true)
+                        }}
+                        className="text-sm text-blue-600 hover:text-blue-800 font-medium cursor-pointer"
+                      >
                         عرض جميع الإشعارات
                       </button>
                     </div>
@@ -402,12 +383,6 @@ export function Header() {
                 className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-300"
               >
                 المنتجات الرقمية
-              </Link>
-              <Link
-                href="#categories"
-                className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-300"
-              >
-                التصنيفات
               </Link>
               <Link
                 href="#how-it-works"
@@ -515,6 +490,12 @@ export function Header() {
           </div>
         )}
       </div>
+
+      {/* Notifications Modal */}
+      <NotificationsModal 
+        isOpen={showNotificationsModal}
+        onClose={() => setShowNotificationsModal(false)}
+      />
     </header>
   )
 }

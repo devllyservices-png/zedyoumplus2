@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabaseClient"
 import jwt from "jsonwebtoken"
 import { put } from "@vercel/blob"
 import sharp from "sharp"
+import { NotificationTriggers } from "@/lib/notifications"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
 
@@ -199,6 +200,37 @@ export async function POST(request: NextRequest) {
     console.log('Additional Notes:', additionalNotes)
     console.log('Created At:', order.created_at)
     console.log('========================')
+
+    // Trigger notifications for new order
+    try {
+      // Get service/product title for notification
+      let serviceTitle = 'خدمة غير محددة'
+      if (serviceId) {
+        const { data: service } = await supabase
+          .from('services')
+          .select('title')
+          .eq('id', serviceId)
+          .single()
+        if (service) serviceTitle = service.title
+      } else if (productId) {
+        const { data: product } = await supabase
+          .from('digital_products')
+          .select('title')
+          .eq('id', productId)
+          .single()
+        if (product) serviceTitle = product.title
+      }
+
+      await NotificationTriggers.onNewOrder({
+        orderId: order.id,
+        buyerId: order.buyer_id,
+        sellerId: order.seller_id,
+        serviceTitle
+      })
+    } catch (notificationError) {
+      console.error('Error sending notifications for new order:', notificationError)
+      // Don't fail the order creation if notifications fail
+    }
 
     // Handle payment proof upload if provided
     let paymentProofUrl = null
