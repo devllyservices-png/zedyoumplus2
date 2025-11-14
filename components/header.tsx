@@ -10,6 +10,8 @@ import { useNotifications } from "@/contexts/notification-context"
 import { NotificationsModal } from "@/components/notifications-modal"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { useTranslation } from "@/lib/i18n/hooks/useTranslation"
+import { FlagIcon } from "@/components/flag-icon"
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -17,8 +19,10 @@ export function Header() {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [showNotificationsModal, setShowNotificationsModal] = useState(false)
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false)
   const { user, profile, logout } = useAuth()
   const { notifications, unreadCount, markAsRead } = useNotifications()
+  const { t, language, setLanguage } = useTranslation()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,10 +41,13 @@ export function Header() {
       if (showNotifications && !(event.target as Element).closest('.notification-menu')) {
         setShowNotifications(false)
       }
+      if (showLanguageMenu && !(event.target as Element).closest('.language-menu')) {
+        setShowLanguageMenu(false)
+      }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [showUserMenu, showNotifications])
+  }, [showUserMenu, showNotifications, showLanguageMenu])
 
   return (
     <header
@@ -56,14 +63,14 @@ export function Header() {
           <Link href="/" className="flex-shrink-0">
             <Image
               src="/images/logo-large.png"
-              alt="شعار المنصة"
+              alt={t.header.logoAlt}
               width={120}
               height={40}
               className="hidden md:block transition-all duration-300 hover:scale-105"
             />
             <Image
               src="/images/logo-small.png"
-              alt="شعار المنصة"
+              alt={t.header.logoAlt}
               width={40}
               height={40}
               className="md:hidden transition-all duration-300 hover:scale-105"
@@ -76,34 +83,100 @@ export function Header() {
               href="/services"
               className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-300 relative group"
             >
-              الخدمات
+              {t.header.nav.services}
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
             </Link>
             <Link
               href="/digital-products"
               className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-300 relative group"
             >
-              المنتجات الرقمية
+              {t.header.nav.digitalProducts}
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
             </Link>
             <Link
-              href="#how-it-works"
+              href="/how-it-works"
               className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-300 relative group"
             >
-              كيف تعمل المنصة
+              {t.header.nav.howItWorks}
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
             </Link>
             <Link
               href="/contact"
               className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-300 relative group"
             >
-              تواصل معنا
+              {t.header.nav.contact}
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
             </Link>
           </nav>
 
           {/* User Actions */}
           <div className="hidden lg:flex items-center gap-4">
+            {/* Language Switcher */}
+            <div className="relative language-menu">
+              <button
+                onClick={() => setShowLanguageMenu(!showLanguageMenu)}
+                className="relative flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-300 cursor-pointer group border-2 shadow-sm bg-white hover:bg-gray-50 border-gray-300 text-gray-700 hover:border-blue-400"
+                title={language === "fr" ? "Français" : "العربية"}
+              >
+                <FlagIcon language={language} size={18} className="rounded-sm shadow-sm" />
+                <span className="text-sm font-medium text-gray-700">
+                  {language === "fr" ? "FR" : "AR"}
+                </span>
+                <svg 
+                  className={`w-4 h-4 transition-transform duration-300 ${showLanguageMenu ? "rotate-180" : ""} text-gray-600`}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Language Dropdown */}
+              {showLanguageMenu && (
+                <div className="absolute left-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50 overflow-hidden">
+                  <button
+                    onClick={() => {
+                      setLanguage("fr")
+                      setShowLanguageMenu(false)
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-all duration-200 ${
+                      language === "fr"
+                        ? "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 font-semibold border-r-4 border-blue-500"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <FlagIcon language="fr" size={24} className="rounded-sm shadow-sm" />
+                    <span className="flex-1 text-left">Français</span>
+                    {language === "fr" && (
+                      <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setLanguage("ar")
+                      setShowLanguageMenu(false)
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-all duration-200 ${
+                      language === "ar"
+                        ? "bg-gradient-to-r from-green-50 to-green-100 text-green-700 font-semibold border-r-4 border-green-500"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <FlagIcon language="ar" size={24} className="rounded-sm shadow-sm" />
+                    <span className="flex-1 text-right">العربية</span>
+                    {language === "ar" && (
+                      <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+
             {user ? (
               <>
                 {user.role === "seller" && (
@@ -113,7 +186,7 @@ export function Header() {
                       className="flex items-center gap-2 bg-transparent hover:bg-blue-50 transition-all duration-300"
                     >
                       <Plus className="w-4 h-4" />
-                      إضافة خدمة
+                      {t.header.actions.addService}
                     </Button>
                   </Link>
                 )}
@@ -136,8 +209,8 @@ export function Header() {
                   {showNotifications && (
                     <div className="absolute left-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                       <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-                        <h3 className="font-semibold text-gray-900">الإشعارات</h3>
-                        <span className="text-sm text-gray-500">{unreadCount} غير مقروء</span>
+                        <h3 className="font-semibold text-gray-900">{t.header.notifications.title}</h3>
+                        <span className="text-sm text-gray-500">{unreadCount} {t.header.notifications.unread}</span>
                       </div>
                       
                       <div className="max-h-96 overflow-y-auto">
@@ -186,7 +259,7 @@ export function Header() {
                           }}
                           className="text-sm text-blue-600 hover:text-blue-800 font-medium cursor-pointer"
                         >
-                          عرض جميع الإشعارات
+                          {t.header.notifications.viewAll}
                         </button>
                       </div>
                     </div>
@@ -242,11 +315,11 @@ export function Header() {
                       <div className="py-2">
                         <Link href="/dashboard" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                           <User className="w-4 h-4" />
-                          لوحة التحكم
+                          {t.header.actions.dashboard}
                         </Link>
                         <Link href="/dashboard/profile" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                           <User className="w-4 h-4" />
-                          الملف الشخصي
+                          {t.header.actions.profile}
                         </Link>
                         <button
                           onClick={() => {
@@ -256,7 +329,7 @@ export function Header() {
                           className="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-right cursor-pointer"
                         >
                           <LogOut className="w-4 h-4" />
-                          تسجيل الخروج
+                          {t.header.actions.logout}
                         </button>
                       </div>
                     </div>
@@ -267,12 +340,12 @@ export function Header() {
               <>
                 <Link href="/login">
                   <Button variant="outline" className="hover:bg-blue-50 transition-all duration-300 bg-transparent">
-                    تسجيل الدخول
+                    {t.header.actions.login}
                   </Button>
                 </Link>
                 <Link href="/register">
                   <Button className="btn-gradient text-white px-6 py-2 rounded-lg font-medium hover:scale-105 transition-all duration-300 shadow-lg">
-                    سجّل الآن
+                    {t.header.actions.register}
                   </Button>
                 </Link>
               </>
@@ -281,6 +354,71 @@ export function Header() {
 
           {/* Mobile Actions */}
           <div className="lg:hidden flex items-center gap-2">
+            {/* Mobile Language Switcher */}
+            <div className="relative language-menu">
+              <button
+                onClick={() => setShowLanguageMenu(!showLanguageMenu)}
+                className="relative flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-300 cursor-pointer group border-2 shadow-sm bg-white hover:bg-gray-50 border-gray-300 text-gray-700 hover:border-blue-400"
+              >
+                <FlagIcon language={language} size={18} className="rounded-sm shadow-sm" />
+                <span className="text-sm font-medium text-gray-700">
+                  {language === "fr" ? "FR" : "AR"}
+                </span>
+                <svg 
+                  className={`w-4 h-4 transition-transform duration-300 ${showLanguageMenu ? "rotate-180" : ""} text-gray-600`}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Mobile Language Dropdown */}
+              {showLanguageMenu && (
+                <div className="absolute left-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50 overflow-hidden">
+                  <button
+                    onClick={() => {
+                      setLanguage("fr")
+                      setShowLanguageMenu(false)
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-all duration-200 ${
+                      language === "fr"
+                        ? "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 font-semibold border-r-4 border-blue-500"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <FlagIcon language="fr" size={24} className="rounded-sm shadow-sm" />
+                    <span className="flex-1 text-left">Français</span>
+                    {language === "fr" && (
+                      <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setLanguage("ar")
+                      setShowLanguageMenu(false)
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-all duration-200 ${
+                      language === "ar"
+                        ? "bg-gradient-to-r from-green-50 to-green-100 text-green-700 font-semibold border-r-4 border-green-500"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <FlagIcon language="ar" size={24} className="rounded-sm shadow-sm" />
+                    <span className="flex-1 text-right">العربية</span>
+                    {language === "ar" && (
+                      <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* Mobile Notifications Button */}
             {user && (
               <div className="relative notification-menu">
@@ -300,8 +438,8 @@ export function Header() {
                 {showNotifications && (
                   <div className="absolute left-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                     <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-                      <h3 className="font-semibold text-gray-900">الإشعارات</h3>
-                      <span className="text-sm text-gray-500">{unreadCount} غير مقروء</span>
+                      <h3 className="font-semibold text-gray-900">{t.header.notifications.title}</h3>
+                      <span className="text-sm text-gray-500">{unreadCount} {t.header.notifications.unread}</span>
                     </div>
                     
                     <div className="max-h-96 overflow-y-auto">
@@ -350,7 +488,7 @@ export function Header() {
                         }}
                         className="text-sm text-blue-600 hover:text-blue-800 font-medium cursor-pointer"
                       >
-                        عرض جميع الإشعارات
+                        {t.header.notifications.viewAll}
                       </button>
                     </div>
                   </div>
@@ -376,25 +514,25 @@ export function Header() {
                 href="/services"
                 className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-300"
               >
-                الخدمات
+                {t.header.nav.services}
               </Link>
               <Link
                 href="/digital-products"
                 className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-300"
               >
-                المنتجات الرقمية
+                {t.header.nav.digitalProducts}
               </Link>
               <Link
-                href="#how-it-works"
+                href="/how-it-works"
                 className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-300"
               >
-                كيف تعمل المنصة
+                {t.header.nav.howItWorks}
               </Link>
               <Link
                 href="/contact"
                 className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-300"
               >
-                تواصل معنا
+                {t.header.nav.contact}
               </Link>
 
               {user ? (
@@ -428,7 +566,7 @@ export function Header() {
                             ? "bg-purple-100 text-purple-800"
                             : "bg-blue-100 text-blue-800"
                       }`}>
-                        {user.role === "seller" ? "مقدم خدمة" : user.role === "admin" ? "مدير" : "مشتري"}
+                        {user.role === "seller" ? t.header.user.seller : user.role === "admin" ? t.header.user.admin : t.header.user.buyer}
                       </div>
                     </div>
                   </div>
@@ -441,7 +579,7 @@ export function Header() {
                         className="w-full flex items-center justify-center gap-2 bg-transparent hover:bg-blue-50 transition-all duration-300"
                       >
                         <Plus className="w-4 h-4" />
-                        إضافة خدمة
+                        {t.header.actions.addService}
                       </Button>
                     </Link>
                   )}
@@ -450,7 +588,7 @@ export function Header() {
                       variant="outline"
                       className="w-full bg-transparent hover:bg-blue-50 transition-all duration-300"
                     >
-                      لوحة التحكم
+                      {t.header.actions.dashboard}
                     </Button>
                   </Link>
                   <Link href="/dashboard/profile">
@@ -458,7 +596,7 @@ export function Header() {
                       variant="outline"
                       className="w-full bg-transparent hover:bg-blue-50 transition-all duration-300"
                     >
-                      الملف الشخصي
+                      {t.header.actions.profile}
                     </Button>
                   </Link>
                   <Button
@@ -466,7 +604,7 @@ export function Header() {
                     variant="outline"
                     className="w-full bg-transparent hover:bg-red-50 hover:text-red-600 transition-all duration-300"
                   >
-                    تسجيل الخروج
+                    {t.header.actions.logout}
                   </Button>
                 </>
               ) : (
@@ -476,12 +614,12 @@ export function Header() {
                       variant="outline"
                       className="w-full bg-transparent hover:bg-blue-50 transition-all duration-300"
                     >
-                      تسجيل الدخول
+                      {t.header.actions.login}
                     </Button>
                   </Link>
                   <Link href="/register">
                     <Button className="btn-gradient text-white w-full font-medium hover:scale-105 transition-all duration-300 shadow-lg">
-                      سجّل الآن
+                      {t.header.actions.register}
                     </Button>
                   </Link>
                 </>

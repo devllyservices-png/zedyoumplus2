@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Star, Clock, ShoppingCart, Shield, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import { useTranslation } from "@/lib/i18n/hooks/useTranslation"
 
 interface ServiceWithSeller {
   id: string
@@ -50,6 +51,7 @@ export default function EnhancedServicesGrid({
   limit = 24, 
   sortBy = "newest"
 }: EnhancedServicesGridProps) {
+  const { t } = useTranslation()
   const [services, setServices] = useState<ServiceWithSeller[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -83,10 +85,10 @@ export default function EnhancedServicesGrid({
         setTotalServices(data.pagination?.total || 0)
         setTotalPages(Math.ceil((data.pagination?.total || 0) / limit))
       } else {
-        throw new Error(data.error || "فشل في تحميل الخدمات")
+        throw new Error(data.error || t.services.errorLoading)
       }
     } catch (e: any) {
-      setError(e?.message || "تعذر تحميل الخدمات")
+      setError(e?.message || t.services.failedToLoad)
     } finally {
       setLoading(false)
     }
@@ -122,7 +124,7 @@ export default function EnhancedServicesGrid({
       <div className="text-center py-12">
         <p className="text-red-600 mb-6">{error}</p>
         <Button onClick={fetchServices} variant="outline">
-          إعادة المحاولة
+          {t.servicesPage.grid.retry}
         </Button>
       </div>
     )
@@ -131,9 +133,9 @@ export default function EnhancedServicesGrid({
   if (services.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-600 mb-6">لا توجد خدمات مطابقة لبحثك.</p>
+        <p className="text-gray-600 mb-6">{t.servicesPage.grid.noResults}</p>
         <Button onClick={() => { setCurrentPage(1); fetchServices() }} variant="outline">
-          عرض جميع الخدمات
+          {t.servicesPage.grid.viewAll}
         </Button>
       </div>
     )
@@ -144,7 +146,7 @@ export default function EnhancedServicesGrid({
       {/* Results Count */}
       <div className="flex items-center justify-between">
         <p className="text-gray-600">
-          عرض {((currentPage - 1) * limit) + 1} - {Math.min(currentPage * limit, totalServices)} من {totalServices} خدمة
+          {t.servicesPage.grid.showing} {((currentPage - 1) * limit) + 1} {t.servicesPage.grid.to} {Math.min(currentPage * limit, totalServices)} {t.servicesPage.grid.of} {totalServices} {totalServices === 1 ? t.servicesPage.grid.service : t.servicesPage.grid.services}
         </p>
       </div>
 
@@ -153,7 +155,7 @@ export default function EnhancedServicesGrid({
         {services.map((service) => {
           const firstPackage = service.service_packages?.[0]
           const price = firstPackage?.price || 0
-          const delivery = firstPackage?.delivery_time || "غير محدد"
+          const delivery = firstPackage?.delivery_time || t.services.deliveryTime
           const seller = service.seller_profile
 
           return (
@@ -211,13 +213,13 @@ export default function EnhancedServicesGrid({
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-sm truncate">{seller.display_name || "البائع"}</span>
+                        <span className="font-medium text-sm truncate">{seller.display_name || t.services.seller}</span>
                         {seller.is_verified && (
                           <Shield className="w-3 h-3 text-green-600 flex-shrink-0" />
                         )}
                         {seller.is_verified && (
                           <Badge variant="secondary" className="text-xs bg-green-100 text-green-800 flex-shrink-0">
-                            معتمد
+                            {t.services.verified}
                           </Badge>
                         )}
                       </div>
@@ -227,7 +229,7 @@ export default function EnhancedServicesGrid({
                           <span>{seller.rating?.toFixed(1) || "0.0"}</span>
                         </div>
                         <span>•</span>
-                        <span>{seller.completed_orders || 0} طلب</span>
+                        <span>{seller.completed_orders || 0} {t.services.order}</span>
                       </div>
                     </div>
                   </div>
@@ -240,7 +242,7 @@ export default function EnhancedServicesGrid({
                     </Avatar>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-sm">البائع</span>
+                        <span className="font-medium text-sm">{t.services.seller}</span>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-gray-600">
                         <div className="flex items-center gap-1">
@@ -248,7 +250,7 @@ export default function EnhancedServicesGrid({
                           <span>0.0</span>
                         </div>
                         <span>•</span>
-                        <span>0 طلب</span>
+                        <span>0 {t.services.order}</span>
                       </div>
                     </div>
                   </div>
@@ -269,7 +271,7 @@ export default function EnhancedServicesGrid({
                     ))}
                   </div>
                   <span className="text-sm text-gray-600">
-                    {service.average_rating.toFixed(1)} ({service.reviews_count} تقييم)
+                    {service.average_rating.toFixed(1)} ({service.reviews_count} {t.services.rating})
                   </span>
                 </div>
 
@@ -282,12 +284,12 @@ export default function EnhancedServicesGrid({
                 {/* Price and Order Button */}
                 <div className="flex items-center justify-between">
                   <div className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                    ${price} دج
+                    {price > 0 ? `${t.services.startingFrom} ${price} ${t.services.currency}` : t.services.startingFrom}
                   </div>
                   <Link href={`/services/${service.id}`}>
                     <Button className="btn-gradient text-white px-4 py-2 text-sm rounded-lg flex items-center gap-1">
                       <ShoppingCart className="w-3 h-3" />
-                      طلب الآن
+                      {t.servicesPage.grid.orderNow}
                     </Button>
                   </Link>
                 </div>
@@ -309,7 +311,7 @@ export default function EnhancedServicesGrid({
             disabled={currentPage === 1}
           >
             <ChevronRight className="w-4 h-4 mr-1" />
-            السابق
+            {t.servicesPage.grid.prev}
           </Button>
 
           {/* Page Numbers */}
@@ -350,7 +352,7 @@ export default function EnhancedServicesGrid({
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
           >
-            التالي
+            {t.servicesPage.grid.next}
             <ChevronLeft className="w-4 h-4 ml-1" />
           </Button>
         </div>

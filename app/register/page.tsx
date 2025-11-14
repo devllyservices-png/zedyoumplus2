@@ -16,8 +16,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Eye, EyeOff, Mail, Lock, User, Phone, MapPin, ArrowRight } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
+import { useTranslation } from "@/lib/i18n/hooks/useTranslation"
 
 export default function RegisterPage() {
+  const { t, mounted } = useTranslation()
   const [formData, setFormData] = useState({
     display_name: "",
     email: "",
@@ -35,27 +37,44 @@ export default function RegisterPage() {
   const { register, isLoading } = useAuth()
   const router = useRouter()
 
+  // Wait for client-side hydration to complete
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-violet-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-lg">
+          <div className="text-center mb-8">
+            <Link href="/">
+              <Image src="/images/logo-large.png" alt={t.header.logoAlt} width={120} height={40} className="mx-auto mb-4" />
+            </Link>
+            <h1 className="text-2xl font-bold text-gray-900">{t.register.title}</h1>
+            <p className="text-gray-600 mt-2">جاري التحميل...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
 
     if (!formData.display_name || !formData.email || !formData.password || !formData.role) {
-      setError("يرجى ملء جميع الحقول المطلوبة")
+      setError(t.register.errors.fillFields)
       return
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError("كلمة المرور وتأكيد كلمة المرور غير متطابقتين")
+      setError(t.register.errors.passwordMismatch)
       return
     }
 
     if (formData.password.length < 6) {
-      setError("كلمة المرور يجب أن تكون 6 أحرف على الأقل")
+      setError(t.register.errors.passwordLength)
       return
     }
 
     if (!acceptTerms) {
-      setError("يجب الموافقة على شروط الاستخدام")
+      setError(t.register.errors.acceptTerms)
       return
     }
 
@@ -72,7 +91,7 @@ export default function RegisterPage() {
     if (success) {
       router.push("/dashboard")
     } else {
-      setError("حدث خطأ أثناء إنشاء الحساب")
+      setError(t.register.errors.createError)
     }
   }
 
@@ -86,15 +105,15 @@ export default function RegisterPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/">
-            <Image src="/images/logo-large.png" alt="شعار المنصة" width={120} height={40} className="mx-auto mb-4" />
+            <Image src="/images/logo-large.png" alt={t.header.logoAlt} width={120} height={40} className="mx-auto mb-4" />
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">انضم إلينا</h1>
-          <p className="text-gray-600 mt-2">أنشئ حسابك وابدأ رحلتك معنا</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t.register.title}</h1>
+          <p className="text-gray-600 mt-2">{t.register.subtitle}</p>
         </div>
 
         <Card className="shadow-xl border-0">
           <CardHeader className="text-center pb-4">
-            <CardTitle className="text-xl font-bold">إنشاء حساب جديد</CardTitle>
+            <CardTitle className="text-xl font-bold">{t.register.formTitle}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -106,7 +125,7 @@ export default function RegisterPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="display_name" className="text-sm font-medium">
-                  الاسم المعروض *
+                  {t.register.displayName} *
                 </Label>
                 <div className="relative">
                   <User className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -115,7 +134,7 @@ export default function RegisterPage() {
                     type="text"
                     value={formData.display_name}
                     onChange={(e) => updateFormData("display_name", e.target.value)}
-                    placeholder="أدخل اسمك المعروض"
+                    placeholder={t.register.displayNamePlaceholder}
                     className="pr-10 h-12"
                     required
                   />
@@ -124,7 +143,7 @@ export default function RegisterPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium">
-                  البريد الإلكتروني *
+                  {t.register.email} *
                 </Label>
                 <div className="relative">
                   <Mail className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -133,7 +152,7 @@ export default function RegisterPage() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => updateFormData("email", e.target.value)}
-                    placeholder="أدخل بريدك الإلكتروني"
+                    placeholder={t.register.emailPlaceholder}
                     className="pr-10 h-12"
                     required
                   />
@@ -142,15 +161,15 @@ export default function RegisterPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="role" className="text-sm font-medium">
-                  نوع الحساب *
+                  {t.register.role} *
                 </Label>
                 <Select value={formData.role} onValueChange={(value) => updateFormData("role", value)}>
                   <SelectTrigger className="h-12">
-                    <SelectValue placeholder="اختر نوع حسابك" />
+                    <SelectValue placeholder={t.register.rolePlaceholder} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="buyer">مشتري - أريد طلب خدمات</SelectItem>
-                    <SelectItem value="seller">مقدم خدمة - أريد تقديم خدمات</SelectItem>
+                    <SelectItem value="buyer">{t.register.roleBuyer}</SelectItem>
+                    <SelectItem value="seller">{t.register.roleSeller}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -158,7 +177,7 @@ export default function RegisterPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-sm font-medium">
-                    كلمة المرور *
+                    {t.register.password} *
                   </Label>
                   <div className="relative">
                     <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -167,7 +186,7 @@ export default function RegisterPage() {
                       type={showPassword ? "text" : "password"}
                       value={formData.password}
                       onChange={(e) => updateFormData("password", e.target.value)}
-                      placeholder="كلمة المرور"
+                      placeholder={t.register.passwordPlaceholder}
                       className="pr-10 pl-10 h-12"
                       required
                     />
@@ -183,7 +202,7 @@ export default function RegisterPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword" className="text-sm font-medium">
-                    تأكيد كلمة المرور *
+                    {t.register.confirmPassword} *
                   </Label>
                   <div className="relative">
                     <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -192,7 +211,7 @@ export default function RegisterPage() {
                       type={showConfirmPassword ? "text" : "password"}
                       value={formData.confirmPassword}
                       onChange={(e) => updateFormData("confirmPassword", e.target.value)}
-                      placeholder="تأكيد كلمة المرور"
+                      placeholder={t.register.confirmPasswordPlaceholder}
                       className="pr-10 pl-10 h-12"
                       required
                     />
@@ -209,13 +228,13 @@ export default function RegisterPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="bio" className="text-sm font-medium">
-                  نبذة عنك
+                  {t.register.bio}
                 </Label>
                 <Textarea
                   id="bio"
                   value={formData.bio}
                   onChange={(e) => updateFormData("bio", e.target.value)}
-                  placeholder="اكتب نبذة مختصرة عنك..."
+                  placeholder={t.register.bioPlaceholder}
                   rows={3}
                   className="h-20"
                 />
@@ -224,7 +243,7 @@ export default function RegisterPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="phone" className="text-sm font-medium">
-                    رقم الهاتف
+                    {t.register.phone}
                   </Label>
                   <div className="relative">
                     <Phone className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -241,7 +260,7 @@ export default function RegisterPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="location" className="text-sm font-medium">
-                    الموقع
+                    {t.register.location}
                   </Label>
                   <div className="relative">
                     <MapPin className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -250,7 +269,7 @@ export default function RegisterPage() {
                       type="text"
                       value={formData.location}
                       onChange={(e) => updateFormData("location", e.target.value)}
-                      placeholder="المدينة"
+                      placeholder={t.register.locationPlaceholder}
                       className="pr-10 h-12"
                     />
                   </div>
@@ -264,13 +283,13 @@ export default function RegisterPage() {
                   onCheckedChange={(checked) => setAcceptTerms(checked as boolean)}
                 />
                 <Label htmlFor="terms" className="text-sm text-gray-600">
-                  أوافق على{" "}
+                  {t.register.acceptTerms}{" "}
                   <Link href="/terms" className="text-blue-600 hover:text-blue-800">
-                    شروط الاستخدام
+                    {t.register.terms}
                   </Link>{" "}
-                  و{" "}
+                  {t.register.and}{" "}
                   <Link href="/privacy" className="text-blue-600 hover:text-blue-800">
-                    سياسة الخصوصية
+                    {t.register.privacy}
                   </Link>
                 </Label>
               </div>
@@ -280,16 +299,16 @@ export default function RegisterPage() {
                 disabled={isLoading}
                 className="w-full btn-gradient text-white h-12 text-lg font-medium"
               >
-                {isLoading ? "جاري إنشاء الحساب..." : "إنشاء الحساب"}
+                {isLoading ? t.register.submitting : t.register.submit}
                 <ArrowRight className="w-5 h-5 mr-2" />
               </Button>
             </form>
 
             <div className="mt-6 text-center">
               <p className="text-gray-600">
-                لديك حساب بالفعل؟{" "}
+                {t.register.hasAccount}{" "}
                 <Link href="/login" className="text-blue-600 hover:text-blue-800 font-medium">
-                  سجل دخولك
+                  {t.register.signIn}
                 </Link>
               </p>
             </div>
@@ -299,7 +318,7 @@ export default function RegisterPage() {
         <div className="text-center mt-6">
           <Link href="/" className="text-gray-600 hover:text-gray-800 flex items-center justify-center gap-2">
             <ArrowRight className="w-4 h-4" />
-            العودة إلى الصفحة الرئيسية
+            {t.register.backToHome}
           </Link>
         </div>
       </div>

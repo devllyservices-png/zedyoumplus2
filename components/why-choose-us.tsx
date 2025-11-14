@@ -2,28 +2,31 @@
 
 import { Shield, Headphones, Globe, Award } from "lucide-react"
 import { motion } from "framer-motion"
+import { useTranslation } from "@/lib/i18n/hooks/useTranslation"
 
 export function WhyChooseUs() {
+  const { t } = useTranslation()
+  
   const features = [
     {
       icon: Shield,
-      title: "دفع آمن بوسائل جزائرية 100%",
-      description: "ندعم جميع وسائل الدفع المحلية: Chargily، CCP، CIB، Visa، Mastercard والتحويل البنكي",
+      title: t.whyChooseUs.features.securePayment.title,
+      description: t.whyChooseUs.features.securePayment.description,
     },
     {
       icon: Headphones,
-      title: "دعم فني سريع ومتجاوب",
-      description: "فريق الدعم الفني متاح 24/7 لحل جميع استفساراتك ومشاكلك بسرعة",
+      title: t.whyChooseUs.features.support.title,
+      description: t.whyChooseUs.features.support.description,
     },
     {
       icon: Globe,
-      title: "منصة عربية بواجهة سهلة",
-      description: "تصميم عصري وسهل الاستخدام باللغة العربية مع دعم كامل للغة المحلية",
+      title: t.whyChooseUs.features.platform.title,
+      description: t.whyChooseUs.features.platform.description,
     },
     {
       icon: Award,
-      title: "منتجات وخدمات موثوقة ومضمونة",
-      description: "جميع الخدمات والمنتجات مراجعة ومعتمدة من فريقنا لضمان أعلى جودة",
+      title: t.whyChooseUs.features.quality.title,
+      description: t.whyChooseUs.features.quality.description,
     },
   ]
 
@@ -37,8 +40,8 @@ export function WhyChooseUs() {
           viewport={{ once: true, margin: "-100px" }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl font-bold text-white mb-4">لماذا تختار منصتنا؟</h2>
-          <p className="text-xl text-white/90 max-w-2xl mx-auto">نحن نقدم تجربة فريدة ومميزة للمستخدمين الجزائريين</p>
+          <h2 className="text-4xl font-bold text-white mb-4">{t.whyChooseUs.title}</h2>
+          <p className="text-xl text-white/90 max-w-2xl mx-auto">{t.whyChooseUs.subtitle}</p>
         </motion.div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -62,20 +65,20 @@ export function WhyChooseUs() {
 
         <div className="text-center mt-16">
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 max-w-4xl mx-auto">
-            <h3 className="text-2xl font-bold text-white mb-4">انضم إلى آلاف المستخدمين الراضين</h3>
-            <p className="text-white/90 text-lg mb-6">أكثر من 10,000 مستخدم يثق في منصتنا لتلبية احتياجاتهم الرقمية</p>
+            <h3 className="text-2xl font-bold text-white mb-4">{t.whyChooseUs.stats.joinTitle}</h3>
+            <p className="text-white/90 text-lg mb-6">{t.whyChooseUs.stats.joinDescription}</p>
             <div className="grid grid-cols-3 gap-8 text-center">
               <div>
                 <div className="text-3xl font-bold text-white mb-2">10,000+</div>
-                <div className="text-white/80">مستخدم نشط</div>
+                <div className="text-white/80">{t.whyChooseUs.stats.activeUsers}</div>
               </div>
               <div>
                 <div className="text-3xl font-bold text-white mb-2">5,000+</div>
-                <div className="text-white/80">خدمة مكتملة</div>
+                <div className="text-white/80">{t.whyChooseUs.stats.completedServices}</div>
               </div>
               <div>
                 <div className="text-3xl font-bold text-white mb-2">98%</div>
-                <div className="text-white/80">نسبة الرضا</div>
+                <div className="text-white/80">{t.whyChooseUs.stats.satisfaction}</div>
               </div>
             </div>
           </div>

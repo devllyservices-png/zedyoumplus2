@@ -10,33 +10,35 @@ import EnhancedServicesGrid from "@/components/enhanced-services-grid"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { useSearchParams } from "next/navigation"
-
-const categories = [
-  { value: "all", label: "جميع الفئات" },
-  { value: "design", label: "التصميم" },
-  { value: "programming", label: "البرمجة" },
-  { value: "translation", label: "الترجمة" },
-  { value: "marketing", label: "التسويق" },
-  { value: "education", label: "التعليم" },
-  { value: "audio", label: "الصوتيات" },
-  { value: "photography", label: "التصوير" },
-  { value: "illustration", label: "الرسم" },
-  { value: "mobile", label: "تطبيقات الجوال" },
-  { value: "seo", label: "تحسين محركات البحث" },
-  { value: "content", label: "كتابة المحتوى" },
-  { value: "video", label: "المونتاج والفيديو" }
-]
-
-const sortOptions = [
-  { value: "newest", label: "الأحدث" },
-  { value: "oldest", label: "الأقدم" },
-  { value: "rating", label: "الأعلى تقييماً" },
-  { value: "price-low", label: "السعر: من الأقل للأعلى" },
-  { value: "price-high", label: "السعر: من الأعلى للأقل" },
-  { value: "orders", label: "الأكثر طلباً" }
-]
+import { useTranslation } from "@/lib/i18n/hooks/useTranslation"
 
 export default function ServicesPage() {
+  const { t } = useTranslation()
+  
+  const categories = [
+    { value: "all", label: t.servicesPage.categories.all },
+    { value: "design", label: t.servicesPage.categories.design },
+    { value: "programming", label: t.servicesPage.categories.programming },
+    { value: "translation", label: t.servicesPage.categories.translation },
+    { value: "marketing", label: t.servicesPage.categories.marketing },
+    { value: "education", label: t.servicesPage.categories.education },
+    { value: "audio", label: t.servicesPage.categories.audio },
+    { value: "photography", label: t.servicesPage.categories.photography },
+    { value: "illustration", label: t.servicesPage.categories.illustration },
+    { value: "mobile", label: t.servicesPage.categories.mobile },
+    { value: "seo", label: t.servicesPage.categories.seo },
+    { value: "content", label: t.servicesPage.categories.content },
+    { value: "video", label: t.servicesPage.categories.video }
+  ]
+
+  const sortOptions = [
+    { value: "newest", label: t.servicesPage.sortOptions.newest },
+    { value: "oldest", label: t.servicesPage.sortOptions.oldest },
+    { value: "rating", label: t.servicesPage.sortOptions.rating },
+    { value: "price-low", label: t.servicesPage.sortOptions.priceLow },
+    { value: "price-high", label: t.servicesPage.sortOptions.priceHigh },
+    { value: "orders", label: t.servicesPage.sortOptions.orders }
+  ]
   const searchParams = useSearchParams()
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState<string | undefined>(undefined)
@@ -63,9 +65,9 @@ export default function ServicesPage() {
       <div className="container mx-auto px-4 py-4 sm:py-8">
         {/* Page Header */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">استكشف الخدمات</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">{t.servicesPage.title}</h1>
           <p className="text-gray-600 text-sm sm:text-base">
-            اكتشف آلاف الخدمات المهنية من أفضل المقدمين حول العالم
+            {t.servicesPage.subtitle}
           </p>
         </div>
 
@@ -76,7 +78,7 @@ export default function ServicesPage() {
             <div className="relative mb-4">
               <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <Input
-                placeholder="ابحث عن الخدمات..."
+                placeholder={t.servicesPage.searchPlaceholder}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pr-10 h-12"
@@ -89,7 +91,7 @@ export default function ServicesPage() {
               <div className="flex-1">
                 <Select value={category || "all"} onValueChange={(value) => setCategory(value === "all" ? undefined : value)}>
                   <SelectTrigger className="h-10">
-                    <SelectValue placeholder="اختر الفئة" />
+                    <SelectValue placeholder={t.servicesPage.selectCategory} />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((cat) => (
@@ -105,7 +107,7 @@ export default function ServicesPage() {
               <div className="flex-1">
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger className="h-10">
-                    <SelectValue placeholder="ترتيب حسب" />
+                    <SelectValue placeholder={t.servicesPage.sortBy} />
                   </SelectTrigger>
                   <SelectContent>
                     {sortOptions.map((option) => (

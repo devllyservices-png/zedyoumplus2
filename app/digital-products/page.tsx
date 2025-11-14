@@ -10,19 +10,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Header } from "@/components/header"
 import { Search, Star, Download, Play, Gamepad2, LogInIcon as Subscription, Code, Palette, Music } from "lucide-react"
 import { Footer } from "@/components/footer"
+import { useTranslation } from "@/lib/i18n/hooks/useTranslation"
 
 export default function DigitalProductsPage() {
+  const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [sortBy, setSortBy] = useState("popular")
 
   const categories = [
-    { id: "all", name: "جميع المنتجات", icon: null },
-    { id: "games", name: "الألعاب", icon: Gamepad2 },
-    { id: "subscriptions", name: "الاشتراكات", icon: Subscription },
-    { id: "software", name: "البرمجيات", icon: Code },
-    { id: "templates", name: "القوالب", icon: Palette },
-    { id: "music", name: "الموسيقى", icon: Music },
+    { id: "all", name: t.digitalProductsPage.categories.all, icon: null },
+    { id: "games", name: t.digitalProductsPage.categories.games, icon: Gamepad2 },
+    { id: "subscriptions", name: t.digitalProductsPage.categories.subscriptions, icon: Subscription },
+    { id: "software", name: t.digitalProductsPage.categories.software, icon: Code },
+    { id: "templates", name: t.digitalProductsPage.categories.templates, icon: Palette },
+    { id: "music", name: t.digitalProductsPage.categories.music, icon: Music },
   ]
 
  const digitalProducts = [
@@ -173,6 +175,23 @@ export default function DigitalProductsPage() {
     }
   }
 
+  const getProductTypeLabel = (type: string) => {
+    switch (type) {
+      case "game":
+        return t.digitalProductsPage.productTypes.game
+      case "subscription":
+        return t.digitalProductsPage.productTypes.subscription
+      case "software":
+        return t.digitalProductsPage.productTypes.software
+      case "template":
+        return t.digitalProductsPage.productTypes.template
+      case "music":
+        return t.digitalProductsPage.productTypes.music
+      default:
+        return ""
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -180,9 +199,9 @@ export default function DigitalProductsPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Hero Section */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold gradient-brand-text mb-4">المنتجات الرقمية</h1>
+          <h1 className="text-4xl font-bold gradient-brand-text mb-4">{t.digitalProductsPage.title}</h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            اكتشف مجموعة واسعة من المنتجات الرقمية عالية الجودة - من الألعاب والاشتراكات إلى البرمجيات والقوالب
+            {t.digitalProductsPage.subtitle}
           </p>
         </div>
 
@@ -193,7 +212,7 @@ export default function DigitalProductsPage() {
             <div className="flex-1 relative">
               <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <Input
-                placeholder="ابحث عن المنتجات الرقمية..."
+                placeholder={t.digitalProductsPage.search.placeholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pr-10"
@@ -203,7 +222,7 @@ export default function DigitalProductsPage() {
             {/* Category Filter */}
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger className="w-full lg:w-48">
-                <SelectValue placeholder="اختر الفئة" />
+                <SelectValue placeholder={t.digitalProductsPage.filters.category} />
               </SelectTrigger>
               <SelectContent>
                 {categories.map((category) => (
@@ -220,14 +239,14 @@ export default function DigitalProductsPage() {
             {/* Sort */}
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-full lg:w-48">
-                <SelectValue placeholder="ترتيب حسب" />
+                <SelectValue placeholder={t.digitalProductsPage.filters.sort} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="popular">الأكثر شعبية</SelectItem>
-                <SelectItem value="newest">الأحدث</SelectItem>
-                <SelectItem value="rating">الأعلى تقييماً</SelectItem>
-                <SelectItem value="price-low">السعر: من الأقل للأعلى</SelectItem>
-                <SelectItem value="price-high">السعر: من الأعلى للأقل</SelectItem>
+                <SelectItem value="popular">{t.digitalProductsPage.filters.sortOptions.popular}</SelectItem>
+                <SelectItem value="newest">{t.digitalProductsPage.filters.sortOptions.newest}</SelectItem>
+                <SelectItem value="rating">{t.digitalProductsPage.filters.sortOptions.rating}</SelectItem>
+                <SelectItem value="price-low">{t.digitalProductsPage.filters.sortOptions.priceLow}</SelectItem>
+                <SelectItem value="price-high">{t.digitalProductsPage.filters.sortOptions.priceHigh}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -265,18 +284,14 @@ export default function DigitalProductsPage() {
                 <div className="absolute top-3 right-3">
                   <Badge className="bg-white/90 text-gray-700 flex items-center gap-1">
                     {getProductIcon(product.type)}
-                    {product.type === "game" && "لعبة"}
-                    {product.type === "subscription" && "اشتراك"}
-                    {product.type === "software" && "برنامج"}
-                    {product.type === "template" && "قالب"}
-                    {product.type === "music" && "موسيقى"}
+                    {getProductTypeLabel(product.type)}
                   </Badge>
                 </div>
 
                 {/* Sale Badge */}
                 {product.isOnSale && (
                   <div className="absolute top-3 left-3">
-                    <Badge className="bg-red-500 text-white">خصم {product.discount}%</Badge>
+                    <Badge className="bg-red-500 text-white">{t.digitalProductsPage.product.discount} {product.discount}%</Badge>
                   </div>
                 )}
 
@@ -284,7 +299,7 @@ export default function DigitalProductsPage() {
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <Button className="bg-white text-gray-900 hover:bg-gray-100">
                     <Play className="w-4 h-4 mr-2" />
-                    معاينة
+                    {t.digitalProductsPage.product.preview}
                   </Button>
                 </div>
               </div>
@@ -320,15 +335,15 @@ export default function DigitalProductsPage() {
 
                 {/* Additional Info */}
                 <div className="text-xs text-gray-500 mb-3">
-                  {product.duration && <span>المدة: {product.duration}</span>}
-                  {product.format && <span>الصيغة: {product.format}</span>}
-                  {product.tracks && <span>عدد المقاطع: {product.tracks}</span>}
+                  {product.duration && <span>{t.digitalProductsPage.product.duration}: {product.duration}</span>}
+                  {product.format && <span>{t.digitalProductsPage.product.format}: {product.format}</span>}
+                  {product.tracks && <span>{t.digitalProductsPage.product.tracks}: {product.tracks}</span>}
                   {product.license && <span>{product.license}</span>}
                 </div>
 
                 {/* Seller */}
                 <p className="text-sm text-gray-600 mb-4">
-                  بواسطة: <span className="font-medium">{product.seller}</span>
+                  {t.digitalProductsPage.product.by}: <span className="font-medium">{product.seller}</span>
                 </p>
 
                 {/* Price and Action */}
@@ -341,7 +356,7 @@ export default function DigitalProductsPage() {
                   </div>
                   <Button className="btn-gradient hover:bg-blue-700 text-white">
                     <Download className="w-4 h-4 mr-2" />
-                    شراء
+                    {t.digitalProductsPage.product.buy}
                   </Button>
                 </div>
               </CardContent>
@@ -355,8 +370,8 @@ export default function DigitalProductsPage() {
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Search className="w-12 h-12 text-gray-400" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">لم يتم العثور على منتجات</h3>
-            <p className="text-gray-600">جرب تغيير معايير البحث أو الفلترة</p>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">{t.digitalProductsPage.noResults.title}</h3>
+            <p className="text-gray-600">{t.digitalProductsPage.noResults.message}</p>
           </div>
         )}
       </div>

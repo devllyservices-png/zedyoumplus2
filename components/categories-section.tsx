@@ -16,83 +16,85 @@ import {
   Video,
 } from "lucide-react"
 import { motion } from "framer-motion"
-
-const categories = [
-  {
-    id: "design",
-    name: "التصميم الجرافيكي",
-    icon: Palette,
-    gradient: "from-pink-500 to-purple-600",
-  },
-  {
-    id: "programming",
-    name: "البرمجة وتطوير المواقع",
-    icon: Code,
-    gradient: "from-blue-500 to-cyan-600",
-  },
-  {
-    id: "translation",
-    name: "الترجمة والكتابة",
-    icon: Languages,
-    gradient: "from-green-500 to-teal-600",
-  },
-  {
-    id: "marketing",
-    name: "التسويق الرقمي",
-    icon: Megaphone,
-    gradient: "from-orange-500 to-red-600",
-  },
-  {
-    id: "education",
-    name: "التعليم والدروس",
-    icon: GraduationCap,
-    gradient: "from-indigo-500 to-purple-600",
-  },
-  {
-    id: "audio",
-    name: "الصوتيات والمونتاج",
-    icon: Music,
-    gradient: "from-yellow-500 to-orange-600",
-  },
-  {
-    id: "photography",
-    name: "التصوير والفوتوغرافيا",
-    icon: Camera,
-    gradient: "from-gray-500 to-gray-700",
-  },
-  {
-    id: "illustration",
-    name: "الرسم والتوضيح",
-    icon: PenTool,
-    gradient: "from-rose-500 to-pink-600",
-  },
-  {
-    id: "mobile",
-    name: "تطبيقات الجوال",
-    icon: Smartphone,
-    gradient: "from-emerald-500 to-green-600",
-  },
-  {
-    id: "seo",
-    name: "تحسين محركات البحث",
-    icon: Globe,
-    gradient: "from-violet-500 to-purple-600",
-  },
-  {
-    id: "content",
-    name: "كتابة المحتوى",
-    icon: FileText,
-    gradient: "from-amber-500 to-yellow-600",
-  },
-  {
-    id: "video",
-    name: "المونتاج والفيديو",
-    icon: Video,
-    gradient: "from-red-500 to-pink-600",
-  },
-]
+import { useTranslation } from "@/lib/i18n/hooks/useTranslation"
 
 export function CategoriesSection() {
+  const { t } = useTranslation()
+  
+  const categories = [
+    {
+      id: "design",
+      name: t.categories.items.design,
+      icon: Palette,
+      gradient: "from-pink-500 to-purple-600",
+    },
+    {
+      id: "programming",
+      name: t.categories.items.programming,
+      icon: Code,
+      gradient: "from-blue-500 to-cyan-600",
+    },
+    {
+      id: "translation",
+      name: t.categories.items.translation,
+      icon: Languages,
+      gradient: "from-green-500 to-teal-600",
+    },
+    {
+      id: "marketing",
+      name: t.categories.items.marketing,
+      icon: Megaphone,
+      gradient: "from-orange-500 to-red-600",
+    },
+    {
+      id: "education",
+      name: t.categories.items.education,
+      icon: GraduationCap,
+      gradient: "from-indigo-500 to-purple-600",
+    },
+    {
+      id: "audio",
+      name: t.categories.items.audio,
+      icon: Music,
+      gradient: "from-yellow-500 to-orange-600",
+    },
+    {
+      id: "photography",
+      name: t.categories.items.photography,
+      icon: Camera,
+      gradient: "from-gray-500 to-gray-700",
+    },
+    {
+      id: "illustration",
+      name: t.categories.items.illustration,
+      icon: PenTool,
+      gradient: "from-rose-500 to-pink-600",
+    },
+    {
+      id: "mobile",
+      name: t.categories.items.mobile,
+      icon: Smartphone,
+      gradient: "from-emerald-500 to-green-600",
+    },
+    {
+      id: "seo",
+      name: t.categories.items.seo,
+      icon: Globe,
+      gradient: "from-violet-500 to-purple-600",
+    },
+    {
+      id: "content",
+      name: t.categories.items.content,
+      icon: FileText,
+      gradient: "from-amber-500 to-yellow-600",
+    },
+    {
+      id: "video",
+      name: t.categories.items.video,
+      icon: Video,
+      gradient: "from-red-500 to-pink-600",
+    },
+  ]
   return (
     <section className="py-16 lg:py-24 bg-gray-50">
       <div className="container mx-auto px-4">
@@ -103,9 +105,9 @@ export function CategoriesSection() {
           viewport={{ once: true, margin: "-100px" }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">استكشف التصنيفات</h2>
+          <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">{t.categories.title}</h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            اكتشف مجموعة واسعة من الخدمات المتخصصة من أفضل المستقلين في الجزائر
+            {t.categories.subtitle}
           </p>
         </motion.div>
 

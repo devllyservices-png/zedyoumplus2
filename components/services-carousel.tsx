@@ -9,6 +9,7 @@ import { ChevronLeft, ChevronRight, Star, Clock, Shield, ShoppingCart } from "lu
 import Image from "next/image"
 import Link from "next/link"
 import { motion } from "framer-motion"
+import { useTranslation } from "@/lib/i18n/hooks/useTranslation"
 
 interface ServiceWithSeller {
   id: string
@@ -38,6 +39,7 @@ interface ServiceWithSeller {
 }
 
 export function ServicesCarousel() {
+  const { t } = useTranslation()
   const [services, setServices] = useState<ServiceWithSeller[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string>("")
@@ -55,10 +57,10 @@ export function ServicesCarousel() {
         if (response.ok) {
           setServices(data.services || [])
         } else {
-          throw new Error(data.error || "فشل في تحميل الخدمات")
+          throw new Error(data.error || t.services.errorLoading)
         }
       } catch (e: any) {
-        setError(e?.message || "تعذر تحميل الخدمات")
+        setError(e?.message || t.services.failedToLoad)
       } finally {
         setIsLoading(false)
       }
@@ -104,10 +106,10 @@ export function ServicesCarousel() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-              الخدمات الأكثر طلبًا
+              {t.services.title}
             </h2>
             <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
-              اكتشف أفضل الخدمات المقدمة من المستقلين الجزائريين المحترفين
+              {t.services.subtitle}
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -136,7 +138,7 @@ export function ServicesCarousel() {
           <div className="text-center">
             <p className="text-red-600 mb-6">{error}</p>
             <Button onClick={() => window.location.reload()} variant="outline">
-              إعادة المحاولة
+              {t.services.retry}
             </Button>
           </div>
         </div>
@@ -150,12 +152,12 @@ export function ServicesCarousel() {
         <div className="container mx-auto px-4">
           <div className="text-center">
             <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-              الخدمات الأكثر طلبًا
+              {t.services.title}
             </h2>
-            <p className="text-gray-600 mb-6">لا توجد خدمات لعرضها حالياً.</p>
+            <p className="text-gray-600 mb-6">{t.services.noServices}</p>
             <Link href="/services">
               <Button className="btn-gradient text-white px-6 py-2 rounded-lg">
-                استعرض كل الخدمات
+                {t.services.browseAll}
               </Button>
             </Link>
           </div>
@@ -169,10 +171,10 @@ export function ServicesCarousel() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-            الخدمات الأكثر طلبًا
+            {t.services.title}
           </h2>
           <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
-            اكتشف أفضل الخدمات المقدمة من المستقلين الجزائريين المحترفين
+            {t.services.subtitle}
           </p>
         </div>
 
@@ -181,7 +183,7 @@ export function ServicesCarousel() {
           {/* Mobile Swipe Hint */}
           {services.length > itemsPerView && (
             <div className="text-center mb-4 sm:hidden">
-              <p className="text-sm text-gray-500">اسحب للتنقل بين الخدمات</p>
+              <p className="text-sm text-gray-500">{t.services.swipeHint}</p>
             </div>
           )}
           
@@ -190,7 +192,7 @@ export function ServicesCarousel() {
             {visibleServices.map((service, index) => {
               const firstPackage = service.service_packages?.[0]
               const price = firstPackage?.price || 0
-              const delivery = firstPackage?.delivery_time || "غير محدد"
+              const delivery = firstPackage?.delivery_time || t.services.deliveryTime
               const seller = service.seller_profile
 
               return (
@@ -222,7 +224,7 @@ export function ServicesCarousel() {
                     </div>
                     {/* Price Badge */}
                     <div className="absolute bottom-3 right-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                      يبدأ من {price} دج
+                      {t.services.startingFrom} {price} {t.services.currency}
                     </div>
                   </div>
 
@@ -259,13 +261,13 @@ export function ServicesCarousel() {
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-sm truncate">{seller.display_name || "البائع"}</span>
+                            <span className="font-medium text-sm truncate">{seller.display_name || t.services.seller}</span>
                             {seller.is_verified && (
                               <Shield className="w-3 h-3 text-green-600 flex-shrink-0" />
                             )}
                             {seller.is_verified && (
                               <Badge variant="secondary" className="text-xs bg-green-100 text-green-800 flex-shrink-0">
-                                معتمد
+                                {t.services.verified}
                               </Badge>
                             )}
                           </div>
@@ -275,7 +277,7 @@ export function ServicesCarousel() {
                               <span>{seller.rating?.toFixed(1) || "0.0"}</span>
                             </div>
                             <span>•</span>
-                            <span>{seller.completed_orders || 0} طلب</span>
+                            <span>{seller.completed_orders || 0} {t.services.order}</span>
                           </div>
                         </div>
                       </div>
@@ -288,7 +290,7 @@ export function ServicesCarousel() {
                         </Avatar>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-sm">البائع</span>
+                            <span className="font-medium text-sm">{t.services.seller}</span>
                           </div>
                           <div className="flex items-center gap-2 text-xs text-gray-600">
                             <div className="flex items-center gap-1">
@@ -296,7 +298,7 @@ export function ServicesCarousel() {
                               <span>0.0</span>
                             </div>
                             <span>•</span>
-                            <span>0 طلب</span>
+                            <span>0 {t.services.order}</span>
                           </div>
                         </div>
                       </div>
@@ -317,7 +319,7 @@ export function ServicesCarousel() {
                         ))}
                       </div>
                       <span className="text-sm text-gray-600">
-                        {service.average_rating.toFixed(1)} ({service.reviews_count} تقييم)
+                        {service.average_rating.toFixed(1)} ({service.reviews_count} {t.services.rating})
                       </span>
                     </div>
 
@@ -346,7 +348,7 @@ export function ServicesCarousel() {
               onClick={prevSlide}
             >
               <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-              <span className="hidden sm:inline">السابق</span>
+              <span className="hidden sm:inline">{t.services.prev}</span>
               <span className="sm:hidden">‹</span>
             </Button>
 
@@ -372,7 +374,7 @@ export function ServicesCarousel() {
               className="bg-white/90 hover:bg-white backdrop-blur-sm shadow-lg border-gray-200 hover:border-blue-300 text-xs sm:text-sm"
               onClick={nextSlide}
             >
-              <span className="hidden sm:inline">التالي</span>
+              <span className="hidden sm:inline">{t.services.next}</span>
               <span className="sm:hidden">›</span>
               <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
             </Button>
@@ -386,7 +388,7 @@ export function ServicesCarousel() {
               variant="outline"
               className="px-8 py-3 text-lg border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white bg-transparent backdrop-blur-sm"
             >
-              عرض المزيد من الخدمات
+              {t.services.viewMore}
             </Button>
           </Link>
         </div>

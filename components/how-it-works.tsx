@@ -2,23 +2,26 @@
 
 import { UserPlus, Search, CreditCard } from "lucide-react"
 import { motion } from "framer-motion"
+import { useTranslation } from "@/lib/i18n/hooks/useTranslation"
 
 export function HowItWorks() {
+  const { t } = useTranslation()
+  
   const steps = [
     {
       icon: UserPlus,
-      title: "أنشئ حسابك",
-      description: "سجّل كمشتري أو مقدم خدمة في دقائق معدودة",
+      title: t.howItWorks.steps.createAccount.title,
+      description: t.howItWorks.steps.createAccount.description,
     },
     {
       icon: Search,
-      title: "اختر ما تريد",
-      description: "استعرض الخدمات أو المنتجات الرقمية المتاحة",
+      title: t.howItWorks.steps.choose.title,
+      description: t.howItWorks.steps.choose.description,
     },
     {
       icon: CreditCard,
-      title: "ادفع بسهولة",
-      description: "بوسائل دفع جزائرية موثوقة ومضمونة",
+      title: t.howItWorks.steps.pay.title,
+      description: t.howItWorks.steps.pay.description,
     },
   ]
 
@@ -32,8 +35,8 @@ export function HowItWorks() {
           viewport={{ once: true, margin: "-100px" }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">كيف تعمل المنصة</h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">ثلاث خطوات بسيطة للبدء في استخدام منصتنا</p>
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">{t.howItWorks.title}</h2>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">{t.howItWorks.subtitle}</p>
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">

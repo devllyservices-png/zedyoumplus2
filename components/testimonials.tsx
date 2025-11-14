@@ -4,36 +4,35 @@ import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Star } from "lucide-react"
 import Image from "next/image"
+import { useTranslation } from "@/lib/i18n/hooks/useTranslation"
 
 export function Testimonials() {
+  const { t } = useTranslation()
   const [currentIndex, setCurrentIndex] = useState(0)
 
   const testimonials = [
     {
       id: 1,
-      name: "أحمد بن محمد",
-      location: "الجزائر العاصمة",
+      name: t.testimonials.items.ahmed.name,
+      location: t.testimonials.items.ahmed.location,
       rating: 5,
-      comment:
-        "منصة رائعة! حصلت على تصميم شعار احترافي بسعر ممتاز وجودة عالية. التعامل كان سهل والدفع آمن.",
+      comment: t.testimonials.items.ahmed.comment,
       avatar: "https://cdn-icons-png.flaticon.com/512/4128/4128176.png",
     },
     {
       id: 2,
-      name: "فاطمة قاسمي",
-      location: "وهران",
+      name: t.testimonials.items.fatima.name,
+      location: t.testimonials.items.fatima.location,
       rating: 5,
-      comment:
-        "استخدمت المنصة لشراء اشتراك نتفليكس وكانت التجربة ممتازة. التسليم كان فوري والسعر أفضل من أي مكان آخر.",
+      comment: t.testimonials.items.fatima.comment,
       avatar: "https://cdn-icons-png.flaticon.com/512/4128/4128253.png",
     },
     {
       id: 3,
-      name: "يوسف العربي",
-      location: "قسنطينة",
+      name: t.testimonials.items.youssef.name,
+      location: t.testimonials.items.youssef.location,
       rating: 5,
-      comment:
-        "كمقدم خدمة، المنصة ساعدتني في الوصول لعملاء جدد وزيادة دخلي. النظام سهل والعمولة معقولة.",
+      comment: t.testimonials.items.youssef.comment,
       avatar: "https://cdn-icons-png.flaticon.com/512/4128/4128176.png",
     },
   ]
@@ -51,9 +50,9 @@ export function Testimonials() {
     <section className="py-20 bg-gray-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">ماذا يقول عملاؤنا</h2>
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">{t.testimonials.title}</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            تجارب حقيقية من مستخدمين جزائريين راضين عن خدماتنا
+            {t.testimonials.subtitle}
           </p>
         </div>
 

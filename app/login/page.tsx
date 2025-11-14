@@ -14,8 +14,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
+import { useTranslation } from "@/lib/i18n/hooks/useTranslation"
 
 function LoginForm() {
+  const { t, mounted } = useTranslation()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -26,13 +28,30 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const redirectUrl = searchParams.get("redirect")
 
+  // Wait for client-side hydration to complete
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-violet-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <Link href="/">
+              <Image src="/images/logo-large.png" alt={t.header.logoAlt} width={120} height={40} className="mx-auto mb-4" />
+            </Link>
+            <h1 className="text-2xl font-bold text-gray-900">{t.login.title}</h1>
+            <p className="text-gray-600 mt-2">جاري التحميل...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setIsSuspended(false)
 
     if (!email || !password) {
-      setError("يرجى ملء جميع الحقول")
+      setError(t.login.errors.fillFields)
       return
     }
 
@@ -43,7 +62,7 @@ function LoginForm() {
       const destination = redirectUrl || "/dashboard"
       router.push(destination)
     } else {
-      setError(result.error || "البريد الإلكتروني أو كلمة المرور غير صحيحة")
+      setError(result.error || t.login.errors.invalidCredentials)
       setIsSuspended(result.suspended || false)
     }
   }
@@ -54,15 +73,15 @@ function LoginForm() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/">
-            <Image src="/images/logo-large.png" alt="شعار المنصة" width={120} height={40} className="mx-auto mb-4" />
+            <Image src="/images/logo-large.png" alt={t.header.logoAlt} width={120} height={40} className="mx-auto mb-4" />
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">مرحباً بعودتك</h1>
-          <p className="text-gray-600 mt-2">سجل دخولك للوصول إلى حسابك</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t.login.title}</h1>
+          <p className="text-gray-600 mt-2">{t.login.subtitle}</p>
         </div>
 
         <Card className="shadow-xl border-0">
           <CardHeader className="text-center pb-4">
-            <CardTitle className="text-xl font-bold">تسجيل الدخول</CardTitle>
+            <CardTitle className="text-xl font-bold">{t.login.formTitle}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -72,7 +91,7 @@ function LoginForm() {
                     {error}
                     {isSuspended && (
                       <div className="mt-3 p-3 bg-orange-100 rounded-lg border border-orange-200">
-                        <p className="text-sm font-medium text-orange-900 mb-1">للحصول على المساعدة:</p>
+                        <p className="text-sm font-medium text-orange-900 mb-1">{t.login.errors.suspendedHelp}</p>
                         <a 
                           href="mailto:support@zedyoumplus.com" 
                           className="text-orange-800 hover:text-orange-900 underline font-medium"
@@ -87,7 +106,7 @@ function LoginForm() {
 
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium">
-                  البريد الإلكتروني
+                  {t.login.email}
                 </Label>
                 <div className="relative">
                   <Mail className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -96,7 +115,7 @@ function LoginForm() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="أدخل بريدك الإلكتروني"
+                    placeholder={t.login.emailPlaceholder}
                     className="pr-10 h-12"
                     required
                   />
@@ -105,7 +124,7 @@ function LoginForm() {
 
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-sm font-medium">
-                  كلمة المرور
+                  {t.login.password}
                 </Label>
                 <div className="relative">
                   <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -114,7 +133,7 @@ function LoginForm() {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="أدخل كلمة المرور"
+                    placeholder={t.login.passwordPlaceholder}
                     className="pr-10 pl-10 h-12"
                     required
                   />
@@ -130,7 +149,7 @@ function LoginForm() {
 
               <div className="flex items-center justify-between">
                 <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-800">
-                  نسيت كلمة المرور؟
+                  {t.login.forgotPassword}
                 </Link>
               </div>
 
@@ -139,16 +158,16 @@ function LoginForm() {
                 disabled={isLoading}
                 className="w-full btn-gradient text-white h-12 text-lg font-medium"
               >
-                {isLoading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
+                {isLoading ? t.login.submitting : t.login.submit}
                 <ArrowRight className="w-5 h-5 mr-2" />
               </Button>
             </form>
 
             <div className="mt-6 text-center">
               <p className="text-gray-600">
-                ليس لديك حساب؟{" "}
+                {t.login.noAccount}{" "}
                 <Link href="/register" className="text-blue-600 hover:text-blue-800 font-medium">
-                  سجل الآن
+                  {t.login.signUp}
                 </Link>
               </p>
             </div>
@@ -158,7 +177,7 @@ function LoginForm() {
         <div className="text-center mt-6">
           <Link href="/" className="text-gray-600 hover:text-gray-800 flex items-center justify-center gap-2">
             <ArrowRight className="w-4 h-4" />
-            العودة إلى الصفحة الرئيسية
+            {t.login.backToHome}
           </Link>
         </div>
       </div>
@@ -173,9 +192,9 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Link href="/">
-              <Image src="/images/logo-large.png" alt="شعار المنصة" width={120} height={40} className="mx-auto mb-4" />
+              <Image src="/images/logo-large.png" alt="Logo" width={120} height={40} className="mx-auto mb-4" />
             </Link>
-            <h1 className="text-2xl font-bold text-gray-900">مرحباً بعودتك</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Loading...</h1>
             <p className="text-gray-600 mt-2">جاري التحميل...</p>
           </div>
           <Card className="shadow-xl border-0">

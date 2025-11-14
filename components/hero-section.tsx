@@ -8,8 +8,10 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import { SearchResults } from "@/components/search-results"
 import { useRouter } from "next/navigation"
+import { useTranslation } from "@/lib/i18n/hooks/useTranslation"
 
 export function HeroSection() {
+  const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState("")
   const [showSearchResults, setShowSearchResults] = useState(false)
   const [isSearchFocused, setIsSearchFocused] = useState(false)
@@ -18,11 +20,11 @@ export function HeroSection() {
 
   // Categories data
   const categories = [
-    { id: "design", name: "التصميم", searchTerm: "تصميم" },
-    { id: "programming", name: "البرمجة", searchTerm: "برمجة" },
-    { id: "translation", name: "الترجمة", searchTerm: "ترجمة" },
-    { id: "marketing", name: "التسويق", searchTerm: "تسويق" },
-    { id: "writing", name: "الكتابة", searchTerm: "كتابة" }
+    { id: "design", name: t.hero.categories.design, searchTerm: "تصميم" },
+    { id: "programming", name: t.hero.categories.programming, searchTerm: "برمجة" },
+    { id: "translation", name: t.hero.categories.translation, searchTerm: "ترجمة" },
+    { id: "marketing", name: t.hero.categories.marketing, searchTerm: "تسويق" },
+    { id: "writing", name: t.hero.categories.writing, searchTerm: "كتابة" }
   ]
 
   // Handle search input change
@@ -108,7 +110,7 @@ export function HeroSection() {
                 transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
                 className="text-3xl lg:text-5xl font-bold text-white leading-tight"
               >
-                ابحث عن أفضل المستقلين في الجزائر أو قدّم خدماتك بسهولة
+                {t.hero.title}
               </motion.h1>
               <motion.p 
                 initial={{ opacity: 0, y: 20 }}
@@ -116,7 +118,7 @@ export function HeroSection() {
                 transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
                 className="text-lg lg:text-xl text-white/90 leading-relaxed max-w-3xl mx-auto"
               >
-                منصتك الشاملة لطلب الخدمات الرقمية وشراء المنتجات المضمونة، بوسائل دفع جزائرية 100%
+                {t.hero.subtitle}
               </motion.p>
             </div>
 
@@ -132,7 +134,7 @@ export function HeroSection() {
                   <div className="flex-1">
                     <Input
                       type="text"
-                      placeholder="ابحث عن الخدمات أو المنتجات..."
+                      placeholder={t.hero.searchPlaceholder}
                       value={searchQuery}
                       onChange={handleSearchChange}
                       onKeyPress={handleKeyPress}
@@ -186,7 +188,7 @@ export function HeroSection() {
                   size="lg"
                   className="bg-white/20 border-2 border-white/30 text-white hover:bg-white hover:text-gray-900 px-8 py-3 text-base font-semibold rounded-xl backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:shadow-xl min-w-[180px]"
                 >
-                  استعرض الخدمات
+                  {t.hero.cta.browseServices}
                 </Button>
               </Link>
               <Link href="/services/create">
@@ -194,7 +196,7 @@ export function HeroSection() {
                   size="lg"
                   className="bg-gradient-to-r from-blue-500/80 to-purple-600/80 border-2 border-white/30 text-white hover:from-blue-600 hover:to-purple-700 px-8 py-3 text-base font-semibold rounded-xl backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:shadow-xl min-w-[180px]"
                 >
-                  قدّم خدمتك
+                  {t.hero.cta.offerService}
                 </Button>
               </Link>
             </motion.div>
