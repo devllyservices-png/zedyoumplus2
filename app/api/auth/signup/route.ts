@@ -39,13 +39,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create user
+    // Create user (suspended by default - admin needs to activate)
     const { data: user, error: userError } = await supabase
       .from("users")
       .insert({
         email,
         password_hash,
         role,
+        suspended: true, // New accounts are inactive by default, admin must activate
       })
       .select()
       .single()
