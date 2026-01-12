@@ -5,8 +5,8 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   
   // Skip middleware for public routes
-  const publicRoutes = ["/", "/home", "/login", "/register", "/api/auth/login", "/api/auth/signup", "/api/upload"]
-  if (publicRoutes.includes(pathname) || pathname.startsWith("/api/upload") || pathname.startsWith("/api/services")) {
+  const publicRoutes = ["/", "/home", "/login", "/register", "/terms", "/privacy", "/contact", "/services", "/digital-products", "/how-it-works", "/api/auth/login", "/api/auth/signup", "/api/upload"]
+  if (publicRoutes.includes(pathname) || pathname.startsWith("/api/upload") || pathname.startsWith("/api/services") || pathname.startsWith("/services/") || pathname.startsWith("/digital-products/") || pathname.startsWith("/sellers/")) {
     return NextResponse.next()
   }
 

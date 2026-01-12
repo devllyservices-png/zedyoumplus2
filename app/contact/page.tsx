@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Mail, Phone, MapPin, Send, MessageSquare, Clock } from "lucide-react"
+import { WhatsAppButton } from "@/components/whatsapp-button"
 
 export default function ContactPage() {
   const { t, mounted } = useTranslation()
@@ -55,18 +56,28 @@ export default function ContactPage() {
       title: t.contactPage.contactInfo.email,
       value: t.footer.contact.email,
       link: `mailto:${t.footer.contact.email}`,
+      isWhatsApp: false,
     },
     {
       icon: Phone,
       title: t.contactPage.contactInfo.phone,
       value: t.footer.contact.phone,
       link: `tel:${t.footer.contact.phone}`,
+      isWhatsApp: false,
     },
     {
       icon: MapPin,
       title: t.contactPage.contactInfo.address,
       value: t.footer.contact.address,
       link: "#",
+      isWhatsApp: false,
+    },
+    {
+      icon: Phone,
+      title: "واتساب",
+      value: "+213 557 46 91 13",
+      link: "https://wa.me/213557469113",
+      isWhatsApp: true,
     },
   ]
 
@@ -224,15 +235,23 @@ export default function ContactPage() {
                       <motion.a
                         key={index}
                         href={info.link}
+                        target={info.isWhatsApp ? "_blank" : undefined}
+                        rel={info.isWhatsApp ? "noopener noreferrer" : undefined}
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, delay: index * 0.1 }}
                         viewport={{ once: true }}
                         className="flex items-start gap-4 p-4 rounded-lg hover:bg-gray-50 transition-colors group"
                       >
-                        <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-violet-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <info.icon className="w-6 h-6 text-white" />
-                        </div>
+                        {info.isWhatsApp ? (
+                          <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+                            <WhatsAppButton size={48} className="m-0" />
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-violet-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <info.icon className="w-6 h-6 text-white" />
+                          </div>
+                        )}
                         <div>
                           <h3 className="font-semibold text-gray-900 mb-1">{info.title}</h3>
                           <p className="text-gray-600">{info.value}</p>

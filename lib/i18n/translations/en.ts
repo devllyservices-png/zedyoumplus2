@@ -464,7 +464,11 @@ export const en = {
     contact: {
       title: "Contact Us",
       email: "support@platform.dz",
+      reclamationEmail: "zedyoumplus@gmail.com",
+      reclamationEmailLabel: "Reclamation Email",
       phone: "+213 555 123 456",
+      whatsapp: "WhatsApp",
+      helpMessage: "Can I help you?",
       address: "Algiers, Algeria",
     },
     paymentMethods: {

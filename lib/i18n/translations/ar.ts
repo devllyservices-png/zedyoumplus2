@@ -464,7 +464,11 @@ export const ar = {
     contact: {
       title: "تواصل معنا",
       email: "support@platform.dz",
+      reclamationEmail: "zedyoumplus@gmail.com",
+      reclamationEmailLabel: "بريد الشكاوى",
       phone: "+213 555 123 456",
+      whatsapp: "واتساب",
+      helpMessage: "هل يمكنني مساعدتك؟",
       address: "الجزائر العاصمة، الجزائر",
     },
     paymentMethods: {

@@ -15,6 +15,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useTranslation } from "@/lib/i18n/hooks/useTranslation"
+import { WhatsAppButton } from "@/components/whatsapp-button"
 
 function LoginForm() {
   const { t, mounted } = useTranslation()
@@ -91,13 +92,26 @@ function LoginForm() {
                     {error}
                     {isSuspended && (
                       <div className="mt-3 p-3 bg-orange-100 rounded-lg border border-orange-200">
-                        <p className="text-sm font-medium text-orange-900 mb-1">{t.login.errors.suspendedHelp}</p>
-                        <a 
-                          href="mailto:support@zedyoumplus.com" 
-                          className="text-orange-800 hover:text-orange-900 underline font-medium"
-                        >
-                          support@zedyoumplus.com
-                        </a>
+                        <p className="text-sm font-medium text-orange-900 mb-2">{t.login.errors.suspendedHelp}</p>
+                        <div className="flex flex-col gap-2">
+                          <a 
+                            href="mailto:support@zedyoumplus.com" 
+                            className="text-orange-800 hover:text-orange-900 underline font-medium"
+                          >
+                            support@zedyoumplus.com
+                          </a>
+                          <div className="flex items-center gap-2">
+                            <WhatsAppButton size={24} phoneNumber="+213557469113" />
+                            <a 
+                              href="https://wa.me/213557469113" 
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-orange-800 hover:text-orange-900 underline font-medium"
+                            >
+                              واتساب: +213 557 46 91 13
+                            </a>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </AlertDescription>

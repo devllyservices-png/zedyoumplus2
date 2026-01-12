@@ -4,11 +4,15 @@ import Link from "next/link"
 import Image from "next/image"
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react"
 import { useTranslation } from "@/lib/i18n/hooks/useTranslation"
+import { WhatsAppButton } from "@/components/whatsapp-button"
 
 export function Footer() {
-  const { t } = useTranslation()
+  const { t, language } = useTranslation()
+  const isRTL = language === "ar"
+  const direction = isRTL ? "rtl" : "ltr"
+  
   return (
-    <footer className="bg-gray-900 text-white">
+    <footer className="bg-gray-900 text-white" dir={direction}>
       <div className="container mx-auto px-4 py-16">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Logo and Description */}
@@ -23,7 +27,7 @@ export function Footer() {
             <p className="text-gray-300 leading-relaxed mb-6">
               {t.footer.description}
             </p>
-            <div className="flex space-x-4 space-x-reverse">
+            <div className={`flex ${isRTL ? "space-x-4 space-x-reverse" : "space-x-4"}`}>
               <Link href="#" className="text-gray-400 hover:text-white transition-colors">
                 <Facebook className="w-5 h-5" />
               </Link>
@@ -104,11 +108,23 @@ export function Footer() {
             <ul className="space-y-3">
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-gray-400" />
-                <span className="text-gray-300">{t.footer.contact.email}</span>
+                <a href={`mailto:${t.footer.contact.email}`} className="text-gray-300 hover:text-white transition-colors">
+                  {t.footer.contact.email}
+                </a>
+              </li>
+              <li className="flex items-center gap-3">
+                <Mail className="w-5 h-5 text-gray-400" />
+                <a href={`mailto:${t.footer.contact.reclamationEmail}`} className="text-gray-300 hover:text-white transition-colors">
+                  {t.footer.contact.reclamationEmailLabel}: {t.footer.contact.reclamationEmail}
+                </a>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-gray-400" />
                 <span className="text-gray-300">{t.footer.contact.phone}</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <WhatsAppButton size={32} className="flex-shrink-0" />
+                <span className="text-gray-300">{t.footer.contact.whatsapp}: +213 557 46 91 13</span>
               </li>
               <li className="flex items-center gap-3">
                 <MapPin className="w-5 h-5 text-gray-400" />

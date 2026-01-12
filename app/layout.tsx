@@ -4,6 +4,7 @@ import { Cairo } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/contexts/auth-context"
 import { NotificationProvider } from "@/contexts/notification-context"
+import { WhatsAppFloat } from "@/components/whatsapp-float"
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
@@ -28,6 +29,7 @@ export default function RootLayout({
         <AuthProvider>
           <NotificationProvider>
             {children}
+            <WhatsAppFloat />
           </NotificationProvider>
         </AuthProvider>
       </body>
