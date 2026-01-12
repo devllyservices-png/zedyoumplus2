@@ -82,7 +82,7 @@ export function FeaturedServices() {
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">الخدمات الأكثر طلبًا</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            اكتشف أفضل الخدمات المقدمة من المستقلين الجزائريين المحترفين
+            اكتشف أفضل الخدمات المقدمة من المستقلين المحترفين حول العالم
           </p>
         </div>
 

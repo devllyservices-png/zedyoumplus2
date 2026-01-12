@@ -93,8 +93,8 @@ export const fr = {
 
   // Hero Section
   hero: {
-    title: "Trouvez les meilleurs freelances en Algérie ou proposez vos services facilement",
-    subtitle: "Votre plateforme complète pour commander des services numériques et acheter des produits garantis, avec des moyens de paiement 100% algériens",
+    title: "Trouvez les meilleurs freelances dans le monde ou proposez vos services facilement",
+    subtitle: "Votre plateforme complète pour commander des services numériques et acheter des produits garantis, avec des moyens de paiement locaux et internationaux",
     searchPlaceholder: "Recherchez des services ou des produits...",
     categories: {
       design: "Design",
@@ -112,7 +112,7 @@ export const fr = {
   // Categories Section
   categories: {
     title: "Explorez les catégories",
-    subtitle: "Découvrez une large gamme de services spécialisés proposés par les meilleurs freelances d'Algérie",
+    subtitle: "Découvrez une large gamme de services spécialisés proposés par les meilleurs freelances professionnels",
     items: {
       design: "Design graphique",
       programming: "Programmation et développement web",
@@ -144,7 +144,7 @@ export const fr = {
       },
       pay: {
         title: "Payez facilement",
-        description: "Avec des moyens de paiement algériens fiables et sécurisés",
+        description: "Avec des moyens de paiement locaux et internationaux fiables et sécurisés",
       },
     },
   },
@@ -152,7 +152,7 @@ export const fr = {
   // Services Carousel
   services: {
     title: "Services les plus demandés",
-    subtitle: "Découvrez les meilleurs services proposés par des freelances algériens professionnels",
+    subtitle: "Découvrez les meilleurs services proposés par des freelances professionnels du monde entier",
     swipeHint: "Glissez pour naviguer entre les services",
     startingFrom: "À partir de",
     currency: "DA",
@@ -218,11 +218,11 @@ export const fr = {
   // Why Choose Us
   whyChooseUs: {
     title: "Pourquoi choisir notre plateforme ?",
-    subtitle: "Nous offrons une expérience unique et exceptionnelle aux utilisateurs algériens",
+    subtitle: "Nous offrons une expérience unique et exceptionnelle aux utilisateurs du monde entier",
     features: {
       securePayment: {
-        title: "Paiement sécurisé avec des moyens 100% algériens",
-        description: "Nous supportons tous les moyens de paiement locaux : Chargily, CCP, CIB, Visa, Mastercard et virement bancaire",
+        title: "Paiement sécurisé avec des moyens locaux et internationaux",
+        description: "Nous supportons tous les moyens de paiement locaux et internationaux : Chargily, CCP, CIB, Visa, Mastercard et virement bancaire",
       },
       support: {
         title: "Support technique rapide et réactif",
@@ -249,7 +249,7 @@ export const fr = {
   // Testimonials
   testimonials: {
     title: "Ce que disent nos clients",
-    subtitle: "Expériences réelles d'utilisateurs algériens satisfaits de nos services",
+    subtitle: "Expériences réelles d'utilisateurs satisfaits de nos services",
     items: {
       ahmed: {
         name: "Ahmed Ben Mohamed",
@@ -419,7 +419,7 @@ export const fr = {
       },
       paymentMethods: {
         question: "Quels sont les moyens de paiement disponibles ?",
-        answer: "Nous acceptons tous les moyens de paiement algériens : Chargily, CCP, CIB et cartes de crédit.",
+        answer: "Nous acceptons tous les moyens de paiement locaux et internationaux : Chargily, CCP, CIB, Visa, Mastercard et cartes de crédit.",
       },
       becomeSeller: {
         question: "Comment puis-je devenir prestataire ?",
@@ -445,7 +445,7 @@ export const fr = {
 
   // Footer
   footer: {
-    description: "Votre plateforme complète pour commander des services numériques et acheter des produits garantis, avec des moyens de paiement 100% algériens",
+    description: "Votre plateforme complète pour commander des services numériques et acheter des produits garantis, avec des moyens de paiement locaux et internationaux",
     quickLinks: {
       title: "Liens rapides",
       services: "Services",
@@ -476,7 +476,154 @@ export const fr = {
       mastercard: "Mastercard",
       bankTransfer: "Virement bancaire",
     },
-    copyright: "© 2024 Plateforme de services algérienne. Tous droits réservés.",
+    copyright: "© 2024 Plateforme de services numériques. Tous droits réservés.",
+  },
+
+  // Dashboard
+  dashboard: {
+    title: "Tableau de bord",
+    loading: "Chargement...",
+    logout: "Déconnexion",
+    editProfile: "Modifier le profil",
+    joinDate: "Rejoint le",
+    stats: {
+      buyer: {
+        totalOrders: "Total des commandes",
+        totalSpent: "Montant dépensé",
+        completedOrders: "Commandes terminées",
+        pendingOrders: "Commandes en attente",
+      },
+      seller: {
+        activeServices: "Services actifs",
+        inProgressOrders: "Projets en cours",
+        completedOrders: "Projets terminés",
+        totalEarnings: "Gains totaux",
+      },
+    },
+    orders: {
+      title: "Commandes récentes",
+      myOrders: "Mes commandes",
+      service: "Service",
+      provider: "Prestataire",
+      buyer: "Acheteur",
+      amount: "Montant",
+      status: "Statut",
+      date: "Date",
+      actions: "Actions",
+      package: "Forfait",
+      by: "Par",
+      buyerLabel: "Acheteur",
+      details: "Détails",
+      complete: "Terminer",
+      viewAll: "Voir toutes les commandes",
+      noOrders: "Aucune commande pour le moment",
+      noOrdersDesc: "Vous n'avez pas encore passé de commande. Commencez votre voyage dans le monde des services numériques!",
+      browseServices: "Parcourir les services",
+      startTip: "💡 Commencez par les services les plus demandés",
+      noRecentOrders: "Aucune commande récente",
+    },
+    status: {
+      pending: "En attente",
+      inProgress: "En cours",
+      completed: "Terminé",
+      cancelled: "Annulé",
+    },
+    quickActions: {
+      title: "Actions rapides",
+      browseServices: "Parcourir les services",
+      digitalProducts: "Produits numériques",
+      allOrders: "Toutes mes commandes",
+      addService: "Ajouter un nouveau service",
+      addDigitalProduct: "Ajouter un produit numérique",
+    },
+    completeDialog: {
+      title: "Terminer le projet",
+      description: "Êtes-vous sûr de vouloir terminer ce projet?",
+      buyer: "Acheteur",
+      amount: "Montant",
+      importantInfo: "Informations importantes:",
+      info1: "Lors de la finalisation du projet, l'acheteur sera notifié pour confirmer la réception",
+      info2: "Après confirmation de l'acheteur, le montant sera transféré à votre compte au moment convenu",
+      info3: "Assurez-vous de livrer tous les fichiers et exigences convenus",
+      info4: "Cette action ne peut pas être annulée après confirmation",
+      cancel: "Annuler",
+      confirm: "Confirmer la finalisation",
+    },
+    orderDetails: {
+      title: "Détails de la commande",
+      description: "Informations détaillées sur la commande et l'acheteur",
+      orderInfo: "Informations sur la commande",
+      serviceTitle: "Titre du service",
+      selectedPackage: "Forfait sélectionné",
+      amount: "Montant",
+      status: "Statut",
+      orderDate: "Date de commande",
+      paymentMethod: "Méthode de paiement",
+      notSpecified: "Non spécifié",
+      providerInfo: "Informations du prestataire",
+      buyerInfo: "Informations de l'acheteur",
+      additionalNotes: "Notes supplémentaires",
+      paymentProof: "Preuve de paiement",
+      paymentVerified: "La preuve de paiement a été vérifiée par l'équipe",
+      close: "Fermer",
+      completeProject: "Terminer le projet",
+    },
+  },
+
+  // Dashboard Profile
+  dashboardProfile: {
+    title: "Paramètres du profil",
+    back: "← Retour",
+    backToDashboard: "Retour au tableau de bord",
+    profile: "Profil",
+    noBio: "Aucune biographie",
+    rating: "Note",
+    completedProjects: "Projets terminés",
+    verified: "✓ Vérifié",
+    displayName: "Nom affiché",
+    phone: "Téléphone",
+    location: "Localisation",
+    responseTime: "Temps de réponse",
+    responseTimePlaceholder: "Ex: Moins d'une heure",
+    avatar: "Photo de profil",
+    changeImage: "Changer la photo",
+    uploading: "Téléchargement...",
+    bio: "Biographie",
+    languages: "Langues",
+    addLanguage: "Ajouter une langue",
+    add: "Ajouter",
+    deleteLanguage: "Supprimer",
+    deleteAccount: "Supprimer le compte",
+    deleteConfirm: "Êtes-vous sûr de vouloir supprimer le compte? Cette action est irréversible.",
+    save: "Enregistrer",
+    saving: "Enregistrement...",
+    saveSuccess: "Profil mis à jour avec succès",
+    saveError: "Échec de l'enregistrement",
+    uploadError: "Échec du téléchargement de l'image",
+    deleteError: "Impossible de supprimer le compte",
+  },
+
+  // Dashboard Manage Services
+  manageServices: {
+    title: "Mes services",
+    description: "Gérez et modifiez facilement vos services affichés ici",
+    found: "Trouvé",
+    service: "service",
+    services: "services",
+    sortBy: "Trier par",
+    sortOptions: {
+      popular: "Les plus populaires",
+      newest: "Les plus récents",
+      priceLow: "Prix: Du moins cher au plus cher",
+      priceHigh: "Prix: Du plus cher au moins cher",
+      rating: "Meilleure note",
+    },
+    featured: "En vedette",
+    verified: "Vérifié",
+    viewDetails: "Voir les détails",
+    noServices: "Aucun service trouvé",
+    noServicesDesc: "Essayez de changer les critères de recherche ou les filtres",
+    loadMore: "Charger plus de services",
   },
 }
 

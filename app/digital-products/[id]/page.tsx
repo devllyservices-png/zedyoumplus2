@@ -58,9 +58,9 @@ export default function DigitalProductDetailPage() {
     description:
       "اشتراك نتفليكس بريميوم لمدة 3 أشهر مع جودة 4K. استمتع بآلاف الأفلام والمسلسلات العربية والعالمية بأعلى جودة. يدعم التشغيل على جميع الأجهزة مع إمكانية المشاهدة دون اتصال بالإنترنت.",
     images: [
-      "https://i0.wp.com/www.ar-buy.com/wp-content/uploads/2024/09/netflix-cover.jpg?fit=600%2C338&ssl=1",
-      "https://i0.wp.com/www.ar-buy.com/wp-content/uploads/2024/09/netflix-cover.jpg?fit=600%2C338&ssl=1",
-      "https://i0.wp.com/www.ar-buy.com/wp-content/uploads/2024/09/netflix-cover.jpg?fit=600%2C338&ssl=1",
+      "https://s3-alpha.figma.com/hub/file/4815167922/e93c294e-285c-413c-a9fb-d98da281307c-cover.png",
+      "https://s3-alpha.figma.com/hub/file/4815167922/e93c294e-285c-413c-a9fb-d98da281307c-cover.png",
+      "https://s3-alpha.figma.com/hub/file/4815167922/e93c294e-285c-413c-a9fb-d98da281307c-cover.png",
     ],
     rating: 4.9,
     reviews: 567,

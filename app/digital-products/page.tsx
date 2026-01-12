@@ -39,7 +39,7 @@ export default function DigitalProductsPage() {
     rating: 4.9,
     reviews: 567,
     downloads: 890,
-    image: "https://i0.wp.com/www.ar-buy.com/wp-content/uploads/2024/09/netflix-cover.jpg?fit=600%2C338&ssl=1",
+    image: "https://s3-alpha.figma.com/hub/file/4815167922/e93c294e-285c-413c-a9fb-d98da281307c-cover.png",
     tags: ["نتفليكس", "أفلام", "مسلسلات"],
     seller: "متجر الاشتراكات",
     duration: "3 أشهر",

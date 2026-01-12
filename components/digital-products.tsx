@@ -17,7 +17,7 @@ export function DigitalProducts() {
       title: t.digitalProducts.items.netflix.title,
       price: "1500",
       originalPrice: "2000",
-      image: "https://i0.wp.com/www.ar-buy.com/wp-content/uploads/2024/09/netflix-cover.jpg?fit=600%2C338&ssl=1",
+      image: "https://s3-alpha.figma.com/hub/file/4815167922/e93c294e-285c-413c-a9fb-d98da281307c-cover.png",
       features: t.digitalProducts.items.netflix.features,
       badge: t.digitalProducts.items.netflix.badge,
     },

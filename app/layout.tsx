@@ -12,7 +12,7 @@ const cairo = Cairo({
 })
 
 export const metadata: Metadata = {
-  title: "منصة الخدمات الجزائرية",
+  title: "منصة الخدمات الرقمية",
   description: "منصتك الشاملة لطلب الخدمات الرقمية وشراء المنتجات المضمونة",
   generator: "v0.dev",
 }

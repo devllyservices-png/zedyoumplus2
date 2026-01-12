@@ -1,13 +1,15 @@
 import { ar } from "./translations/ar"
 import { fr } from "./translations/fr"
+import { en } from "./translations/en"
 
-export type Language = "ar" | "fr"
+export type Language = "ar" | "fr" | "en"
 
 export type Translations = typeof ar
 
 const translations: Record<Language, Translations> = {
   ar,
   fr,
+  en,
 }
 
 // Default language

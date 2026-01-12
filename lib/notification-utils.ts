@@ -31,7 +31,7 @@ export async function sendWelcomeNotification(userId: string): Promise<void> {
   try {
     await NotificationTriggers.onSystemNotification(
       userId,
-      'مرحباً بك في منصة الخدمات الجزائرية',
+      'مرحباً بك في منصة الخدمات الرقمية',
       'نرحب بك في منصتنا! يمكنك الآن استكشاف الخدمات المتاحة أو إنشاء خدمتك الخاصة.'
     )
   } catch (error) {

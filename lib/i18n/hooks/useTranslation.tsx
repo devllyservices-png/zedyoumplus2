@@ -13,14 +13,14 @@ export function useTranslation() {
     setMounted(true)
     // Load language from localStorage on mount
     const savedLang = localStorage.getItem("language") as Language
-    if (savedLang && (savedLang === "ar" || savedLang === "fr")) {
+    if (savedLang && (savedLang === "ar" || savedLang === "fr" || savedLang === "en")) {
       setLanguageState(savedLang)
     }
 
     // Listen for language changes from other components
     const handleLanguageChange = () => {
       const currentLang = localStorage.getItem("language") as Language
-      if (currentLang && (currentLang === "ar" || currentLang === "fr")) {
+      if (currentLang && (currentLang === "ar" || currentLang === "fr" || currentLang === "en")) {
         setLanguageState(currentLang)
       }
     }

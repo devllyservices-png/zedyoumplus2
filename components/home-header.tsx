@@ -12,7 +12,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { motion, AnimatePresence } from "framer-motion"
 import { useTranslation } from "@/lib/i18n/hooks/useTranslation"
-import { FlagIcon } from "@/components/flag-icon"
 
 export function HomeHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -166,11 +165,10 @@ export function HomeHeader() {
                     ? "bg-white hover:bg-gray-50 border-gray-300 text-gray-700 hover:border-blue-400" 
                     : "bg-white/10 hover:bg-white/20 border-white/40 text-white backdrop-blur-sm hover:border-white/60"
                 }`}
-                title={language === "fr" ? "Français" : "العربية"}
+                title={language === "fr" ? "Français" : language === "en" ? "English" : "العربية"}
               >
-                <FlagIcon language={language} size={18} className="rounded-sm shadow-sm" />
                 <span className={`text-sm font-medium ${isScrolled ? "text-gray-700" : "text-white"}`}>
-                  {language === "fr" ? "FR" : "AR"}
+                  {language === "fr" ? "FR" : language === "en" ? "EN" : "AR"}
                 </span>
                 <svg 
                   className={`w-4 h-4 transition-transform duration-300 ${showLanguageMenu ? "rotate-180" : ""} ${isScrolled ? "text-gray-600" : "text-white"}`}
@@ -196,10 +194,27 @@ export function HomeHeader() {
                         : "text-gray-700 hover:bg-gray-50"
                     }`}
                   >
-                    <FlagIcon language="fr" size={24} className="rounded-sm shadow-sm" />
-                    <span className="flex-1 text-left">Français</span>
+                    <span className="flex-1 text-left">FR - Français</span>
                     {language === "fr" && (
                       <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setLanguage("en")
+                      setShowLanguageMenu(false)
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-all duration-200 ${
+                      language === "en"
+                        ? "bg-gradient-to-r from-red-50 to-red-100 text-red-700 font-semibold border-r-4 border-red-500"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <span className="flex-1 text-left">EN - English</span>
+                    {language === "en" && (
+                      <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     )}
@@ -215,8 +230,7 @@ export function HomeHeader() {
                         : "text-gray-700 hover:bg-gray-50"
                     }`}
                   >
-                    <FlagIcon language="ar" size={24} className="rounded-sm shadow-sm" />
-                    <span className="flex-1 text-right">العربية</span>
+                    <span className="flex-1 text-right">AR - العربية</span>
                     {language === "ar" && (
                       <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -439,9 +453,8 @@ export function HomeHeader() {
                     : "bg-white/10 hover:bg-white/20 border-white/40 text-white backdrop-blur-sm hover:border-white/60"
                 }`}
               >
-                <FlagIcon language={language} size={18} className="rounded-sm shadow-sm" />
                 <span className={`text-sm font-medium ${isScrolled ? "text-gray-700" : "text-white"}`}>
-                  {language === "fr" ? "FR" : "AR"}
+                  {language === "fr" ? "FR" : language === "en" ? "EN" : "AR"}
                 </span>
                 <svg 
                   className={`w-4 h-4 transition-transform duration-300 ${showLanguageMenu ? "rotate-180" : ""} ${isScrolled ? "text-gray-600" : "text-white"}`}
@@ -467,10 +480,27 @@ export function HomeHeader() {
                         : "text-gray-700 hover:bg-gray-50"
                     }`}
                   >
-                    <FlagIcon language="fr" size={24} className="rounded-sm shadow-sm" />
-                    <span className="flex-1 text-left">Français</span>
+                    <span className="flex-1 text-left">FR - Français</span>
                     {language === "fr" && (
                       <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setLanguage("en")
+                      setShowLanguageMenu(false)
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-all duration-200 ${
+                      language === "en"
+                        ? "bg-gradient-to-r from-red-50 to-red-100 text-red-700 font-semibold border-r-4 border-red-500"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <span className="flex-1 text-left">EN - English</span>
+                    {language === "en" && (
+                      <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     )}
@@ -486,8 +516,7 @@ export function HomeHeader() {
                         : "text-gray-700 hover:bg-gray-50"
                     }`}
                   >
-                    <FlagIcon language="ar" size={24} className="rounded-sm shadow-sm" />
-                    <span className="flex-1 text-right">العربية</span>
+                    <span className="flex-1 text-right">AR - العربية</span>
                     {language === "ar" && (
                       <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />

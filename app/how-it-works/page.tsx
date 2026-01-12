@@ -39,7 +39,7 @@ export default function HowItWorksPage() {
       icon: CreditCard,
       title: t.howItWorks.steps.pay.title,
       description: t.howItWorks.steps.pay.description,
-      details: "ادفع بثقة باستخدام وسائل الدفع الجزائرية الموثوقة. جميع المعاملات محمية ومضمونة.",
+      details: "ادفع بثقة باستخدام وسائل الدفع المحلية والدولية الموثوقة. جميع المعاملات محمية ومضمونة.",
     },
   ]
 

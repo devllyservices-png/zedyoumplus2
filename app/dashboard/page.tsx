@@ -13,8 +13,10 @@ import { Mail, Phone, MapPin, Calendar, ShoppingBag, Package, Star, DollarSign, 
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import SellerServices from "@/components/seller-services"
+import { useTranslation } from "@/lib/i18n/hooks/useTranslation"
 
 export default function DashboardPage() {
+  const { t, language, setLanguage } = useTranslation()
   const { user, profile, logout, hasPermission, refreshSession } = useAuth()
   const router = useRouter()
   const [stats, setStats] = useState({
@@ -31,6 +33,7 @@ export default function DashboardPage() {
   const [showCompleteDialog, setShowCompleteDialog] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<any>(null)
   const [showOrderDetails, setShowOrderDetails] = useState(false)
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false)
 
   useEffect(() => {
     if (!user) {
@@ -44,6 +47,17 @@ export default function DashboardPage() {
       fetchDashboardData()
     }
   }, [user, router, refreshSession])
+
+  // Close language menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showLanguageMenu && !(event.target as Element).closest('.language-menu')) {
+        setShowLanguageMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showLanguageMenu])
 
   const fetchDashboardData = async () => {
     try {
@@ -117,33 +131,33 @@ export default function DashboardPage() {
   }
 
   if (!user) {
-    return <div>جاري التحميل...</div>
+    return <div>{t.dashboard.loading}</div>
   }
 
   const statsData = user?.role === 'buyer' ? [
     {
-      title: "إجمالي الطلبات",
+      title: t.dashboard.stats.buyer.totalOrders,
       value: stats.completedOrders.toString(),
       icon: ShoppingBag,
       color: "text-blue-600",
       bgColor: "bg-blue-100",
     },
     {
-      title: "المبلغ المنفق",
+      title: t.dashboard.stats.buyer.totalSpent,
       value: `${stats.totalSpent.toLocaleString()} دج`,
       icon: DollarSign,
       color: "text-green-600",
       bgColor: "bg-green-100",
     },
     {
-      title: "الطلبات المكتملة",
+      title: t.dashboard.stats.buyer.completedOrders,
       value: recentOrders.filter((order: any) => order.status === 'completed').length.toString(),
       icon: Star,
       color: "text-yellow-600",
       bgColor: "bg-yellow-100",
     },
     {
-      title: "الطلبات المعلقة",
+      title: t.dashboard.stats.buyer.pendingOrders,
       value: recentOrders.filter((order: any) => order.status === 'pending').length.toString(),
       icon: Package,
       color: "text-purple-600",
@@ -151,28 +165,28 @@ export default function DashboardPage() {
     },
   ] : [
     {
-      title: "الخدمات النشطة",
+      title: t.dashboard.stats.seller.activeServices,
       value: stats.activeServices.toString(),
       icon: Package,
       color: "text-blue-600",
       bgColor: "bg-blue-100",
     },
     {
-      title: "المشاريع قيد التنفيذ",
+      title: t.dashboard.stats.seller.inProgressOrders,
       value: stats.inProgressOrders.toString(),
       icon: Clock,
       color: "text-orange-600",
       bgColor: "bg-orange-100",
     },
     {
-      title: "المشاريع المكتملة",
+      title: t.dashboard.stats.seller.completedOrders,
       value: stats.completedOrders.toString(),
       icon: CheckCircle,
       color: "text-green-600",
       bgColor: "bg-green-100",
     },
     {
-      title: "إجمالي الأرباح",
+      title: t.dashboard.stats.seller.totalEarnings,
       value: `${stats.totalEarnings.toLocaleString()} دج`,
       icon: DollarSign,
       color: "text-purple-600",
@@ -182,10 +196,10 @@ export default function DashboardPage() {
 
   const getStatusBadge = (status: string) => {
     const statusMap: { [key: string]: { text: string; className: string } } = {
-      'pending': { text: 'معلق', className: 'bg-yellow-100 text-yellow-800' },
-      'in_progress': { text: 'قيد التنفيذ', className: 'bg-blue-100 text-blue-800' },
-      'completed': { text: 'مكتمل', className: 'bg-green-100 text-green-800' },
-      'cancelled': { text: 'ملغي', className: 'bg-red-100 text-red-800' }
+      'pending': { text: t.dashboard.status.pending, className: 'bg-yellow-100 text-yellow-800' },
+      'in_progress': { text: t.dashboard.status.inProgress, className: 'bg-blue-100 text-blue-800' },
+      'completed': { text: t.dashboard.status.completed, className: 'bg-green-100 text-green-800' },
+      'cancelled': { text: t.dashboard.status.cancelled, className: 'bg-red-100 text-red-800' }
     }
     return statusMap[status] || { text: status, className: 'bg-gray-100 text-gray-800' }
   }
@@ -244,10 +258,92 @@ export default function DashboardPage() {
       <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">لوحة التحكم</h1>
-            <Button onClick={logout} variant="outline">
-              تسجيل الخروج
-            </Button>
+            <h1 className="text-2xl font-bold text-gray-900">{t.dashboard.title}</h1>
+            <div className="flex items-center gap-4">
+              {/* Language Switcher */}
+              <div className="relative language-menu">
+                <button
+                  onClick={() => setShowLanguageMenu(!showLanguageMenu)}
+                  className="relative flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-300 cursor-pointer group border-2 shadow-sm bg-white hover:bg-gray-50 border-gray-300 text-gray-700 hover:border-blue-400"
+                  title={language === "fr" ? "Français" : language === "en" ? "English" : "العربية"}
+                >
+                  <span className="text-sm font-medium text-gray-700">
+                    {language === "fr" ? "FR" : language === "en" ? "EN" : "AR"}
+                  </span>
+                  <svg 
+                    className={`w-4 h-4 transition-transform duration-300 ${showLanguageMenu ? "rotate-180" : ""} text-gray-600`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* Language Dropdown */}
+                {showLanguageMenu && (
+                  <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50 overflow-hidden">
+                    <button
+                      onClick={() => {
+                        setLanguage("fr")
+                        setShowLanguageMenu(false)
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-all duration-200 ${
+                        language === "fr"
+                          ? "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 font-semibold border-r-4 border-blue-500"
+                          : "text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      <span className="flex-1 text-left">FR - Français</span>
+                      {language === "fr" && (
+                        <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setLanguage("en")
+                        setShowLanguageMenu(false)
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-all duration-200 ${
+                        language === "en"
+                          ? "bg-gradient-to-r from-red-50 to-red-100 text-red-700 font-semibold border-r-4 border-red-500"
+                          : "text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      <span className="flex-1 text-left">EN - English</span>
+                      {language === "en" && (
+                        <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setLanguage("ar")
+                        setShowLanguageMenu(false)
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-all duration-200 ${
+                        language === "ar"
+                          ? "bg-gradient-to-r from-green-50 to-green-100 text-green-700 font-semibold border-r-4 border-green-500"
+                          : "text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      <span className="flex-1 text-right">AR - العربية</span>
+                      {language === "ar" && (
+                        <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+              <Button onClick={logout} variant="outline">
+                {t.dashboard.logout}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -275,7 +371,7 @@ export default function DashboardPage() {
                         : "bg-blue-100 text-blue-800"
                   }`}
                 >
-                  {user.role === "seller" ? "مقدم خدمة" : user.role === "admin" ? "مدير" : "مشتري"}
+                  {user.role === "seller" ? t.header.user.seller : user.role === "admin" ? t.header.user.admin : t.header.user.buyer}
                 </Badge>
 
                 <div className="space-y-3 text-right">
@@ -297,12 +393,12 @@ export default function DashboardPage() {
                   )}
                   <div className="flex items-center gap-3">
                     <Calendar className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">انضم في {profile?.member_since || user.created_at}</span>
+                    <span className="text-sm text-gray-600">{t.dashboard.joinDate} {profile?.member_since || user.created_at}</span>
                   </div>
                 </div>
 
                 <Link href="/dashboard/profile">
-                  <Button className="w-full mt-6 btn-gradient text-white">تعديل الملف الشخصي</Button>
+                  <Button className="w-full mt-6 btn-gradient text-white">{t.dashboard.editProfile}</Button>
                 </Link>
               </CardContent>
             </Card>
@@ -333,14 +429,14 @@ export default function DashboardPage() {
             <Card className="shadow-lg border-0">
               <CardHeader>
                 <CardTitle className="text-xl font-bold">
-                  {user?.role === 'buyer' ? 'طلباتي الأخيرة' : 'الطلبات الأخيرة'}
+                  {user?.role === 'buyer' ? t.dashboard.orders.myOrders : t.dashboard.orders.title}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
                   <div className="flex items-center justify-center py-8">
                     <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                    <span className="mr-2 text-gray-600">جاري التحميل...</span>
+                    <span className="mr-2 text-gray-600">{t.dashboard.loading}</span>
                   </div>
                 ) : recentOrders.length > 0 ? (
                   <div className="space-y-4">
@@ -397,7 +493,7 @@ export default function DashboardPage() {
                                       className="text-blue-600 border-blue-200 hover:bg-blue-50"
                                     >
                                       <Eye className="w-4 h-4 mr-1" />
-                                      التفاصيل
+                                      {t.dashboard.orders.details}
                                     </Button>
                                     {user?.role === 'seller' && order.status === 'in_progress' && (
                                       <Button
@@ -406,7 +502,7 @@ export default function DashboardPage() {
                                         className="bg-green-600 hover:bg-green-700 text-white"
                                       >
                                         <CheckCircle className="w-4 h-4 mr-1" />
-                                        إكمال
+                                        {t.dashboard.orders.complete}
                                       </Button>
                                     )}
                                   </div>
@@ -451,7 +547,7 @@ export default function DashboardPage() {
                                 className="flex-1 text-blue-600 border-blue-200 hover:bg-blue-50"
                               >
                                 <Eye className="w-4 h-4 mr-1" />
-                                التفاصيل
+                                {t.dashboard.orders.details}
                               </Button>
                               {user?.role === 'seller' && order.status === 'in_progress' && (
                                 <Button
@@ -460,7 +556,7 @@ export default function DashboardPage() {
                                   className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                                 >
                                   <CheckCircle className="w-4 h-4 mr-1" />
-                                  إكمال
+                                  {t.dashboard.orders.complete}
                                 </Button>
                               )}
                             </div>
@@ -474,30 +570,30 @@ export default function DashboardPage() {
                     <div className="w-16 h-16 bg-gray-300/60 rounded-full flex items-center justify-center mx-auto mb-4">
                       <ShoppingBag className="w-8 h-8 text-gray-500" />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-500 mb-2">لا توجد طلبات بعد</h3>
+                    <h3 className="text-lg font-medium text-gray-500 mb-2">{t.dashboard.orders.noOrders}</h3>
                     <p className="text-sm text-gray-400 mb-6 max-w-md mx-auto">
-                      لم تقم بطلب أي خدمة بعد. ابدأ رحلتك في عالم الخدمات الرقمية!
+                      {t.dashboard.orders.noOrdersDesc}
                     </p>
                     <div className="space-y-6">
                       <Link href="/services">
                         <Button variant="outline" className="px-6 py-2 text-sm text-gray-600 border-gray-300 hover:bg-gray-100">
-                          تصفح الخدمات
+                          {t.dashboard.orders.browseServices}
                         </Button>
                       </Link>
                       <p className="text-xs text-gray-400">
-                        💡 ابدأ بالخدمات الأكثر طلباً
+                        {t.dashboard.orders.startTip}
                       </p>
                     </div>
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <p className="text-gray-600">لا توجد طلبات حديثة</p>
+                    <p className="text-gray-600">{t.dashboard.orders.noRecentOrders}</p>
                   </div>
                 )}
                 
                 {recentOrders.length > 0 && (
                   <Button variant="outline" className="w-full mt-4 bg-transparent">
-                    عرض جميع الطلبات
+                    {t.dashboard.orders.viewAll}
                   </Button>
                 )}
               </CardContent>
@@ -506,36 +602,36 @@ export default function DashboardPage() {
             {/* Quick Actions */}
             <Card className="shadow-lg border-0">
               <CardHeader>
-                <CardTitle className="text-xl font-bold">إجراءات سريعة</CardTitle>
+                <CardTitle className="text-xl font-bold">{t.dashboard.quickActions.title}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-2 gap-4">
                   <Link href="/services">
-                    <Button className="btn-gradient w-full text-white h-12">تصفح الخدمات</Button>
+                    <Button className="btn-gradient w-full text-white h-12">{t.dashboard.quickActions.browseServices}</Button>
                   </Link>
                   <Link href="/digital-products">
                     <Button variant="outline" className="h-12 w-full bg-transparent">
-                      المنتجات الرقمية
+                      {t.dashboard.quickActions.digitalProducts}
                     </Button>
                   </Link>
                   {user?.role === 'buyer' && (
                     <Link href="/orders">
                       <Button variant="outline" className="h-12 w-full bg-transparent">
-                        جميع طلباتي
+                        {t.dashboard.quickActions.allOrders}
                       </Button>
                     </Link>
                   )}
                   {hasPermission('service', 'create') && (
                     <Link href="/services/create">
                       <Button variant="outline" className="h-12 w-full bg-transparent">
-                        إضافة خدمة جديدة
+                        {t.dashboard.quickActions.addService}
                       </Button>
                     </Link>
                   )}
                   {hasPermission('digital_product', 'create') && (
                     <Link href="/digital-products/create">
                       <Button variant="outline" className="h-12 w-full bg-transparent">
-                        إضافة منتج رقمي
+                        {t.dashboard.quickActions.addDigitalProduct}
                       </Button>
                     </Link>
                   )}
@@ -558,9 +654,9 @@ export default function DashboardPage() {
       <Dialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
         <DialogContent className="bg-white">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-gray-900">إكمال المشروع</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-gray-900">{t.dashboard.completeDialog.title}</DialogTitle>
             <DialogDescription className="text-gray-600">
-              هل أنت متأكد من إكمال هذا المشروع؟
+              {t.dashboard.completeDialog.description}
             </DialogDescription>
           </DialogHeader>
           
@@ -568,17 +664,17 @@ export default function DashboardPage() {
             <div className="space-y-4">
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h3 className="font-semibold text-gray-900 mb-2">{completingOrder.title}</h3>
-                <p className="text-sm text-gray-600">المشتري: {completingOrder.buyer}</p>
-                <p className="text-sm text-gray-600">المبلغ: {completingOrder.price.toLocaleString()} دج</p>
+                <p className="text-sm text-gray-600">{t.dashboard.completeDialog.buyer}: {completingOrder.buyer}</p>
+                <p className="text-sm text-gray-600">{t.dashboard.completeDialog.amount}: {completingOrder.price.toLocaleString()} دج</p>
               </div>
               
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-semibold text-blue-900 mb-2">معلومات مهمة:</h4>
+                <h4 className="font-semibold text-blue-900 mb-2">{t.dashboard.completeDialog.importantInfo}</h4>
                 <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• عند إكمال المشروع، سيتم إشعار المشتري لتأكيد استلامه</li>
-                  <li>• بعد تأكيد المشتري، سيتم تحويل المبلغ إلى حسابك في الوقت المتفق عليه</li>
-                  <li>• تأكد من تسليم جميع الملفات والمتطلبات المتفق عليها</li>
-                  <li>• لا يمكن التراجع عن هذا الإجراء بعد التأكيد</li>
+                  <li>• {t.dashboard.completeDialog.info1}</li>
+                  <li>• {t.dashboard.completeDialog.info2}</li>
+                  <li>• {t.dashboard.completeDialog.info3}</li>
+                  <li>• {t.dashboard.completeDialog.info4}</li>
                 </ul>
               </div>
             </div>
@@ -590,14 +686,14 @@ export default function DashboardPage() {
               onClick={() => setShowCompleteDialog(false)}
               className="border-gray-300 text-gray-700 hover:bg-gray-50"
             >
-              إلغاء
+              {t.dashboard.completeDialog.cancel}
             </Button>
             <Button 
               onClick={confirmCompleteOrder}
               className="bg-green-600 hover:bg-green-700 text-white"
             >
               <CheckCircle className="w-4 h-4 mr-2" />
-              تأكيد الإكمال
+              {t.dashboard.completeDialog.confirm}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -607,9 +703,9 @@ export default function DashboardPage() {
       <Dialog open={showOrderDetails} onOpenChange={setShowOrderDetails}>
         <DialogContent className="bg-white max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-gray-900">تفاصيل الطلب</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-gray-900">{t.dashboard.orderDetails.title}</DialogTitle>
             <DialogDescription className="text-gray-600">
-              معلومات مفصلة عن الطلب والمشتري
+              {t.dashboard.orderDetails.description}
             </DialogDescription>
           </DialogHeader>
           
@@ -619,36 +715,36 @@ export default function DashboardPage() {
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
                   <Package className="w-5 h-5 mr-2" />
-                  معلومات الطلب
+                  {t.dashboard.orderDetails.orderInfo}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600">عنوان الخدمة</p>
+                    <p className="text-sm text-gray-600">{t.dashboard.orderDetails.serviceTitle}</p>
                     <p className="font-medium text-gray-900">{selectedOrder.title}</p>
                   </div>
                   {selectedOrder.package && (
                     <div>
-                      <p className="text-sm text-gray-600">الباقة المختارة</p>
+                      <p className="text-sm text-gray-600">{t.dashboard.orderDetails.selectedPackage}</p>
                       <p className="font-medium text-gray-900">{selectedOrder.package}</p>
                     </div>
                   )}
                   <div>
-                    <p className="text-sm text-gray-600">المبلغ</p>
+                    <p className="text-sm text-gray-600">{t.dashboard.orderDetails.amount}</p>
                     <p className="font-bold text-green-600 text-lg">{selectedOrder.price.toLocaleString()} دج</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">الحالة</p>
+                    <p className="text-sm text-gray-600">{t.dashboard.orderDetails.status}</p>
                     <Badge className={getStatusBadge(selectedOrder.status).className}>
                       {getStatusBadge(selectedOrder.status).text}
                     </Badge>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">تاريخ الطلب</p>
+                    <p className="text-sm text-gray-600">{t.dashboard.orderDetails.orderDate}</p>
                     <p className="font-medium text-gray-900">{selectedOrder.date}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">طريقة الدفع</p>
-                    <p className="font-medium text-gray-900">{selectedOrder.payment_method || 'غير محدد'}</p>
+                    <p className="text-sm text-gray-600">{t.dashboard.orderDetails.paymentMethod}</p>
+                    <p className="font-medium text-gray-900">{selectedOrder.payment_method || t.dashboard.orderDetails.notSpecified}</p>
                   </div>
                 </div>
               </div>
@@ -657,7 +753,7 @@ export default function DashboardPage() {
               <div className="bg-blue-50 p-4 rounded-lg">
                 <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
                   <User className="w-5 h-5 mr-2" />
-                  معلومات {user?.role === 'buyer' ? 'مقدم الخدمة' : 'المشتري'}
+                  {user?.role === 'buyer' ? t.dashboard.orderDetails.providerInfo : t.dashboard.orderDetails.buyerInfo}
                 </h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
@@ -681,7 +777,7 @@ export default function DashboardPage() {
                 <div className="bg-yellow-50 p-4 rounded-lg">
                   <h3 className="font-semibold text-gray-900 mb-2 flex items-center">
                     <MessageSquare className="w-5 h-5 mr-2" />
-                    ملاحظات إضافية
+                    {t.dashboard.orderDetails.additionalNotes}
                   </h3>
                   <p className="text-gray-700">{selectedOrder.additional_notes}</p>
                 </div>
@@ -692,14 +788,14 @@ export default function DashboardPage() {
                 <div className="bg-green-50 p-4 rounded-lg">
                   <h3 className="font-semibold text-gray-900 mb-2 flex items-center">
                     <CreditCard className="w-5 h-5 mr-2" />
-                    إثبات الدفع
+                    {t.dashboard.orderDetails.paymentProof}
                   </h3>
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
                       <CheckCircle className="w-4 h-4 text-white" />
                     </div>
                     <p className="text-sm text-green-800 font-medium">
-                      تم التحقق من إثبات الدفع من قبل الفريق
+                      {t.dashboard.orderDetails.paymentVerified}
                     </p>
                   </div>
                 </div>
@@ -713,7 +809,7 @@ export default function DashboardPage() {
               onClick={() => setShowOrderDetails(false)}
               className="border-gray-300 text-gray-700 hover:bg-gray-50"
             >
-              إغلاق
+              {t.dashboard.orderDetails.close}
             </Button>
             {user?.role === 'seller' && selectedOrder?.status === 'in_progress' && (
               <Button 
@@ -724,7 +820,7 @@ export default function DashboardPage() {
                 className="bg-green-600 hover:bg-green-700 text-white"
               >
                 <CheckCircle className="w-4 h-4 mr-2" />
-                إكمال المشروع
+                {t.dashboard.orderDetails.completeProject}
               </Button>
             )}
           </DialogFooter>
