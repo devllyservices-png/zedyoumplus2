@@ -1,9 +1,15 @@
-import { Suspense } from "react"
-import { ArrowLeft, AlertCircle } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import ChargilyFailureClient from "./ChargilyFailureClient"
+"use client"
 
-function ChargilyFailureFallback() {
+import { useSearchParams, useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ArrowLeft, AlertCircle } from "lucide-react"
+
+export default function ChargilyFailureClient() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const orderId = searchParams?.get("order_id")
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <Card className="max-w-md w-full shadow-lg border-0">
@@ -19,32 +25,30 @@ function ChargilyFailureFallback() {
           <p className="text-gray-600">
             يبدو أن عملية الدفع عبر Chargily لم تكتمل أو تم إلغاؤها. يمكنك المحاولة مرة أخرى أو اختيار طريقة دفع أخرى.
           </p>
+          {orderId && (
+            <p className="text-sm text-gray-500">
+              رقم الطلب: <span className="font-mono font-semibold">{orderId}</span>
+            </p>
+          )}
           <div className="pt-4 flex flex-col gap-3">
-            <a
-              className="w-full btn-gradient text-white inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all px-4 py-2"
-              href="/checkout"
+            <Button
+              className="w-full btn-gradient text-white"
+              onClick={() => router.push("/checkout")}
             >
               إعادة المحاولة
-            </a>
-            <a
-              className="w-full inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all border border-input bg-background px-4 py-2"
-              href="/services"
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => router.push("/services")}
             >
               <ArrowLeft className="w-4 h-4 ml-2" />
               الرجوع إلى الخدمات
-            </a>
+            </Button>
           </div>
         </CardContent>
       </Card>
     </div>
-  )
-}
-
-export default function ChargilyFailurePage() {
-  return (
-    <Suspense fallback={<ChargilyFailureFallback />}>
-      <ChargilyFailureClient />
-    </Suspense>
   )
 }
 

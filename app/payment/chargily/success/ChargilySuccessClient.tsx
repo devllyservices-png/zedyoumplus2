@@ -1,9 +1,15 @@
-import { Suspense } from "react"
-import { ArrowLeft, CheckCircle } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import ChargilySuccessClient from "./ChargilySuccessClient"
+"use client"
 
-function ChargilySuccessFallback() {
+import { useSearchParams, useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { CheckCircle, ArrowLeft } from "lucide-react"
+
+export default function ChargilySuccessClient() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const orderId = searchParams?.get("order_id")
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <Card className="max-w-md w-full shadow-lg border-0">
@@ -19,32 +25,30 @@ function ChargilySuccessFallback() {
           <p className="text-gray-600">
             شكراً لك! تم استلام دفعتك عبر Chargily بنجاح. سيتم تأكيد طلبك من قبل مقدم الخدمة في أقرب وقت.
           </p>
+          {orderId && (
+            <p className="text-sm text-gray-500">
+              رقم الطلب: <span className="font-mono font-semibold">{orderId}</span>
+            </p>
+          )}
           <div className="pt-4 flex flex-col gap-3">
-            <a
-              className="w-full btn-gradient text-white inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all px-4 py-2"
-              href="/dashboard"
+            <Button
+              className="w-full btn-gradient text-white"
+              onClick={() => router.push("/dashboard")}
             >
               الذهاب إلى لوحة التحكم
-            </a>
-            <a
-              className="w-full inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all border border-input bg-background px-4 py-2"
-              href="/orders"
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => router.push("/orders")}
             >
               <ArrowLeft className="w-4 h-4 ml-2" />
               عرض كل الطلبات
-            </a>
+            </Button>
           </div>
         </CardContent>
       </Card>
     </div>
-  )
-}
-
-export default function ChargilySuccessPage() {
-  return (
-    <Suspense fallback={<ChargilySuccessFallback />}>
-      <ChargilySuccessClient />
-    </Suspense>
   )
 }
 

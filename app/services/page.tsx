@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -12,7 +12,18 @@ import { Footer } from "@/components/footer"
 import { useSearchParams } from "next/navigation"
 import { useTranslation } from "@/lib/i18n/hooks/useTranslation"
 
-export default function ServicesPage() {
+function ServicesPageFallback() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center px-4">
+      <div className="text-center">
+        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-gray-700">جاري تحميل الخدمات...</p>
+      </div>
+    </div>
+  )
+}
+
+function ServicesContent() {
   const { t } = useTranslation()
   
   const categories = [
@@ -133,5 +144,13 @@ export default function ServicesPage() {
 
       <Footer />
     </div>
+  )
+}
+
+export default function ServicesPage() {
+  return (
+    <Suspense fallback={<ServicesPageFallback />}>
+      <ServicesContent />
+    </Suspense>
   )
 }
