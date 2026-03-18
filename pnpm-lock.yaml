@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@chargily/chargily-pay':
+        specifier: ^2.1.0
+        version: 2.1.0
       '@hookform/resolvers':
         specifier: ^3.10.0
         version: 3.10.0(react-hook-form@7.62.0(react@19.1.1))
@@ -221,6 +224,9 @@ packages:
   '@babel/runtime@7.28.2':
     resolution: {integrity: sha512-KHp2IflsnGywDjBWDkR9iEqiWSpc8GIi0lgTT3mOElT0PP1tG26P4tmFI2YvAdzgq9RGyoHZQEIEdZy6Ec5xCA==}
     engines: {node: '>=6.9.0'}
+
+  '@chargily/chargily-pay@2.1.0':
+    resolution: {integrity: sha512-BMmvgowoZN2ETqNcSTle7VIVX4wHYvxTzk1Cu3o1TV+1Lj2P1hznIo6dgj7Die9ALUsBAnSR+SjuhYsrN1LlPw==}
 
   '@date-fns/tz@1.2.0':
     resolution: {integrity: sha512-LBrd7MiJZ9McsOgxqWX7AaxrDjcFVjWH/tIKJd7pnR7McaslGYOP1QmmiBXdJH/H/yLCT+rcQ7FaPBUxRGUtrg==}
@@ -2060,6 +2066,8 @@ snapshots:
       '@jridgewell/trace-mapping': 0.3.29
 
   '@babel/runtime@7.28.2': {}
+
+  '@chargily/chargily-pay@2.1.0': {}
 
   '@date-fns/tz@1.2.0': {}
 
