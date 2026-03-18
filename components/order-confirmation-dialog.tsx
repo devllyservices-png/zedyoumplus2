@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Clock, User, Package, AlertTriangle, Shield } from "lucide-react"
 import Link from "next/link"
+import { Price } from "@/components/price"
 
 interface ServicePackage {
   id: string
@@ -71,7 +72,7 @@ export default function OrderConfirmationDialog({
                 <span className="text-sm font-medium">{selectedPackage.name}</span>
               </div>
               <Badge className="bg-blue-100 text-blue-800">
-                {selectedPackage.price} دج
+                  <Price amountDzd={selectedPackage.price} />
               </Badge>
             </div>
 

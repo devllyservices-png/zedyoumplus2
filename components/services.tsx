@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Star, Clock, User } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { Price } from "@/components/price"
 
 export function FeaturedServices() {
   // const [selectedCategory, setSelectedCategory] = useState("all")
@@ -124,7 +125,9 @@ export function FeaturedServices() {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <div className="text-2xl font-bold gradient-brand-text">{service.price} دج</div>
+                  <div className="text-2xl font-bold gradient-brand-text">
+                    <Price amountDzd={Number(service.price)} />
+                  </div>
                   <Link href={`/services/${service.id}`}>
                     <Button className="btn-gradient text-white px-6 py-2 rounded-lg">اطلب الآن</Button>
                   </Link>

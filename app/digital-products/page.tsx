@@ -11,6 +11,7 @@ import { Header } from "@/components/header"
 import { Search, Star, Download, Play, Gamepad2, LogInIcon as Subscription, Code, Palette, Music } from "lucide-react"
 import { Footer } from "@/components/footer"
 import { useTranslation } from "@/lib/i18n/hooks/useTranslation"
+import { Price } from "@/components/price"
 
 export default function DigitalProductsPage() {
   const { t } = useTranslation()
@@ -349,9 +350,13 @@ export default function DigitalProductsPage() {
                 {/* Price and Action */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold text-blue-600">{product.price} دج</span>
+                    <span className="text-2xl font-bold text-blue-600">
+                      <Price amountDzd={Number(product.price)} />
+                    </span>
                     {product.originalPrice && (
-                      <span className="text-sm text-gray-500 line-through">{product.originalPrice} دج</span>
+                      <span className="text-sm text-gray-500 line-through">
+                        <Price amountDzd={Number(product.originalPrice)} />
+                      </span>
                     )}
                   </div>
                   <Button className="btn-gradient hover:bg-blue-700 text-white">

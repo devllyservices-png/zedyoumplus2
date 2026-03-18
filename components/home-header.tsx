@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { motion, AnimatePresence } from "framer-motion"
 import { useTranslation } from "@/lib/i18n/hooks/useTranslation"
+import { useCurrency } from "@/contexts/currency-context"
 
 export function HomeHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -20,9 +21,11 @@ export function HomeHeader() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [showNotificationsModal, setShowNotificationsModal] = useState(false)
   const [showLanguageMenu, setShowLanguageMenu] = useState(false)
+  const [showCurrencyMenu, setShowCurrencyMenu] = useState(false)
   const { user, profile, logout } = useAuth()
   const { notifications, unreadCount, markAsRead } = useNotifications()
   const { t, language, setLanguage } = useTranslation()
+  const { currency, availableCurrencies, setCurrencyCode } = useCurrency()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -44,10 +47,18 @@ export function HomeHeader() {
       if (showLanguageMenu && !(event.target as Element).closest('.language-menu')) {
         setShowLanguageMenu(false)
       }
+      if (showCurrencyMenu && !(event.target as Element).closest('.currency-menu')) {
+        setShowCurrencyMenu(false)
+      }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [showUserMenu, showNotifications, showLanguageMenu])
+  }, [showUserMenu, showNotifications, showLanguageMenu, showCurrencyMenu])
+
+  const handleCurrencySelect = async (code: string) => {
+    await setCurrencyCode(code)
+    setShowCurrencyMenu(false)
+  }
 
   return (
     <header
@@ -156,6 +167,68 @@ export function HomeHeader() {
 
           {/* User Actions */}
           <div className="hidden lg:flex items-center gap-4">
+            {/* Currency Switcher */}
+            <div className="relative currency-menu">
+              <button
+                onClick={() => setShowCurrencyMenu(!showCurrencyMenu)}
+                className={`relative flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-300 cursor-pointer group border-2 shadow-sm ${
+                  isScrolled
+                    ? "bg-white hover:bg-gray-50 border-gray-300 text-gray-700 hover:border-emerald-400"
+                    : "bg-white/10 hover:bg-white/20 border-white/40 text-white backdrop-blur-sm hover:border-emerald-300"
+                }`}
+              >
+                <span className={`text-sm font-medium ${isScrolled ? "text-gray-700" : "text-white"}`}>
+                  {currency?.code || "EUR"}
+                </span>
+                <svg
+                  className={`w-4 h-4 transition-transform duration-300 ${showCurrencyMenu ? "rotate-180" : ""} ${
+                    isScrolled ? "text-gray-600" : "text-white"
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {showCurrencyMenu && (
+                <div className="absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50 overflow-hidden">
+                  {availableCurrencies.length === 0 ? (
+                    <div className="px-4 py-3 text-sm text-gray-500">
+                      لا توجد عملات مفعّلة حالياً
+                    </div>
+                  ) : (
+                    availableCurrencies.map((c) => (
+                      <button
+                        key={c.code}
+                        onClick={() => handleCurrencySelect(c.code)}
+                        className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-all duration-200 ${
+                          currency?.code === c.code
+                            ? "bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 font-semibold border-r-4 border-emerald-500"
+                            : "text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        <span className="flex flex-col items-start">
+                          <span>{c.code}</span>
+                          <span className="text-xs text-gray-500">{c.name}</span>
+                        </span>
+                        {currency?.code === c.code && (
+                          <svg className="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        )}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Language Switcher */}
             <div className="relative language-menu">
               <button
@@ -443,6 +516,68 @@ export function HomeHeader() {
 
           {/* Mobile Actions */}
           <div className="lg:hidden flex items-center gap-2">
+            {/* Mobile Currency Switcher */}
+            <div className="relative currency-menu">
+              <button
+                onClick={() => setShowCurrencyMenu(!showCurrencyMenu)}
+                className={`relative flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-300 cursor-pointer group border-2 shadow-sm ${
+                  isScrolled
+                    ? "bg-white hover:bg-gray-50 border-gray-300 text-gray-700 hover:border-emerald-400"
+                    : "bg-white/10 hover:bg-white/20 border-white/40 text-white backdrop-blur-sm hover:border-emerald-300"
+                }`}
+              >
+                <span className={`text-sm font-medium ${isScrolled ? "text-gray-700" : "text-white"}`}>
+                  {currency?.code || "EUR"}
+                </span>
+                <svg
+                  className={`w-4 h-4 transition-transform duration-300 ${showCurrencyMenu ? "rotate-180" : ""} ${
+                    isScrolled ? "text-gray-600" : "text-white"
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {showCurrencyMenu && (
+                <div className="absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50 overflow-hidden">
+                  {availableCurrencies.length === 0 ? (
+                    <div className="px-4 py-3 text-sm text-gray-500">
+                      لا توجد عملات مفعّلة حالياً
+                    </div>
+                  ) : (
+                    availableCurrencies.map((c) => (
+                      <button
+                        key={c.code}
+                        onClick={() => handleCurrencySelect(c.code)}
+                        className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-all duration-200 ${
+                          currency?.code === c.code
+                            ? "bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 font-semibold border-r-4 border-emerald-500"
+                            : "text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        <span className="flex flex-col items-start">
+                          <span>{c.code}</span>
+                          <span className="text-xs text-gray-500">{c.name}</span>
+                        </span>
+                        {currency?.code === c.code && (
+                          <svg className="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        )}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Mobile Language Switcher */}
             <div className="relative language-menu">
               <button

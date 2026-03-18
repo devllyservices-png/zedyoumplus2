@@ -10,6 +10,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { useTranslation } from "@/lib/i18n/hooks/useTranslation"
+import { Price } from "@/components/price"
 
 interface ServiceWithSeller {
   id: string
@@ -224,7 +225,8 @@ export function ServicesCarousel() {
                     </div>
                     {/* Price Badge */}
                     <div className="absolute bottom-3 right-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                      {t.services.startingFrom} {price} {t.services.currency}
+                      {t.services.startingFrom}{" "}
+                      {price > 0 ? <Price amountDzd={price} /> : t.services.currency}
                     </div>
                   </div>
 

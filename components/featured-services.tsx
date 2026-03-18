@@ -7,6 +7,7 @@ import { Clock } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { supabase } from "@/lib/supabaseClient"
+import { Price } from "@/components/price"
 
 type ServiceRecord = {
   id: string
@@ -100,7 +101,9 @@ export function FeaturedServices() {
                       <span>{delivery}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <div className="text-2xl font-bold gradient-brand-text">{price} دج</div>
+                      <div className="text-2xl font-bold gradient-brand-text">
+                        {price === "—" ? "—" : <Price amountDzd={Number(price)} />}
+                      </div>
                       <Link href={`/services/${service.id}`}>
                         <Button className="btn-gradient text-white px-6 py-2 rounded-lg">اطلب الآن</Button>
                       </Link>

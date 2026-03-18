@@ -24,6 +24,7 @@ import {
   Upload,
   Building2,
 } from "lucide-react"
+import { Price } from "@/components/price"
 
 export default function CheckoutPage() {
   const router = useRouter()
@@ -32,6 +33,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true)
   const [paymentMethod, setPaymentMethod] = useState("bank_transfer")
   const [paymentProof, setPaymentProof] = useState<File | null>(null)
+  const [isCreatingPayPalOrder, setIsCreatingPayPalOrder] = useState(false)
 
   const [buyerInfo, setBuyerInfo] = useState({
     fullName: "",
@@ -195,55 +197,90 @@ export default function CheckoutPage() {
     setIsProcessing(true)
 
     try {
-      // Validate payment proof for methods that require it
-      if ((paymentMethod === "bank_transfer" || paymentMethod === "card_payment") && !paymentProof) {
+      const isChargily = paymentMethod === "card_payment"
+      const isPayPal = paymentMethod === "paypal"
+
+      // Validate payment proof only for bank transfer (card via Chargily / PayPal do not need upload)
+      if (!isChargily && !isPayPal && paymentMethod === "bank_transfer" && !paymentProof) {
         alert("يرجى رفع إيصال الدفع")
         setIsProcessing(false)
         return
       }
 
-      // Prepare form data for API
-      const orderFormData = new FormData()
-      orderFormData.append("service_id", serviceId || "")
-      orderFormData.append("package_id", selectedPackage?.id || "")
-      orderFormData.append("seller_id", sellerId || "")
-      orderFormData.append("amount", (selectedPackage?.price || price).toString())
-      orderFormData.append("payment_method", paymentMethod)
-      orderFormData.append("additional_notes", additionalNotes)
-      
-      // Add payment proof if provided
-      if (paymentProof) {
-        orderFormData.append("payment_proof", paymentProof)
+      if (isPayPal) {
+        // Redirect-based PayPal flow
+        try {
+          setIsCreatingPayPalOrder(true)
+          const response = await fetch("/api/paypal/create-order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              service_id: serviceId || undefined,
+              package_id: selectedPackage?.id || undefined,
+            }),
+          })
+          const result = await response.json()
+          setIsCreatingPayPalOrder(false)
+
+          if (!response.ok || !result.approvalUrl) {
+            throw new Error(result.error || "فشل في إنشاء طلب PayPal")
+          }
+
+          window.location.href = result.approvalUrl
+          return
+        } catch (err) {
+          setIsCreatingPayPalOrder(false)
+          console.error("PayPal redirect error:", err)
+          alert(err instanceof Error ? err.message : "حدث خطأ أثناء التوجيه إلى PayPal")
+          setIsProcessing(false)
+          return
+        }
+      } else {
+        // Prepare form data for API (non-PayPal)
+        const orderFormData = new FormData()
+        orderFormData.append("service_id", serviceId || "")
+        orderFormData.append("package_id", selectedPackage?.id || "")
+        orderFormData.append("seller_id", sellerId || "")
+        orderFormData.append("amount", (selectedPackage?.price || price).toString())
+        orderFormData.append("payment_method", isChargily ? "chargily_card" : paymentMethod)
+        orderFormData.append("additional_notes", additionalNotes)
+        if (paymentProof) {
+          orderFormData.append("payment_proof", paymentProof)
+        }
+
+        // Create order in database for non-PayPal methods
+        const response = await fetch("/api/orders", {
+          method: "POST",
+          body: orderFormData,
+          credentials: 'include',
+        })
+
+        const result = await response.json()
+
+        if (!response.ok) {
+          throw new Error(result.error || "فشل في إنشاء الطلب")
+        }
+
+        console.log("Order created successfully:", {
+          orderId: result.order.id,
+          serviceId: serviceId,
+          buyerId: result.order.buyer_id,
+          sellerId: result.order.seller_id,
+          amount: result.order.amount,
+          status: result.order.status,
+          timestamp: new Date().toISOString()
+        })
+
+        if (isChargily && result.chargilyCheckoutUrl) {
+          window.location.href = result.chargilyCheckoutUrl
+          return
+        }
+
+        router.push(
+          `/checkout/success?orderId=${result.order.id}&serviceTitle=${encodeURIComponent(serviceData?.title || serviceTitle)}&package=${encodeURIComponent(selectedPackage?.name || '')}&price=${selectedPackage?.price || price}`
+        )
       }
-
-      // Create order in database
-      const response = await fetch("/api/orders", {
-        method: "POST",
-        body: orderFormData,
-        credentials: 'include',
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || "فشل في إنشاء الطلب")
-      }
-
-      // Log order creation on server
-      console.log("Order created successfully:", {
-        orderId: result.order.id,
-        serviceId: serviceId,
-        buyerId: result.order.buyer_id,
-        sellerId: result.order.seller_id,
-        amount: result.order.amount,
-        status: result.order.status,
-        timestamp: new Date().toISOString()
-      })
-
-      // Redirect to success page with real order data
-      router.push(
-        `/checkout/success?orderId=${result.order.id}&serviceTitle=${encodeURIComponent(serviceData?.title || serviceTitle)}&package=${encodeURIComponent(selectedPackage?.name || '')}&price=${selectedPackage?.price || price}`
-      )
 
     } catch (error) {
       console.error("Order creation error:", error)
@@ -405,7 +442,7 @@ export default function CheckoutPage() {
                         </div>
                       </div>
 
-                      {/* Card Payment */}
+                      {/* Card Payment via Chargily (Edahabia / CIB) */}
                       <div className={`transition-all duration-300 ${
                         paymentMethod === "card_payment" 
                           ? "gradient-border bg-gradient-to-r from-green-50 to-emerald-50" 
@@ -419,7 +456,9 @@ export default function CheckoutPage() {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between">
-                                  <h3 className="text-xl font-bold text-gray-900">دفع بالبطاقة</h3>
+                                  <h3 className="text-xl font-bold text-gray-900">
+                                    دفع بالبطاقة (بطاقة ذهبية / CIB عبر Chargily)
+                                  </h3>
                                   {paymentMethod === "card_payment" && (
                                     <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center">
                                       <Check className="w-4 h-4 text-white" />
@@ -427,8 +466,10 @@ export default function CheckoutPage() {
                                   )}
                                 </div>
                                 <p className="text-gray-600 mt-2 text-sm sm:text-base">
-                                  <span className="hidden sm:inline">ارفع إيصال الدفع بالبطاقة</span>
-                                  <span className="sm:hidden">بطاقة + إيصال</span>
+                                  <span className="hidden sm:inline">
+                                    سيتم تحويلك لصفحة دفع آمنة عبر Chargily (بطاقة ذهبية / CIB)
+                                  </span>
+                                  <span className="sm:hidden">دفع آمن عبر Chargily</span>
                                 </p>
                               </div>
                             </div>
@@ -438,6 +479,39 @@ export default function CheckoutPage() {
                       </div>
 
                       {/* Cash Payment */}
+                      {/* PayPal */}
+                      <div className={`transition-all duration-300 ${
+                        paymentMethod === "paypal" 
+                          ? "gradient-border bg-gradient-to-r from-blue-50 to-sky-50" 
+                          : "border border-gray-200 hover:border-sky-300"
+                      } rounded-xl`}>
+                        <div className="p-8">
+                          <Label htmlFor="paypal" className="cursor-pointer block">
+                            <div className="flex items-center gap-6">
+                              <div className="w-16 h-16 bg-sky-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <CreditCard className="w-8 h-8 text-sky-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between">
+                                  <h3 className="text-xl font-bold text-gray-900">الدفع عبر PayPal (وضع الاختبار)</h3>
+                                  {paymentMethod === "paypal" && (
+                                    <div className="w-6 h-6 bg-sky-600 rounded-full flex items-center justify-center">
+                                      <Check className="w-4 h-4 text-white" />
+                                    </div>
+                                  )}
+                                </div>
+                                <p className="text-gray-600 mt-2 text-sm sm:text-base">
+                                  <span className="hidden sm:inline">
+                                    سيتم فتح واجهة PayPal sandbox لاختبار الدفع باستخدام حسابات PayPal التجريبية.
+                                  </span>
+                                  <span className="sm:hidden">دفع تجريبي عبر PayPal</span>
+                                </p>
+                              </div>
+                            </div>
+                          </Label>
+                          <RadioGroupItem value="paypal" id="paypal" className="sr-only" />
+                        </div>
+                      </div>
                       <div className={`transition-all duration-300 ${
                         paymentMethod === "cash" 
                           ? "gradient-border bg-gradient-to-r from-orange-50 to-yellow-50" 
@@ -472,46 +546,34 @@ export default function CheckoutPage() {
                   </RadioGroup>
 
                   {/* Payment Details */}
-                  {(paymentMethod === "bank_transfer" || paymentMethod === "card_payment") && (
+                  {paymentMethod === "bank_transfer" && (
                     <div className="mt-8 gradient-border">
                       <div className="p-6 bg-gradient-to-r from-blue-50 to-purple-50">
                         <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                           <Banknote className="w-5 h-5 text-blue-600" />
-                          {paymentMethod === "bank_transfer" ? "تفاصيل التحويل البنكي" : "تفاصيل الدفع بالبطاقة"}
+                          تفاصيل التحويل البنكي
                         </h4>
                         
-                        {paymentMethod === "bank_transfer" && (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-6">
-                            <div className="bg-white p-4 rounded-lg">
-                              <span className="font-semibold text-gray-700 text-xs sm:text-sm">اسم البنك:</span>
-                              <p className="text-gray-900 mt-1 text-sm sm:text-base">بنك الجزائر الخارجي</p>
-                            </div>
-                            <div className="bg-white p-4 rounded-lg">
-                              <span className="font-semibold text-gray-700 text-xs sm:text-sm">رقم الحساب:</span>
-                              <p className="text-gray-900 mt-1 font-mono text-xs sm:text-sm break-all">123456789012345</p>
-                            </div>
-                            <div className="bg-white p-4 rounded-lg">
-                              <span className="font-semibold text-gray-700 text-xs sm:text-sm">اسم المستفيد:</span>
-                              <p className="text-gray-900 mt-1 text-sm sm:text-base">شركة الخدمات الرقمية</p>
-                            </div>
-                            <div className="bg-white p-4 rounded-lg">
-                              <span className="font-semibold text-gray-700 text-xs sm:text-sm">المبلغ:</span>
-                              <p className="text-xl sm:text-2xl font-bold gradient-brand-text mt-1">{selectedPackage?.price || price} دج</p>
-                            </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-6">
+                          <div className="bg-white p-4 rounded-lg">
+                            <span className="font-semibold text-gray-700 text-xs sm:text-sm">اسم البنك:</span>
+                            <p className="text-gray-900 mt-1 text-sm sm:text-base">بنك الجزائر الخارجي</p>
                           </div>
-                        )}
-
-                        {paymentMethod === "card_payment" && (
-                          <div className="bg-white p-4 rounded-lg mb-6">
-                            <p className="text-sm sm:text-base text-gray-700 mb-3">
-                              <strong>قم بالدفع عبر البطاقة وارفع إيصال الدفع</strong>
-                            </p>
-                            <p className="text-xs sm:text-sm text-gray-600">
-                              <span className="hidden sm:inline">يمكنك الدفع عبر أي بطاقة ائتمان أو خصم مدعومة في بلدك. تأكد من إرفاق إيصال الدفع الصحيح.</span>
-                              <span className="sm:hidden">أي بطاقة ائتمان أو خصم + إيصال الدفع</span>
+                          <div className="bg-white p-4 rounded-lg">
+                            <span className="font-semibold text-gray-700 text-xs sm:text-sm">رقم الحساب:</span>
+                            <p className="text-gray-900 mt-1 font-mono text-xs sm:text-sm break-all">123456789012345</p>
+                          </div>
+                          <div className="bg-white p-4 rounded-lg">
+                            <span className="font-semibold text-gray-700 text-xs sm:text-sm">اسم المستفيد:</span>
+                            <p className="text-gray-900 mt-1 text-sm sm:text-base">شركة الخدمات الرقمية</p>
+                          </div>
+                          <div className="bg-white p-4 rounded-lg">
+                            <span className="font-semibold text-gray-700 text-xs sm:text-sm">المبلغ:</span>
+                            <p className="text-xl sm:text-2xl font-bold gradient-brand-text mt-1">
+                              <Price amountDzd={Number(selectedPackage?.price || price)} />
                             </p>
                           </div>
-                        )}
+                        </div>
 
                         <div className="mt-6">
                           <Label htmlFor="payment_proof" className="block mb-4 font-semibold text-gray-700 text-lg">
@@ -648,14 +710,19 @@ export default function CheckoutPage() {
                   <div className="border-t pt-6">
                     <div className="flex justify-between items-center mb-6">
                       <span className="text-lg font-semibold text-gray-900">المجموع:</span>
-                      <span className="text-3xl font-bold gradient-brand-text">{selectedPackage?.price || price} دج</span>
+                      <span className="text-3xl font-bold gradient-brand-text">
+                        <Price amountDzd={Number(selectedPackage?.price || price)} />
+                      </span>
                     </div>
 
                     <form onSubmit={handleSubmitOrder}>
                       <Button
                         type="submit"
                         className="w-full btn-gradient text-white h-14 text-lg font-semibold"
-                        disabled={isProcessing || ((paymentMethod === "bank_transfer" || paymentMethod === "card_payment") && !paymentProof)}
+                        disabled={
+                          isProcessing ||
+                          (paymentMethod === "bank_transfer" && !paymentProof)
+                        }
                       >
                         {isProcessing ? (
                           <div className="flex items-center gap-2">

@@ -28,7 +28,9 @@ import {
   ExternalLink,
   Trash2,
   ChevronDown,
-  Package
+  Package,
+  Settings,
+  LayoutDashboard
 } from "lucide-react"
 
 interface AdminStats {
@@ -87,6 +89,14 @@ interface Service {
   }>
 }
 
+interface CurrencyConfig {
+  code: string
+  name: string
+  rate_to_eur: number
+  is_default: boolean
+  is_active: boolean
+}
+
 interface User {
   id: string
   email: string
@@ -116,12 +126,19 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<User[]>([])
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
+  const [ordersPage, setOrdersPage] = useState(1)
+  const [ordersPageSize] = useState(20)
+  const [ordersTotal, setOrdersTotal] = useState(0)
   const [suspendingUser, setSuspendingUser] = useState<User | null>(null)
   const [showSuspendDialog, setShowSuspendDialog] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [showOrderDialog, setShowOrderDialog] = useState(false)
   const [deletingService, setDeletingService] = useState<Service | null>(null)
   const [showDeleteServiceDialog, setShowDeleteServiceDialog] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [activeSection, setActiveSection] = useState<"overview" | "settings">("overview")
+  const [currencies, setCurrencies] = useState<CurrencyConfig[]>([])
+  const [isSavingCurrencies, setIsSavingCurrencies] = useState(false)
 
   useEffect(() => {
     if (!user || user.role !== 'admin') {
@@ -142,12 +159,7 @@ export default function AdminDashboard() {
         setStats(statsData)
       }
 
-      // Fetch orders
-      const ordersResponse = await fetch('/api/admin/orders')
-      const ordersData = await ordersResponse.json()
-      if (ordersResponse.ok) {
-        setOrders(ordersData.orders || [])
-      }
+      await fetchOrders(1)
 
       // Fetch users
       const usersResponse = await fetch('/api/admin/users')
@@ -160,12 +172,15 @@ export default function AdminDashboard() {
         if (usersData.users && usersData.users.length > 0) {
           console.log('First user profile:', usersData.users[0].profiles)
           console.log('First user avatar_url:', usersData.users[0].profiles?.avatar_url)
-          console.log('All users profiles:', usersData.users.map(u => ({ 
-            email: u.email, 
-            avatar_url: u.profiles?.avatar_url,
-            display_name: u.profiles?.display_name,
-            hasProfile: !!u.profiles
-          })))
+          console.log(
+            'All users profiles:',
+            usersData.users.map((u: any) => ({
+              email: u.email,
+              avatar_url: u.profiles?.avatar_url,
+              display_name: u.profiles?.display_name,
+              hasProfile: !!u.profiles,
+            }))
+          )
         }
       } else {
         console.error('Failed to fetch users:', usersData)
@@ -181,10 +196,158 @@ export default function AdminDashboard() {
       } else {
         console.error('Failed to fetch services:', servicesData)
       }
+
+      // Fetch currencies for settings
+      const currenciesResponse = await fetch('/api/admin/currencies')
+      if (currenciesResponse.ok) {
+        const currenciesData = await currenciesResponse.json()
+        if (Array.isArray(currenciesData.currencies)) {
+          setCurrencies(currenciesData.currencies)
+        }
+      } else if (currenciesResponse.status === 404) {
+        console.warn("Currencies API not found yet")
+      }
     } catch (error) {
       console.error('Error fetching admin data:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchOrders = async (page: number) => {
+    try {
+      const params = new URLSearchParams({
+        page: String(page),
+        pageSize: String(ordersPageSize),
+      })
+      const res = await fetch(`/api/admin/orders?${params.toString()}`)
+      const data = await res.json()
+      if (res.ok) {
+        setOrders(data.orders || [])
+        setOrdersTotal(data.total || 0)
+        setOrdersPage(data.page || page)
+      } else {
+        console.error("Failed to fetch paginated orders:", data)
+      }
+    } catch (error) {
+      console.error("Error fetching paginated orders:", error)
+    }
+  }
+
+  const handleCurrencyFieldChange = (index: number, field: keyof CurrencyConfig, value: string | boolean) => {
+    setCurrencies((prev) =>
+      prev.map((currency, i) =>
+        i === index
+          ? {
+              ...currency,
+              [field]:
+                field === "rate_to_eur"
+                  ? Number(value) || 0
+                  : field === "is_default" || field === "is_active"
+                    ? Boolean(value)
+                    : value,
+            }
+          : currency
+      )
+    )
+  }
+
+  const handleSetDefaultCurrency = (code: string) => {
+    setCurrencies((prev) =>
+      prev.map((c) => ({
+        ...c,
+        is_default: c.code === code,
+      }))
+    )
+  }
+
+  const ensureBaseCurrencies = () => {
+    // Ensure EUR, DZD, USD exist in the list (used when API not ready or empty)
+    const existingCodes = new Set(currencies.map((c) => c.code))
+    const base: CurrencyConfig[] = []
+
+    if (!existingCodes.has("EUR")) {
+      base.push({
+        code: "EUR",
+        name: "Euro",
+        rate_to_eur: 1,
+        is_default: true,
+        is_active: true,
+      })
+    }
+    if (!existingCodes.has("DZD")) {
+      base.push({
+        code: "DZD",
+        name: "Dinar Algérien",
+        rate_to_eur: 150,
+        is_default: false,
+        is_active: true,
+      })
+    }
+    if (!existingCodes.has("USD")) {
+      base.push({
+        code: "USD",
+        name: "US Dollar",
+        rate_to_eur: 1.1,
+        is_default: false,
+        is_active: true,
+      })
+    }
+
+    if (base.length > 0) {
+      setCurrencies((prev) => {
+        const merged = [...prev, ...base]
+        // Ensure exactly one default
+        if (!merged.some((c) => c.is_default)) {
+          return merged.map((c) => ({ ...c, is_default: c.code === "EUR" }))
+        }
+        return merged
+      })
+    }
+  }
+
+  const handleAddCustomCurrency = () => {
+    setCurrencies((prev) => [
+      ...prev,
+      {
+        code: "",
+        name: "",
+        rate_to_eur: 1,
+        is_default: false,
+        is_active: true,
+      },
+    ])
+  }
+
+  const handleSaveCurrencies = async () => {
+    try {
+      setIsSavingCurrencies(true)
+      const payload = {
+        currencies: currencies.map((c) => ({
+          ...c,
+          code: c.code.trim().toUpperCase(),
+        })),
+      }
+
+      const response = await fetch("/api/admin/currencies", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        console.error("Failed to save currencies")
+        return
+      }
+
+      const data = await response.json()
+      if (Array.isArray(data.currencies)) {
+        setCurrencies(data.currencies)
+      }
+    } catch (error) {
+      console.error("Error saving currencies:", error)
+    } finally {
+      setIsSavingCurrencies(false)
     }
   }
 
@@ -337,41 +500,9 @@ export default function AdminDashboard() {
     return processedUrl
   }
 
-  if (loading) {
+  const renderOverview = () => {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-300">جاري تحميل لوحة الإدارة...</p>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-900">
-      {/* Header */}
-      <div className="bg-gray-800 shadow-lg border-b border-gray-700">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Shield className="w-8 h-8 text-purple-400" />
-              <h1 className="text-2xl font-bold text-white">لوحة الإدارة</h1>
-            </div>
-            <div className="flex items-center gap-4">
-              <Badge className="bg-purple-100 text-purple-800">
-                {user?.email}
-              </Badge>
-              <Button onClick={logout} variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-700">
-                <LogOut className="w-4 h-4 mr-2" />
-                تسجيل الخروج
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-8">
+      <>
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 lg:gap-6 mb-8">
           <Card className="bg-gray-800 border-gray-700">
@@ -643,6 +774,35 @@ export default function AdminDashboard() {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Orders Pagination */}
+                {ordersTotal > ordersPageSize && (
+                  <div className="flex items-center justify-between mt-4 text-sm text-gray-300">
+                    <span>
+                      الصفحة {ordersPage} من {Math.max(1, Math.ceil(ordersTotal / ordersPageSize))}
+                    </span>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={ordersPage <= 1}
+                        className="border-gray-600 text-gray-200 hover:bg-gray-700"
+                        onClick={() => fetchOrders(ordersPage - 1)}
+                      >
+                        السابق
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={ordersPage >= Math.ceil(ordersTotal / ordersPageSize)}
+                        className="border-gray-600 text-gray-200 hover:bg-gray-700"
+                        onClick={() => fetchOrders(ordersPage + 1)}
+                      >
+                        التالي
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 
                 {orders.length === 0 && (
                   <div className="text-center py-12">
@@ -1019,6 +1179,320 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
         </Tabs>
+      </>
+    )
+  }
+
+  const renderSettings = () => {
+    return (
+      <div className="space-y-6">
+        <Card className="bg-gray-800 border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-white">إعدادات النظام</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-400 text-sm mb-4">
+              إدارة إعدادات العملة واختيارات النظام الأخرى من هذه الصفحة.
+            </p>
+            <div className="grid grid-cols-1 gap-4">
+              <Card className="bg-gray-900 border-gray-700">
+                <CardHeader>
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <CardTitle className="text-white text-base">إعدادات العملة</CardTitle>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="bg-gray-100 text-gray-900 border-gray-300 hover:bg-white hover:text-black"
+                      type="button"
+                      onClick={ensureBaseCurrencies}
+                    >
+                      تهيئة العملات الأساسية (EUR, DZD, USD)
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-gray-400 text-sm">
+                    جميع الأسعار داخل النظام تعتمد على اليورو كعملة أساسية، ويمكن تحويلها إلى الدينار الجزائري أو الدولار
+                    أو عملات أخرى حسب أسعار الصرف التي يتم ضبطها هنا.
+                  </p>
+
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-800">
+                          <th className="py-2 px-2 text-right text-gray-300">الرمز</th>
+                          <th className="py-2 px-2 text-right text-gray-300">الاسم</th>
+                          <th className="py-2 px-2 text-right text-gray-300">سعر الصرف مقابل اليورو</th>
+                          <th className="py-2 px-2 text-center text-gray-300">مفعّلة</th>
+                          <th className="py-2 px-2 text-center text-gray-300">افتراضية</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {currencies.map((currency, index) => (
+                          <tr key={`${currency.code}-${index}`} className="border-b border-gray-800/60">
+                            <td className="py-2 px-2">
+                              <input
+                                className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-gray-100 text-xs"
+                                value={currency.code}
+                                placeholder="EUR"
+                                onChange={(e) =>
+                                  handleCurrencyFieldChange(index, "code", e.target.value.toUpperCase())
+                                }
+                              />
+                            </td>
+                            <td className="py-2 px-2">
+                              <input
+                                className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-gray-100 text-xs"
+                                value={currency.name}
+                                placeholder="Euro"
+                                onChange={(e) => handleCurrencyFieldChange(index, "name", e.target.value)}
+                              />
+                            </td>
+                            <td className="py-2 px-2">
+                              <input
+                                type="number"
+                                step="0.0001"
+                                className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-gray-100 text-xs"
+                                value={currency.rate_to_eur}
+                                onChange={(e) => handleCurrencyFieldChange(index, "rate_to_eur", e.target.value)}
+                              />
+                            </td>
+                            <td className="py-2 px-2 text-center">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleCurrencyFieldChange(index, "is_active", !currency.is_active)
+                                }
+                                className={`inline-flex items-center justify-center w-10 h-6 rounded-full text-xs ${
+                                  currency.is_active
+                                    ? "bg-green-600 text-white"
+                                    : "bg-gray-700 text-gray-300"
+                                }`}
+                              >
+                                {currency.is_active ? "نعم" : "لا"}
+                              </button>
+                            </td>
+                            <td className="py-2 px-2 text-center">
+                              <button
+                                type="button"
+                                onClick={() => handleSetDefaultCurrency(currency.code)}
+                                className={`inline-flex items-center justify-center px-2 py-1 rounded-full text-xs ${
+                                  currency.is_default
+                                    ? "bg-purple-600 text-white"
+                                    : "bg-gray-800 text-gray-300 border border-gray-700"
+                                }`}
+                              >
+                                {currency.is_default ? "افتراضية" : "تعيين كافتراضية"}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile cards */}
+                  <div className="grid grid-cols-1 gap-3 md:hidden">
+                    {currencies.map((currency, index) => (
+                      <div
+                        key={`${currency.code}-${index}-mobile`}
+                        className="bg-gray-800 border border-gray-700 rounded-lg p-3 space-y-2"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <input
+                            className="w-16 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-gray-100 text-xs text-center"
+                            value={currency.code}
+                            placeholder="EUR"
+                            onChange={(e) =>
+                              handleCurrencyFieldChange(index, "code", e.target.value.toUpperCase())
+                            }
+                          />
+                          <input
+                            className="flex-1 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-gray-100 text-xs"
+                            value={currency.name}
+                            placeholder="Euro"
+                            onChange={(e) => handleCurrencyFieldChange(index, "name", e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-400 mb-1">
+                            سعر الصرف مقابل اليورو
+                          </label>
+                          <input
+                            type="number"
+                            step="0.0001"
+                            className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-gray-100 text-xs"
+                            value={currency.rate_to_eur}
+                            onChange={(e) =>
+                              handleCurrencyFieldChange(index, "rate_to_eur", e.target.value)
+                            }
+                          />
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleCurrencyFieldChange(index, "is_active", !currency.is_active)
+                            }
+                            className={`flex-1 inline-flex items-center justify-center px-2 py-1 rounded-full text-xs ${
+                              currency.is_active
+                                ? "bg-green-600 text-white"
+                                : "bg-gray-700 text-gray-300"
+                            }`}
+                          >
+                            {currency.is_active ? "مفعّلة" : "غير مفعّلة"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSetDefaultCurrency(currency.code)}
+                            className={`flex-1 inline-flex items-center justify-center px-2 py-1 rounded-full text-xs ${
+                              currency.is_default
+                                ? "bg-purple-600 text-white"
+                                : "bg-gray-800 text-gray-300 border border-gray-700"
+                            }`}
+                          >
+                            {currency.is_default ? "العملة الافتراضية" : "تعيين كافتراضية"}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-800 mt-2">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="bg-gray-100 text-gray-900 border-gray-300 hover:bg-white hover:text-black"
+                        onClick={handleAddCustomCurrency}
+                      >
+                        إضافة عملة مخصصة
+                      </Button>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-4"
+                      onClick={handleSaveCurrencies}
+                      disabled={isSavingCurrencies || currencies.length === 0}
+                    >
+                      {isSavingCurrencies ? "جاري الحفظ..." : "حفظ إعدادات العملة"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-300">جاري تحميل لوحة الإدارة...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-900">
+      {/* Header */}
+      <div className="bg-gray-800 shadow-lg border-b border-gray-700">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <button
+                className="lg:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-700 text-gray-200 hover:bg-gray-600"
+                onClick={() => setIsSidebarOpen((prev) => !prev)}
+              >
+                <ChevronDown
+                  className={`w-5 h-5 transform transition-transform ${isSidebarOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+              <Shield className="w-8 h-8 text-purple-400 hidden sm:block" />
+              <h1 className="text-xl sm:text-2xl font-bold text-white">لوحة الإدارة</h1>
+            </div>
+            <div className="flex items-center gap-4">
+              <Badge className="bg-purple-100 text-purple-800 max-w-[180px] sm:max-w-none truncate">
+                {user?.email}
+              </Badge>
+              <Button
+                onClick={logout}
+                variant="outline"
+                className="bg-purple-600 text-white border-purple-500 hover:bg-purple-700 hover:text-white"
+              >
+                <LogOut className="w-4 h-4 ml-2" />
+                <span className="hidden sm:inline">تسجيل الخروج</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Sidebar */}
+          <aside
+            className={`
+              bg-gray-900 border border-gray-800 rounded-xl p-4 w-full lg:w-64 flex-shrink-0
+              transition-all duration-300
+              ${isSidebarOpen ? "block" : "hidden lg:block"}
+            `}
+          >
+            <div className="mb-4">
+              <p className="text-xs text-gray-500 mb-2">أقسام الإدارة</p>
+              <div className="space-y-2">
+                <button
+                  onClick={() => {
+                    setActiveSection("overview")
+                    if (window.innerWidth < 1024) setIsSidebarOpen(false)
+                  }}
+                  className={`
+                    w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm
+                    transition-colors
+                    ${activeSection === "overview"
+                      ? "bg-purple-600 text-white"
+                      : "bg-gray-800 text-gray-200 hover:bg-gray-700"}
+                  `}
+                >
+                  <span className="flex items-center gap-2">
+                    <LayoutDashboard className="w-4 h-4" />
+                    <span>الرئيسية</span>
+                  </span>
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveSection("settings")
+                    if (window.innerWidth < 1024) setIsSidebarOpen(false)
+                  }}
+                  className={`
+                    w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm
+                    transition-colors
+                    ${activeSection === "settings"
+                      ? "bg-purple-600 text-white"
+                      : "bg-gray-800 text-gray-200 hover:bg-gray-700"}
+                  `}
+                >
+                  <span className="flex items-center gap-2">
+                    <Settings className="w-4 h-4" />
+                    <span>الإعدادات</span>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </aside>
+
+          {/* Main content */}
+          <main className="flex-1 min-w-0">
+            {activeSection === "overview" ? renderOverview() : renderSettings()}
+          </main>
+        </div>
       </div>
 
       {/* Suspend User Dialog */}
@@ -1039,7 +1513,7 @@ export default function AdminDashboard() {
             <Button 
               variant="outline" 
               onClick={() => setShowSuspendDialog(false)}
-              className="border-gray-600 text-gray-300 hover:bg-gray-700"
+              className="bg-gray-700 text-white border-gray-500 hover:bg-gray-600 hover:text-white"
             >
               إلغاء
             </Button>
@@ -1183,7 +1657,7 @@ export default function AdminDashboard() {
             <Button 
               variant="outline" 
               onClick={() => setShowOrderDialog(false)}
-              className="border-gray-600 text-gray-300 hover:bg-gray-700"
+              className="bg-gray-700 text-white border-gray-500 hover:bg-gray-600 hover:text-white"
             >
               إغلاق
             </Button>
@@ -1204,7 +1678,7 @@ export default function AdminDashboard() {
             <Button 
               variant="outline" 
               onClick={() => setShowDeleteServiceDialog(false)}
-              className="border-gray-600 text-gray-300 hover:bg-gray-700"
+              className="bg-gray-700 text-white border-gray-500 hover:bg-gray-600 hover:text-white"
             >
               إلغاء
             </Button>

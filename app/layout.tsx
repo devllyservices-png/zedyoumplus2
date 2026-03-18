@@ -5,6 +5,7 @@ import "./globals.css"
 import { AuthProvider } from "@/contexts/auth-context"
 import { NotificationProvider } from "@/contexts/notification-context"
 import { WhatsAppFloat } from "@/components/whatsapp-float"
+import { CurrencyProvider } from "@/contexts/currency-context"
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
@@ -28,8 +29,10 @@ export default function RootLayout({
       <body className="font-cairo antialiased">
         <AuthProvider>
           <NotificationProvider>
-            {children}
-            <WhatsAppFloat />
+            <CurrencyProvider>
+              {children}
+              <WhatsAppFloat />
+            </CurrencyProvider>
           </NotificationProvider>
         </AuthProvider>
       </body>

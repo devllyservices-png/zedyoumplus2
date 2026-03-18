@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken"
 import { put } from "@vercel/blob"
 import sharp from "sharp"
 import { NotificationTriggers } from "@/lib/notifications"
+import { chargilyClient } from "@/lib/chargilyClient"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
 
@@ -30,7 +31,8 @@ async function convertImageToPreferredFormat(input: Buffer, contentType: string)
       return { data: webpBuffer, contentType: "image/webp", extension: "webp" }
     }
   } catch (sharpError) {
-    console.warn('Sharp not available, using original file:', sharpError.message)
+    const err = sharpError as Error
+    console.warn('Sharp not available, using original file:', err.message)
     // Fallback to original file if Sharp is not available
     const extension = contentType.split('/')[1] || 'bin'
     return { data: input, contentType, extension }
@@ -89,8 +91,10 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Validate payment proof for methods that require it
-    if ((paymentMethod === "bank_transfer" || paymentMethod === "card_payment") && !paymentProof) {
+    const isChargilyPayment = paymentMethod === "chargily_card" || paymentMethod === "card_payment"
+
+    // Validate payment proof for methods that require it (bank transfer / manual card proof)
+    if (!isChargilyPayment && (paymentMethod === "bank_transfer" || paymentMethod === "card_payment") && !paymentProof) {
       return NextResponse.json({ 
         error: 'إيصال الدفع مطلوب لهذه الطريقة' 
       }, { status: 400 })
@@ -201,7 +205,69 @@ export async function POST(request: NextRequest) {
     console.log('Created At:', order.created_at)
     console.log('========================')
 
-    // Trigger notifications for new order
+    // If using Chargily for card payment, create a checkout and return its URL
+    if (isChargilyPayment) {
+      if (!chargilyClient) {
+        console.error("Chargily client is not configured. Missing CHARGILY_PRIVATE_KEY.")
+        return NextResponse.json(
+          { error: "نظام الدفع بالبطاقة غير مفعّل حالياً. يرجى اختيار طريقة دفع أخرى." },
+          { status: 500 }
+        )
+      }
+
+      const origin = new URL(request.url).origin
+      const successUrl = `${origin}/payment/chargily/success?order_id=${order.id}`
+      const failureUrl = `${origin}/payment/chargily/failure?order_id=${order.id}`
+
+      try {
+        const checkout = await chargilyClient.createCheckout({
+          amount: Number(order.amount),
+          currency: "dzd",
+          success_url: successUrl,
+          failure_url: failureUrl,
+          locale: "ar",
+          metadata: {
+            order_id: order.id,
+            buyer_id: order.buyer_id,
+            seller_id: order.seller_id,
+            service_id: order.service_id,
+            product_id: order.product_id,
+          },
+        } as any)
+
+        const checkoutUrl = (checkout as any)?.checkout_url || (checkout as any)?.payment_url
+        const checkoutId = (checkout as any)?.id || (checkout as any)?.reference
+
+        // Store Chargily reference on the order
+        const { error: updateOrderError } = await supabase
+          .from("orders")
+          .update({
+            chargily_checkout_id: checkoutId || null,
+            chargily_checkout_url: checkoutUrl || null,
+            chargily_status: "pending",
+          })
+          .eq("id", order.id)
+
+        if (updateOrderError) {
+          console.error("Error updating order with Chargily checkout info:", updateOrderError)
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: "تم إنشاء الطلب بنجاح. سيتم تحويلك إلى صفحة الدفع.",
+          order,
+          chargilyCheckoutUrl: checkoutUrl,
+        })
+      } catch (chargilyError) {
+        console.error("Error creating Chargily checkout:", chargilyError)
+        return NextResponse.json(
+          { error: "حدث خطأ أثناء إنشاء طلب الدفع بالبطاقة. يرجى المحاولة لاحقاً أو اختيار طريقة دفع أخرى." },
+          { status: 500 }
+        )
+      }
+    }
+
+    // Trigger notifications for non-Chargily orders immediately (manual payments)
     try {
       // Get service/product title for notification
       let serviceTitle = 'خدمة غير محددة'
@@ -232,7 +298,7 @@ export async function POST(request: NextRequest) {
       // Don't fail the order creation if notifications fail
     }
 
-    // Handle payment proof upload if provided
+    // Handle payment proof upload if provided (for non-Chargily/manual methods)
     let paymentProofUrl = null
     if (paymentProof && paymentProof.size > 0) {
       try {

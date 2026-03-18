@@ -9,6 +9,7 @@ import { Star, Clock, ShoppingCart, Shield, ChevronLeft, ChevronRight } from "lu
 import Link from "next/link"
 import Image from "next/image"
 import { useTranslation } from "@/lib/i18n/hooks/useTranslation"
+import { Price } from "@/components/price"
 
 interface ServiceWithSeller {
   id: string
@@ -284,7 +285,13 @@ export default function EnhancedServicesGrid({
                 {/* Price and Order Button */}
                 <div className="flex items-center justify-between">
                   <div className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                    {price > 0 ? `${t.services.startingFrom} ${price} ${t.services.currency}` : t.services.startingFrom}
+                    {price > 0 ? (
+                      <>
+                        {t.services.startingFrom} <Price amountDzd={price} />
+                      </>
+                    ) : (
+                      t.services.startingFrom
+                    )}
                   </div>
                   <Link href={`/services/${service.id}`}>
                     <Button className="btn-gradient text-white px-4 py-2 text-sm rounded-lg flex items-center gap-1">

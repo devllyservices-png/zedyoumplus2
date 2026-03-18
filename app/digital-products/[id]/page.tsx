@@ -29,6 +29,7 @@ import {
 import { Header } from "@/components/header"
 import { LoginPopup } from "@/components/login-popup"
 import { Footer } from "@/components/footer"
+import { Price } from "@/components/price"
 
 export default function DigitalProductDetailPage() {
   const params = useParams()
@@ -47,7 +48,9 @@ export default function DigitalProductDetailPage() {
     } else {
       // User is logged in, proceed to checkout
       router.push(
-        `/checkout?serviceId=${params.id}&package=${selectedPackage}&notes=${encodeURIComponent(orderNotes)}&type=digital`,
+        `/checkout?serviceId=${params.id}&package=${selectedPackage}&notes=${encodeURIComponent(
+          orderNotes,
+        )}&type=digital`,
       )
     }
   }
@@ -483,7 +486,7 @@ export default function DigitalProductDetailPage() {
                     <SelectContent>
                       {Object.entries(product.packages).map(([key, pkg]) => (
                         <SelectItem key={key} value={key}>
-                          {pkg.name} - {pkg.price} دج
+                          {pkg.name} - <Price amountDzd={Number(pkg.price)} />
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -499,7 +502,11 @@ export default function DigitalProductDetailPage() {
                     <div className="flex justify-between">
                       <span>السعر:</span>
                       <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                        {product.packages[selectedPackage as keyof typeof product.packages].price} دج
+                        <Price
+                          amountDzd={Number(
+                            product.packages[selectedPackage as keyof typeof product.packages].price,
+                          )}
+                        />
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -548,7 +555,12 @@ export default function DigitalProductDetailPage() {
                   onClick={handleOrderClick}
                   className="w-full btn-gradient hover:shadow-lg text-white h-12 text-lg font-medium transition-all hover:scale-105"
                 >
-                  اشترك الآن - {product.packages[selectedPackage as keyof typeof product.packages].price} دج
+                  اشترك الآن -{" "}
+                  <Price
+                    amountDzd={Number(
+                      product.packages[selectedPackage as keyof typeof product.packages].price,
+                    )}
+                  />
                   <ArrowRight className="w-5 h-5 mr-2" />
                 </Button>
 

@@ -7,6 +7,7 @@ import { Zap, Shield, Clock } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useTranslation } from "@/lib/i18n/hooks/useTranslation"
+import { Price } from "@/components/price"
 
 export function DigitalProducts() {
   const { t } = useTranslation()
@@ -91,8 +92,12 @@ export function DigitalProducts() {
                 </div>
 
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="text-2xl font-bold gradient-brand-text">{product.price} {t.services.currency}</div>
-                  <div className="text-lg text-gray-500 line-through">{product.originalPrice} {t.services.currency}</div>
+                  <div className="text-2xl font-bold gradient-brand-text">
+                    <Price amountDzd={Number(product.price)} />
+                  </div>
+                  <div className="text-lg text-gray-500 line-through">
+                    <Price amountDzd={Number(product.originalPrice)} />
+                  </div>
                 </div>
                 <Link href={`/digital-products/${product.id}`}>
                   <Button className="btn-gradient text-white w-full py-2 rounded-lg font-medium">{t.digitalProducts.buyNow}</Button>

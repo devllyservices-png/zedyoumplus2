@@ -24,8 +24,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Fetch all orders with service and user details
-    const { data: orders, error: ordersError } = await supabase
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get("page") || "1", 10)
+    const pageSize = parseInt(searchParams.get("pageSize") || "20", 10)
+    const safePage = Number.isNaN(page) || page < 1 ? 1 : page
+    const safePageSize = Number.isNaN(pageSize) || pageSize < 1 ? 20 : Math.min(pageSize, 100)
+
+    const from = (safePage - 1) * safePageSize
+    const to = from + safePageSize - 1
+
+    // Fetch paginated orders with service and user details
+    const { data: orders, error: ordersError, count } = await supabase
       .from('orders')
       .select(`
         id,
@@ -52,9 +61,9 @@ export async function GET(request: NextRequest) {
             display_name
           )
         )
-      `)
+      `, { count: "exact" })
       .order('created_at', { ascending: false })
-      .limit(50)
+      .range(from, to)
 
     if (ordersError) {
       console.error('Error fetching admin orders:', ordersError)
@@ -62,7 +71,10 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      orders: orders || []
+      orders: orders || [],
+      total: count || 0,
+      page: safePage,
+      pageSize: safePageSize,
     })
 
   } catch (error) {

@@ -25,6 +25,7 @@ import {
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import OrderConfirmationDialog from "./order-confirmation-dialog"
+import { Price } from "@/components/price"
 
 interface Service {
   id: string
@@ -358,7 +359,7 @@ export default function ServiceDetail({ serviceId }: ServiceDetailProps) {
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xl font-semibold">{pkg.name}</h3>
                             <span className="text-2xl font-bold text-blue-600">
-                              ${pkg.price}
+                              <Price amountDzd={pkg.price} />
                             </span>
                           </div>
                           
@@ -546,7 +547,7 @@ export default function ServiceDetail({ serviceId }: ServiceDetailProps) {
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="font-semibold text-sm sm:text-base">{pkg.name}</h4>
                           <span className="text-base sm:text-lg font-bold text-blue-600">
-                            ${pkg.price}
+                            <Price amountDzd={pkg.price} />
                           </span>
                         </div>
                         {pkg.delivery_time && (
