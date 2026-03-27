@@ -20,7 +20,7 @@ async function getCurrentUser(request: NextRequest) {
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getCurrentUser(request)
@@ -28,24 +28,26 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    if (user.role !== 'seller') {
+    if (user.role !== "seller") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const orderId = params.id
+    const { id: orderId } = await params
 
     // First, verify that this order belongs to the seller
     const { data: order, error: orderError } = await supabase
-      .from('orders')
-      .select(`
+      .from("orders")
+      .select(
+        `
         id, 
         seller_id, 
         buyer_id,
         status,
         services!orders_service_id_fkey(title),
         digital_products!orders_product_id_fkey(title)
-      `)
-      .eq('id', orderId)
+      `
+      )
+      .eq("id", orderId)
       .single()
 
     if (orderError || !order) {
@@ -56,44 +58,50 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
     }
 
-    if (order.status !== 'in_progress') {
+    if (order.status !== "in_progress") {
       return NextResponse.json({ error: "Order must be in progress to mark as completed" }, { status: 400 })
     }
 
-    // Update the order status to completed
+    const completedAt = new Date().toISOString()
+
+    // Update the order status to completed and record completion time (aligns with PATCH /api/orders/[id])
     const { error: updateError } = await supabase
-      .from('orders')
-      .update({ status: 'completed' })
-      .eq('id', orderId)
+      .from("orders")
+      .update({ status: "completed", completed_at: completedAt })
+      .eq("id", orderId)
 
     if (updateError) {
-      console.error('Error updating order status:', updateError)
+      console.error("Error updating order status:", updateError)
       return NextResponse.json({ error: "Failed to update order status" }, { status: 500 })
     }
 
     // Trigger notification for order completion
     try {
-      const serviceTitle = order.services?.title || order.digital_products?.title || 'خدمة غير محددة'
-      
+      const services = order.services as { title?: string } | { title?: string }[] | null
+      const products = order.digital_products as { title?: string } | { title?: string }[] | null
+      const serviceTitle =
+        (Array.isArray(services) ? services[0]?.title : services?.title) ||
+        (Array.isArray(products) ? products[0]?.title : products?.title) ||
+        "خدمة غير محددة"
+
       await NotificationTriggers.onOrderStatusChange({
-        orderId: parseInt(orderId),
+        orderId: parseInt(orderId, 10),
         buyerId: order.buyer_id,
         sellerId: order.seller_id,
-        newStatus: 'completed',
-        serviceTitle
+        newStatus: "completed",
+        serviceTitle,
       })
     } catch (notificationError) {
-      console.error('Error sending notification for order completion:', notificationError)
+      console.error("Error sending notification for order completion:", notificationError)
       // Don't fail the order completion if notifications fail
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: "Order marked as completed successfully" 
+    return NextResponse.json({
+      success: true,
+      message: "Order marked as completed successfully",
     })
-
   } catch (error) {
-    console.error('Error in complete order API:', error)
+    console.error("Error in complete order API:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

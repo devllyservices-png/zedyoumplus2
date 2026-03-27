@@ -448,7 +448,7 @@ export default function ServiceDetail({ serviceId }: ServiceDetailProps) {
                   </div>
                 </div>
 
-                <Link href={`/sellers/${service.seller_id}/profile`}>
+                <Link href={`/sellers/${service.seller_id}/store`}>
                   <Button
                     variant="outline"
                     className="w-full bg-transparent border-2 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50"

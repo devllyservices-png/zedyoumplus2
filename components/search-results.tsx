@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Star, Clock, User, Eye } from 'lucide-react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Price } from "@/components/price"
 
 interface Service {
   id: number
@@ -184,7 +185,11 @@ export function SearchResults({ query, isVisible, onClose }: SearchResultsProps)
                                 </div>
                                 <div className="text-left ml-2">
                                   <p className="font-bold text-blue-600 text-sm">
-                                    {service.price ? `${service.price} دج` : 'السعر غير محدد'}
+                                    {service.price ? (
+                                      <Price amountDzd={service.price} />
+                                    ) : (
+                                      "السعر غير محدد"
+                                    )}
                                   </p>
                                 </div>
                               </div>

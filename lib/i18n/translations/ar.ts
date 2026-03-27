@@ -113,6 +113,8 @@ export const ar = {
   categories: {
     title: "استكشف التصنيفات",
     subtitle: "اكتشف مجموعة واسعة من الخدمات المتخصصة من أفضل المستقلين المحترفين",
+    loadError: "تعذر تحميل التصنيفات. حاول لاحقاً.",
+    empty: "لا توجد تصنيفات لعرضها حالياً.",
     items: {
       design: "التصميم الجرافيكي",
       programming: "البرمجة وتطوير المواقع",
@@ -327,6 +329,52 @@ export const ar = {
       next: "التالي",
       page: "صفحة",
     },
+  },
+
+  // Category browse (home category → services list)
+  categoryPage: {
+    brandName: "منصة الخدمات الرقمية",
+    backToHome: "العودة للرئيسية",
+    fallbackDescription:
+      "تصفح الخدمات المتاحة في هذا التصنيف واختر ما يناسب احتياجك.",
+    serviceCount: "{count} خدمة متاحة",
+    searchInCategory: "ابحث داخل هذا التصنيف...",
+    loading: "جاري التحميل...",
+    metaUnknownCategory: "تصنيف",
+  },
+
+  sellerStore: {
+    brandName: "منصة الخدمات الرقمية",
+    notFound: "البائع غير موجود",
+    projectsCompleted: "المشاريع المكتملة",
+    completionRate: "نسبة الإنجاز",
+    completionRateHint:
+      "نسبة الطلبات غير المعلقة التي تم إكمالها بنجاح",
+    noData: "—",
+    lastProject: "آخر مشروع مكتمل",
+    finishedOn: "تاريخ الإكمال",
+    servicesSection: "الخدمات",
+    servicesCount: "{count} خدمة",
+    viewDetails: "عرض التفاصيل",
+    noServices: "لا توجد خدمات",
+    noServicesHint: "لم يقم هذا البائع بنشر أي خدمات بعد.",
+    memberSince: "عضو منذ",
+    responseTime: "وقت الاستجابة",
+    supportRate: "معدل الدعم",
+    languages: "اللغات",
+    verified: "موثق",
+    rating: "التقييم",
+    reviewsCount: "{count} تقييم",
+    avgRating: "متوسط التقييم",
+    priceOnRequest: "السعر عند الطلب",
+    dashboardStoreTitle: "متجرك العام",
+    dashboardStoreHint: "شارك هذا الرابط مع العملاء",
+    copyLink: "نسخ الرابط",
+    copied: "تم النسخ!",
+    copyFailed: "تعذر النسخ",
+    kindService: "خدمة",
+    kindDigitalProduct: "منتج رقمي",
+    viewStore: "عرض المتجر",
   },
 
   // Digital Products Page

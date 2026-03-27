@@ -51,9 +51,14 @@ export async function createPayPalOrder(params: {
   currency: string
   customId: string
   description?: string
+  returnUrl?: string
+  cancelUrl?: string
 }) {
   const accessToken = await getAccessToken()
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+
+  const returnUrl = params.returnUrl || `${siteUrl}/payment/paypal/return`
+  const cancelUrl = params.cancelUrl || `${siteUrl}/payment/paypal/cancel`
 
   const res = await fetch(`${PAYPAL_API_BASE}/v2/checkout/orders`, {
     method: "POST",
@@ -74,8 +79,8 @@ export async function createPayPalOrder(params: {
         },
       ],
       application_context: {
-        return_url: `${siteUrl}/payment/paypal/return`,
-        cancel_url: `${siteUrl}/payment/paypal/cancel`,
+        return_url: returnUrl,
+        cancel_url: cancelUrl,
       },
     }),
   })

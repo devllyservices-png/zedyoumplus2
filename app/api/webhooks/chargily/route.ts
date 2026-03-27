@@ -40,13 +40,40 @@ export async function POST(request: NextRequest) {
 
     const metadata = (event?.metadata || event?.meta || {}) as any
     const orderId = metadata.order_id
+    const subscriptionInvoiceId = metadata.subscription_invoice_id
+    const statusRaw = (event?.status || event?.event || event?.type || "").toString().toLowerCase()
+
+    // Subscription invoice webhook (seller subscription flow)
+    if (subscriptionInvoiceId) {
+      const isPaid = statusRaw.includes("paid") || statusRaw.includes("success")
+
+      const updatePayload: any = {
+        chargily_status: statusRaw || null,
+      }
+
+      if (isPaid) {
+        updatePayload.status = "paid"
+        updatePayload.paid_at = new Date().toISOString()
+      }
+
+      const { error: updateError } = await supabase
+        .from("seller_subscription_invoices")
+        .update(updatePayload)
+        .eq("id", subscriptionInvoiceId)
+
+      if (updateError) {
+        console.error("Chargily webhook failed updating subscription invoice:", updateError)
+        return NextResponse.json({ error: "Failed to update invoice" }, { status: 500 })
+      }
+
+      return NextResponse.json({ success: true })
+    }
 
     if (!orderId) {
       console.error("Chargily webhook missing order_id in metadata")
       return NextResponse.json({ error: "Missing order_id in metadata" }, { status: 400 })
     }
 
-    const statusRaw = (event?.status || event?.event || event?.type || "").toString().toLowerCase()
     let newOrderStatus: "pending" | "in_progress" | "completed" | "cancelled" = "pending"
 
     if (statusRaw.includes("paid") || statusRaw.includes("success")) {

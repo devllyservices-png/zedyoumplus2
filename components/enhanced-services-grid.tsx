@@ -10,6 +10,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useTranslation } from "@/lib/i18n/hooks/useTranslation"
 import { Price } from "@/components/price"
+import ServicesListing from "@/components/services-listing"
 
 interface ServiceWithSeller {
   id: string
@@ -46,7 +47,7 @@ interface EnhancedServicesGridProps {
   sortBy?: string
 }
 
-export default function EnhancedServicesGrid({ 
+function EnhancedServicesGridLegacy({ 
   category, 
   search, 
   limit = 24, 
@@ -365,5 +366,30 @@ export default function EnhancedServicesGrid({
         </div>
       )}
     </div>
+  )
+}
+
+/**
+ * Temporary wrapper: keep the old component API while delegating rendering
+ * to the unified `ServicesListing`.
+ */
+export default function EnhancedServicesGrid({
+  category,
+  search,
+  limit = 24,
+  sortBy = "newest",
+}: EnhancedServicesGridProps) {
+  return (
+    <ServicesListing
+      category={category}
+      limit={limit}
+      initialSearch={search}
+      initialSortBy={sortBy}
+      showSearch={false}
+      showSort={false}
+      showCategoryFilter={false}
+      showSeller={true}
+      compact={false}
+    />
   )
 }

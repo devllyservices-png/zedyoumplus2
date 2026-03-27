@@ -21,6 +21,7 @@ import {
 import Link from "next/link"
 import Image from "next/image"
 import { useAuth } from "@/contexts/auth-context"
+import { Price } from "@/components/price"
 
 interface Service {
   id: string
@@ -272,10 +273,11 @@ export default function SellerServices() {
                 <div className="flex items-center justify-between mb-3">
                   <div className="text-left">
                     <p className="text-lg font-bold text-gray-900">
-                      {service.service_packages?.[0]?.price ? 
-                        `$${service.service_packages[0].price}` : 
-                        'السعر عند الطلب'
-                      }
+                      {service.service_packages?.[0]?.price ? (
+                        <Price amountDzd={service.service_packages[0].price} />
+                      ) : (
+                        "السعر عند الطلب"
+                      )}
                     </p>
                     {service.service_packages?.[0]?.delivery_time && (
                       <div className="flex items-center gap-1 text-sm text-gray-500">

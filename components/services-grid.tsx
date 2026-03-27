@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Star, Clock, ShoppingCart, Eye } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import ServicesListing from "@/components/services-listing"
 
 interface Service {
   id: string
@@ -35,7 +36,7 @@ interface ServicesGridProps {
   showSeller?: boolean
 }
 
-export default function ServicesGrid({ 
+function ServicesGridLegacy({ 
   category, 
   search, 
   limit = 12, 
@@ -213,5 +214,28 @@ export default function ServicesGrid({
         </Card>
       ))}
     </div>
+  )
+}
+
+/**
+ * Wrapper: delegate to unified listing to ensure currency conversion is consistent.
+ */
+export default function ServicesGrid({
+  category,
+  search,
+  limit = 12,
+  showSeller = false,
+}: ServicesGridProps) {
+  return (
+    <ServicesListing
+      category={category}
+      initialSearch={search}
+      limit={limit}
+      showCategoryFilter={false}
+      showSearch={false}
+      showSort={false}
+      showSeller={showSeller}
+      compact={true}
+    />
   )
 }

@@ -113,6 +113,8 @@ export const fr = {
   categories: {
     title: "Explorez les catégories",
     subtitle: "Découvrez une large gamme de services spécialisés proposés par les meilleurs freelances professionnels",
+    loadError: "Impossible de charger les catégories. Réessayez plus tard.",
+    empty: "Aucune catégorie à afficher pour le moment.",
     items: {
       design: "Design graphique",
       programming: "Programmation et développement web",
@@ -327,6 +329,51 @@ export const fr = {
       next: "Suivant",
       page: "Page",
     },
+  },
+
+  categoryPage: {
+    brandName: "Plateforme de services numériques",
+    backToHome: "Retour à l’accueil",
+    fallbackDescription:
+      "Parcourez les services de cette catégorie et trouvez ce qu’il vous faut.",
+    serviceCount: "{count} services disponibles",
+    searchInCategory: "Rechercher dans cette catégorie...",
+    loading: "Chargement...",
+    metaUnknownCategory: "Catégorie",
+  },
+
+  sellerStore: {
+    brandName: "Plateforme de services numériques",
+    notFound: "Vendeur introuvable",
+    projectsCompleted: "Projets terminés",
+    completionRate: "Taux d’achèvement",
+    completionRateHint:
+      "Part des commandes non en attente marquées comme terminées",
+    noData: "—",
+    lastProject: "Dernier projet terminé",
+    finishedOn: "Terminé le",
+    servicesSection: "Services",
+    servicesCount: "{count} services",
+    viewDetails: "Voir les détails",
+    noServices: "Aucun service",
+    noServicesHint: "Ce vendeur n’a pas encore publié de services.",
+    memberSince: "Membre depuis",
+    responseTime: "Temps de réponse",
+    supportRate: "Taux d’assistance",
+    languages: "Langues",
+    verified: "Vérifié",
+    rating: "Note",
+    reviewsCount: "{count} avis",
+    avgRating: "Note moyenne",
+    priceOnRequest: "Prix sur demande",
+    dashboardStoreTitle: "Votre boutique publique",
+    dashboardStoreHint: "Partagez ce lien avec vos clients",
+    copyLink: "Copier le lien",
+    copied: "Copié !",
+    copyFailed: "Impossible de copier",
+    kindService: "Service",
+    kindDigitalProduct: "Produit numérique",
+    viewStore: "Voir la boutique",
   },
 
   // Digital Products Page

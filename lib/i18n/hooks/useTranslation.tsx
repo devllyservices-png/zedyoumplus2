@@ -15,6 +15,7 @@ export function useTranslation() {
     const savedLang = localStorage.getItem("language") as Language
     if (savedLang && (savedLang === "ar" || savedLang === "fr" || savedLang === "en")) {
       setLanguageState(savedLang)
+      document.cookie = `language=${savedLang};path=/;max-age=31536000;SameSite=Lax`
     }
 
     // Listen for language changes from other components
@@ -33,6 +34,7 @@ export function useTranslation() {
     if (typeof window !== "undefined") {
       setLanguageState(lang)
       localStorage.setItem("language", lang)
+      document.cookie = `language=${lang};path=/;max-age=31536000;SameSite=Lax`
       // Dispatch event to notify other components
       window.dispatchEvent(new Event("languagechange"))
     }

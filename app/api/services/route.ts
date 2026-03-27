@@ -27,6 +27,46 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '12')
     const offset = (page - 1) * limit
+    const isPriceSort = sort === "price-low" || sort === "price-high"
+
+    // Subscription gating: only show services for sellers with an active subscription.
+    const now = new Date()
+    let activeSellerIds: string[] = []
+
+    if (sellerId) {
+      const { data: sellerActiveSub, error: sellerActiveErr } = await supabase
+        .from("seller_subscriptions")
+        .select("seller_id")
+        .eq("seller_id", sellerId)
+        .gt("ends_at", now.toISOString())
+        .limit(1)
+
+      if (sellerActiveErr) {
+        console.error("Active seller check failed:", sellerActiveErr)
+      }
+
+      activeSellerIds = (sellerActiveSub || []).map((r: any) => r.seller_id)
+    } else {
+      const { data: activeSellerPeriods, error: activeSellerErr } = await supabase
+        .from("seller_subscriptions")
+        .select("seller_id")
+        .gt("ends_at", now.toISOString())
+
+      if (activeSellerErr) {
+        console.error("Active seller fetch failed:", activeSellerErr)
+      }
+
+      activeSellerIds = Array.from(
+        new Set((activeSellerPeriods || []).map((r: any) => r.seller_id))
+      )
+    }
+
+    if (!activeSellerIds.length) {
+      return NextResponse.json({
+        services: [],
+        pagination: { page, limit, total: 0, pages: 0 },
+      })
+    }
 
     let query = supabase
       .from('services')
@@ -36,7 +76,10 @@ export async function GET(request: NextRequest) {
         service_packages(name, price, delivery_time),
         service_reviews(rating, comment, created_at)
       `)
-      .range(offset, offset + limit - 1)
+
+    if (!isPriceSort) {
+      query = query.range(offset, offset + limit - 1)
+    }
 
     // Apply filters
     if (category) {
@@ -56,12 +99,10 @@ export async function GET(request: NextRequest) {
         query = query.order('rating', { ascending: false })
         break
       case 'price-low':
-        // Note: This would require joining with packages table
-        query = query.order('created_at', { ascending: false })
+        // Handled after fetching services (min package price sort).
         break
       case 'price-high':
-        // Note: This would require joining with packages table
-        query = query.order('created_at', { ascending: false })
+        // Handled after fetching services (min package price sort).
         break
       case 'orders':
         query = query.order('total_orders', { ascending: false })
@@ -71,18 +112,50 @@ export async function GET(request: NextRequest) {
     }
 
     if (sellerId) {
+      if (!activeSellerIds.includes(sellerId)) {
+        return NextResponse.json({
+          services: [],
+          pagination: { page, limit, total: 0, pages: 0 },
+        })
+      }
       query = query.eq('seller_id', sellerId)
+    } else {
+      query = query.in("seller_id", activeSellerIds)
     }
 
-    const { data: services, error, count } = await query
+    const { data: servicesRows, error, count } = await query
 
     if (error) {
       console.error('Error fetching services:', error)
       return NextResponse.json({ error: 'فشل في جلب الخدمات' }, { status: 500 })
     }
 
+    const getMinPackagePrice = (service: any) => {
+      const packages: any[] = service?.service_packages || []
+      const prices = packages
+        .map((p) => Number(p?.price))
+        .filter((n) => Number.isFinite(n) && n > 0)
+      return prices.length ? Math.min(...prices) : Number.POSITIVE_INFINITY
+    }
+
+    const allServices = servicesRows || []
+
+    let servicesPage: any[] = allServices
+    let total = typeof count === "number" ? count : allServices.length
+
+    if (isPriceSort) {
+      const sorted = [...allServices].sort((a, b) => {
+        const ap = getMinPackagePrice(a)
+        const bp = getMinPackagePrice(b)
+        return sort === "price-low" ? ap - bp : bp - ap
+      })
+
+      total = sorted.length
+      servicesPage = sorted.slice(offset, offset + limit)
+    }
+
     // Calculate average ratings and review counts
-    const servicesWithStats = await Promise.all(services?.map(async (service) => {
+    const servicesWithStats = await Promise.all((servicesPage || []).map(async (service) => {
       const reviews = service.service_reviews || []
       const avgRating = reviews.length > 0 
         ? reviews.reduce((sum: number, review: any) => sum + review.rating, 0) / reviews.length
@@ -116,9 +189,9 @@ export async function GET(request: NextRequest) {
       pagination: {
         page,
         limit,
-        total: count || 0,
-        pages: Math.ceil((count || 0) / limit)
-      }
+        total,
+        pages: Math.ceil(total / limit),
+      },
     })
   } catch (error) {
     console.error('Services GET error:', error)

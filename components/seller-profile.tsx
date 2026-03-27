@@ -20,6 +20,7 @@ import {
 import Link from "next/link"
 import Image from "next/image"
 import ServicesGrid from "./services-grid"
+import ServicesListing from "@/components/services-listing"
 
 interface SellerProfile {
   id: string
@@ -276,94 +277,15 @@ export default function SellerProfile({ sellerId }: SellerProfileProps) {
         </Card>
       </div>
 
-      {/* Services Section */}
-      <Card className="shadow-lg">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex flex-col sm:flex-row items-center justify-between gap-2">
-            <span className="text-xl sm:text-2xl">خدمات {seller.profile.display_name}</span>
-            <Badge variant="outline" className="bg-blue-50 text-blue-700">
-              {seller.stats.total_services} خدمة
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {seller.services.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-              {seller.services.map((service) => (
-                <Card key={service.id} className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-0 shadow-md">
-                  <div className="aspect-video relative overflow-hidden">
-                    {service.primary_image ? (
-                      <Image
-                        src={service.primary_image}
-                        alt={service.title}
-                        fill
-                        className="object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 flex items-center justify-center">
-                        <ShoppingCart className="w-12 h-12 text-gray-400" />
-                      </div>
-                    )}
-                    <div className="absolute top-2 right-2">
-                      <Badge variant="secondary" className="bg-white/95 text-gray-700 backdrop-blur-sm">
-                        {service.category}
-                      </Badge>
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </div>
-
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold text-gray-900 mb-3 line-clamp-2 text-right">
-                      {service.title}
-                    </h3>
-                    
-                    <div className="flex items-center gap-3 mb-3 text-sm text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <StarIcon className="w-4 h-4 text-yellow-400 fill-current" />
-                        <span className="font-medium">{service.rating.toFixed(1)}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <ShoppingCart className="w-4 h-4" />
-                        <span>{service.total_orders}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-3">
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-gray-900">
-                          {service.service_packages?.[0]?.price ? 
-                            `$${service.service_packages[0].price}` : 
-                            'السعر عند الطلب'
-                          }
-                        </p>
-                        {service.service_packages?.[0]?.delivery_time && (
-                          <div className="flex items-center justify-end gap-1 text-sm text-gray-500">
-                            <Clock className="w-3 h-3" />
-                            <span>{service.service_packages[0].delivery_time}</span>
-                          </div>
-                        )}
-                      </div>
-                      <Link href={`/services/${service.id}`} className="w-full">
-                        <Button size="sm" variant="outline" className="w-full hover:bg-blue-50 hover:border-blue-300">
-                          عرض التفاصيل
-                        </Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16">
-              <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
-                <ShoppingCart className="w-12 h-12 text-gray-400" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">لا توجد خدمات</h3>
-              <p className="text-gray-600 max-w-md mx-auto">لم يقم هذا البائع بإنشاء أي خدمات بعد. تحقق مرة أخرى لاحقاً!</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <ServicesListing
+        sellerId={seller.id}
+        limit={24}
+        showCategoryFilter={false}
+        showSearch={true}
+        showSort={true}
+        showSeller={false}
+        compact={true}
+      />
     </div>
   )
 }

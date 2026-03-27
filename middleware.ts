@@ -3,7 +3,12 @@ import type { NextRequest } from "next/server"
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  
+
+  // Public read-only seller APIs (marketplace storefronts, profile JSON)
+  if (pathname.startsWith("/api/sellers/") && request.method === "GET") {
+    return NextResponse.next()
+  }
+
   // Skip middleware for public routes
   const publicRoutes = ["/", "/home", "/login", "/register", "/terms", "/privacy", "/contact", "/services", "/digital-products", "/how-it-works", "/api/auth/login", "/api/auth/signup", "/api/upload"]
   if (publicRoutes.includes(pathname) || pathname.startsWith("/api/upload") || pathname.startsWith("/api/services") || pathname.startsWith("/services/") || pathname.startsWith("/digital-products/") || pathname.startsWith("/sellers/")) {
