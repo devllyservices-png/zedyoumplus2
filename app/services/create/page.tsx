@@ -34,7 +34,7 @@ interface FAQ {
   answer: string
 }
 
-function CreateServiceForm() {
+export function CreateServiceForm({ editServiceId }: { editServiceId?: string } = {}) {
   const { user } = useAuth()
   const router = useRouter()
   const [formData, setFormData] = useState({
@@ -72,6 +72,7 @@ function CreateServiceForm() {
     console.log("Popup state changed:", showSuccessPopup)
   }, [showSuccessPopup])
   const [isUploading, setIsUploading] = useState(false)
+  const [loadingExisting, setLoadingExisting] = useState(!!editServiceId)
   const mainImageInputRef = useRef<HTMLInputElement | null>(null)
   const additionalImagesInputRef = useRef<HTMLInputElement | null>(null)
 
@@ -84,6 +85,99 @@ function CreateServiceForm() {
     { value: "business", label: "الأعمال والاستشارات" },
     { value: "music", label: "الموسيقى والصوتيات" },
   ]
+
+  useEffect(() => {
+    if (!editServiceId || !user) {
+      if (!editServiceId) setLoadingExisting(false)
+      return
+    }
+    let cancelled = false
+    const load = async () => {
+      setLoadingExisting(true)
+      setError("")
+      try {
+        const res = await fetch(`/api/services/${editServiceId}`, { credentials: "include" })
+        const data = await res.json()
+        if (!res.ok) {
+          throw new Error(data.error || "تعذر تحميل الخدمة")
+        }
+        const service = data.service
+        if (user.role !== "admin" && service.seller_id !== user.id) {
+          setError("غير مصرح بتعديل هذه الخدمة")
+          router.replace("/dashboard")
+          return
+        }
+
+        const imgs = [...(service.service_images || [])].sort((a: { is_primary?: boolean }, b: { is_primary?: boolean }) => {
+          if (a.is_primary && !b.is_primary) return -1
+          if (!a.is_primary && b.is_primary) return 1
+          return 0
+        })
+        const urls: string[] = imgs.map((i: { image_url?: string }) => i.image_url).filter(Boolean) as string[]
+        const mainImageUrl = urls[0] ?? null
+        const additionalImageUrls = urls.slice(1, 6)
+
+        const packagesFromApi = (service.service_packages || []).map((pkg: any) => ({
+          name: pkg.name || "",
+          price: pkg.price != null ? String(pkg.price) : "",
+          deliveryTime: pkg.delivery_time || "",
+          revisions: pkg.revisions != null ? String(pkg.revisions) : "",
+          features:
+            Array.isArray(pkg.features) && pkg.features.length
+              ? pkg.features.map((f: string) => String(f))
+              : [""],
+        }))
+
+        const packages =
+          packagesFromApi.length > 0
+            ? packagesFromApi
+            : [
+                {
+                  name: "الباقة الأساسية",
+                  price: "",
+                  deliveryTime: "",
+                  revisions: "",
+                  features: [""],
+                },
+              ]
+
+        const faqs =
+          (service.service_faq || []).length > 0
+            ? (service.service_faq as { question?: string; answer?: string }[]).map((f) => ({
+                question: f.question || "",
+                answer: f.answer || "",
+              }))
+            : [{ question: "", answer: "" }]
+
+        if (!cancelled) {
+          setFormData({
+            title: service.title || "",
+            description: service.description || "",
+            category: service.category || "",
+            tags: Array.isArray(service.tags) ? service.tags : [],
+            mainImage: null,
+            additionalImages: [],
+            mainImageUrl,
+            additionalImageUrls,
+            packages,
+            faqs,
+          })
+        }
+      } catch (err: any) {
+        if (!cancelled) {
+          setError(err?.message || "تعذر تحميل الخدمة")
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingExisting(false)
+        }
+      }
+    }
+    void load()
+    return () => {
+      cancelled = true
+    }
+  }, [editServiceId, user, router])
 
   const updateFormData = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -307,32 +401,28 @@ function CreateServiceForm() {
 
 
     try {
-      console.log("Creating service with data:", serviceData)
-      
-      const response = await fetch("/api/services", {
-        method: "POST",
+      const url = editServiceId ? `/api/services/${editServiceId}` : "/api/services"
+      const method = editServiceId ? "PUT" : "POST"
+
+      const response = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: 'include',
+        credentials: "include",
         body: JSON.stringify(serviceData),
       })
 
       const result = await response.json()
-      console.log("Service creation response:", { status: response.status, result })
-      
+
       if (response.ok) {
-        console.log("Service created successfully, showing popup")
         setShowSuccessPopup(true)
-        console.log("Popup state set to true")
       } else {
-        console.error("Service creation failed:", result.error)
-        setError(result.error || "حدث خطأ أثناء إنشاء الخدمة")
+        setError(result.error || (editServiceId ? "حدث خطأ أثناء تحديث الخدمة" : "حدث خطأ أثناء إنشاء الخدمة"))
       }
-      
     } catch (error) {
-      console.error("Service creation error:", error)
-      setError("حدث خطأ أثناء إنشاء الخدمة")
+      console.error("Service save error:", error)
+      setError(editServiceId ? "حدث خطأ أثناء تحديث الخدمة" : "حدث خطأ أثناء إنشاء الخدمة")
     } finally {
       setIsLoading(false)
     }
@@ -345,6 +435,19 @@ function CreateServiceForm() {
       router.push("/dashboard")
     }, 100)
   }
+  if (editServiceId && loadingExisting) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        <Header />
+        <div className="container mx-auto px-4 py-24 flex flex-col items-center justify-center gap-4">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+          <p className="text-gray-600">جاري تحميل بيانات الخدمة...</p>
+        </div>
+        <Footer />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <Header />
@@ -354,8 +457,12 @@ function CreateServiceForm() {
             <div className="w-16 h-16 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-white" />
             </div>
-            <h3 className="text-xl font-semibold bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent mb-2">تم إنشاء الخدمة بنجاح!</h3>
-            <p className="text-gray-600 mb-6">تم حفظ خدمتك ويمكنك الآن استقبال الطلبات</p>
+            <h3 className="text-xl font-semibold bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent mb-2">
+              {editServiceId ? "تم تحديث الخدمة بنجاح!" : "تم إنشاء الخدمة بنجاح!"}
+            </h3>
+            <p className="text-gray-600 mb-6">
+              {editServiceId ? "تم حفظ التعديلات على خدمتك." : "تم حفظ خدمتك ويمكنك الآن استقبال الطلبات"}
+            </p>
             <Button onClick={handleSuccessOk} className="w-full btn-gradient text-white">
               <ArrowRight className="w-4 h-4 ml-2" />
               الذهاب إلى لوحة التحكم
@@ -366,8 +473,12 @@ function CreateServiceForm() {
       <div className="container mx-auto px-4 py-4 sm:py-8">
         <div className="max-w-4xl mx-auto">
           <div className="mb-6 sm:mb-8">
-            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">إضافة خدمة جديدة</h1>
-            <p className="text-gray-600 text-sm sm:text-base">أنشئ خدمتك وابدأ في استقبال الطلبات</p>
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+              {editServiceId ? "تعديل الخدمة" : "إضافة خدمة جديدة"}
+            </h1>
+            <p className="text-gray-600 text-sm sm:text-base">
+              {editServiceId ? "حدّث تفاصيل خدمتك ثم احفظ التغييرات" : "أنشئ خدمتك وابدأ في استقبال الطلبات"}
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
@@ -757,7 +868,7 @@ function CreateServiceForm() {
                 حفظ كمسودة
               </Button>
               <Button type="submit" disabled={isLoading || isUploading} className="btn-gradient text-white">
-                {isLoading ? "جاري النشر..." : "نشر الخدمة"}
+                {isLoading ? (editServiceId ? "جاري الحفظ..." : "جاري النشر...") : editServiceId ? "حفظ التعديلات" : "نشر الخدمة"}
                 <ArrowRight className="w-4 h-4 mr-2" />
               </Button>
               

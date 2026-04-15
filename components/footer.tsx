@@ -149,10 +149,7 @@ export function Footer() {
                 <span className="text-red-600 font-bold text-sm">{t.footer.paymentMethods.cib}</span>
               </div>
               <div className="bg-white rounded-lg p-3">
-                <span className="text-blue-800 font-bold text-sm">{t.footer.paymentMethods.visa}</span>
-              </div>
-              <div className="bg-white rounded-lg p-3">
-                <span className="text-red-500 font-bold text-sm">{t.footer.paymentMethods.mastercard}</span>
+                <span className="text-[#0070ba] font-bold text-sm">{t.footer.paymentMethods.paypal}</span>
               </div>
               <div className="bg-white rounded-lg p-3">
                 <span className="text-gray-700 font-bold text-sm">{t.footer.paymentMethods.bankTransfer}</span>

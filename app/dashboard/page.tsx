@@ -17,7 +17,7 @@ import { useTranslation } from "@/lib/i18n/hooks/useTranslation"
 
 export default function DashboardPage() {
   const { t, language, setLanguage } = useTranslation()
-  const { user, profile, logout, hasPermission, refreshSession } = useAuth()
+  const { user, profile, logout, hasPermission, refreshSession, isLoading: authLoading } = useAuth()
   const router = useRouter()
   const [stats, setStats] = useState({
     activeServices: 0,
@@ -36,17 +36,17 @@ export default function DashboardPage() {
   const [showLanguageMenu, setShowLanguageMenu] = useState(false)
 
   useEffect(() => {
+    if (authLoading) return
+
     if (!user) {
-      // Try to refresh session before redirecting
-      refreshSession().then(() => {
-        if (!user) {
-          router.push("/login")
-        }
+      void refreshSession().then((ok) => {
+        if (!ok) router.push("/login")
       })
-    } else {
-      fetchDashboardData()
+      return
     }
-  }, [user, router, refreshSession])
+
+    fetchDashboardData()
+  }, [user, router, refreshSession, authLoading])
 
   // Close language menu when clicking outside
   useEffect(() => {

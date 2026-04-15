@@ -135,19 +135,55 @@ export const ar = {
   howItWorks: {
     title: "كيف تعمل المنصة",
     subtitle: "ثلاث خطوات بسيطة للبدء في استخدام منصتنا",
+    heroIntro:
+      "منصة تجمع المشترين ومقدمي الخدمات في مكان واحد: خدمات احترافية، منتجات رقمية، ودفع آمن بوسائل محلية ودولية.",
     steps: {
       createAccount: {
         title: "أنشئ حسابك",
         description: "سجّل كمشتري أو مقدم خدمة في دقائق معدودة",
+        detail:
+          "أنشئ حسابك بخطوات واضحة. اختر دورك (مشتري أو بائع/مقدّم خدمة). بياناتك محمية ويمكنك إكمال ملفك لاحقاً.",
       },
       choose: {
         title: "اختر ما تريد",
         description: "استعرض الخدمات أو المنتجات الرقمية المتاحة",
+        detail:
+          "تصفّح التصنيفات، قارن العروض والأسعار، واطلع على التقييمات ووقت التسليم قبل اختيار الأنسب لك.",
       },
       pay: {
         title: "ادفع بسهولة",
         description: "بوسائل دفع محلية ودولية موثوقة ومضمونة",
+        detail:
+          "ادفع عبر Chargily أو البطاقة أو التحويل حسب التوفر. المعاملة مؤمّنة ويمكنك متابعة طلبك من لوحة التحكم.",
       },
+    },
+    featuresSectionTitle: "لماذا تختار منصتنا؟",
+    featuresSectionSubtitle: "تجربة موحّدة تجمع الأمان، السرعة، والدعم في مكان واحد",
+    highlights: {
+      securePayment: {
+        title: "دفع آمن",
+        description:
+          "وسائل دفع محلية ودولية معتمدة، وتتبّع واضح لحالة الطلب والدفع.",
+      },
+      support: {
+        title: "دعم متواصل",
+        description: "فريق مساعدة لاستفساراتك ومشاكلك التقنية قدر الإمكان.",
+      },
+      fastDelivery: {
+        title: "تسليم في الوقت المتفق عليه",
+        description: "مدد تسليم واضحة في بطاقات الخدمة مع التزام مقدمي الخدمة بما يعرضونه.",
+      },
+      quality: {
+        title: "جودة وشفافية",
+        description: "تقييمات وتعليقات تساعدك على اختيار مقدّم خدمة مناسب قبل الشراء.",
+      },
+    },
+    paymentMethodsSubtitle: "وسائل دفع موثوقة تناسب المستخدم في الجزائر والخارج حسب التوفر",
+    cta: {
+      title: "جاهز للبدء؟",
+      description: "أنشئ حساباً مجاناً أو تصفّح الخدمات وابدأ بطلبك عندما يناسبك.",
+      register: "سجّل الآن",
+      browseServices: "استعرض الخدمات",
     },
   },
 
@@ -224,7 +260,7 @@ export const ar = {
     features: {
       securePayment: {
         title: "دفع آمن بوسائل محلية ودولية",
-        description: "ندعم جميع وسائل الدفع المحلية والدولية: Chargily، CCP، CIB، Visa، Mastercard والتحويل البنكي",
+        description: "ندعم جميع وسائل الدفع المحلية والدولية: Chargily، CCP، CIB، PayPal والتحويل البنكي",
       },
       support: {
         title: "دعم فني سريع ومتجاوب",
@@ -352,6 +388,7 @@ export const ar = {
       "نسبة الطلبات غير المعلقة التي تم إكمالها بنجاح",
     noData: "—",
     lastProject: "آخر مشروع مكتمل",
+    lastProjectTitleFallback: "طلب مكتمل",
     finishedOn: "تاريخ الإكمال",
     servicesSection: "الخدمات",
     servicesCount: "{count} خدمة",
@@ -467,7 +504,7 @@ export const ar = {
       },
       paymentMethods: {
         question: "ما هي وسائل الدفع المتاحة؟",
-        answer: "نقبل جميع وسائل الدفع المحلية والدولية: Chargily، CCP، CIB، Visa، Mastercard وبطاقات الائتمان.",
+        answer: "نقبل جميع وسائل الدفع المحلية والدولية: Chargily، CCP، CIB، PayPal وبطاقات الائتمان.",
       },
       becomeSeller: {
         question: "كيف يمكنني أن أصبح مقدم خدمة؟",
@@ -524,8 +561,7 @@ export const ar = {
       chargily: "Chargily",
       ccp: "CCP",
       cib: "CIB",
-      visa: "VISA",
-      mastercard: "Mastercard",
+      paypal: "PayPal",
       bankTransfer: "تحويل بنكي",
     },
     copyright: "© 2024 منصة الخدمات الرقمية. جميع الحقوق محفوظة.",

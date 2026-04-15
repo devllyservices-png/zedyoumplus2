@@ -101,23 +101,29 @@ export async function GET(
   }
 }
 
-// PUT /api/services/[id] - Update service (seller or admin)
+// PUT /api/services/[id] - Full update (seller or admin): core row + packages, FAQ, images
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getCurrentUser(request)
-    
+
     if (!user) {
       return NextResponse.json({ error: 'غير مصرح بالوصول' }, { status: 401 })
     }
 
     const { id } = await params
     const body = await request.json()
-    const { title, description, category, tags } = body
+    const { title, description, category, tags, packages, faq, images } = body
 
-    // Check if service exists and user has permission
+    if (!title || !packages || !Array.isArray(packages) || packages.length === 0) {
+      return NextResponse.json(
+        { error: 'العنوان والحزم مطلوبة' },
+        { status: 400 }
+      )
+    }
+
     const { data: existingService, error: fetchError } = await supabase
       .from('services')
       .select('seller_id')
@@ -128,12 +134,10 @@ export async function PUT(
       return NextResponse.json({ error: 'الخدمة غير موجودة' }, { status: 404 })
     }
 
-    // Check permissions
     if (user.role !== 'admin' && existingService.seller_id !== user.userId) {
       return NextResponse.json({ error: 'غير مصرح بتعديل هذه الخدمة' }, { status: 403 })
     }
 
-    // Update service
     const { data: service, error: updateError } = await supabase
       .from('services')
       .update({
@@ -141,7 +145,6 @@ export async function PUT(
         description,
         category,
         tags: tags || [],
-        updated_at: new Date().toISOString()
       })
       .eq('id', id)
       .select()
@@ -152,10 +155,59 @@ export async function PUT(
       return NextResponse.json({ error: 'فشل في تحديث الخدمة' }, { status: 500 })
     }
 
+    await supabase.from('service_images').delete().eq('service_id', id)
+    await supabase.from('service_faq').delete().eq('service_id', id)
+    await supabase.from('service_packages').delete().eq('service_id', id)
+
+    if (packages && packages.length > 0) {
+      const packageData = packages.map((pkg: any) => ({
+        service_id: id,
+        name: pkg.name,
+        price: pkg.price,
+        delivery_time: pkg.delivery_time,
+        revisions: pkg.revisions,
+        features: pkg.features || [],
+      }))
+
+      const { error: packagesError } = await supabase.from('service_packages').insert(packageData)
+
+      if (packagesError) {
+        console.error('Error updating packages:', packagesError)
+      }
+    }
+
+    if (faq && faq.length > 0) {
+      const faqData = faq.map((item: any) => ({
+        service_id: id,
+        question: item.question,
+        answer: item.answer,
+      }))
+
+      const { error: faqError } = await supabase.from('service_faq').insert(faqData)
+
+      if (faqError) {
+        console.error('Error updating FAQ:', faqError)
+      }
+    }
+
+    if (images && images.length > 0) {
+      const imageData = images.map((img: any, index: number) => ({
+        service_id: id,
+        image_url: img.url,
+        is_primary: index === 0,
+      }))
+
+      const { error: imagesError } = await supabase.from('service_images').insert(imageData)
+
+      if (imagesError) {
+        console.error('Error updating images:', imagesError)
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: 'تم تحديث الخدمة بنجاح',
-      service
+      service,
     })
   } catch (error) {
     console.error('Service PUT error:', error)

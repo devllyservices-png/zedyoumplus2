@@ -13,8 +13,9 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 0, // Expire immediately
-      expires: new Date(0) // Set to epoch time
+      path: "/",
+      maxAge: 0,
+      expires: new Date(0),
     })
 
     return response

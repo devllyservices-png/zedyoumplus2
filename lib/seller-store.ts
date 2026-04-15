@@ -273,7 +273,7 @@ export async function getSellerStoreData(
   if (last) {
     const svc = last.services as { title?: string } | null
     const prod = last.digital_products as { title?: string } | null
-    const title = svc?.title || prod?.title || "طلب مكتمل"
+    const title = (svc?.title || prod?.title || "").trim()
     const finishedAt =
       last.completed_at ||
       last.created_at ||
@@ -309,8 +309,8 @@ export async function getSellerStoreData(
       total_orders: totalOrdersSum,
       average_rating: Math.round(averageRating * 10) / 10,
       total_reviews: totalReviews,
-      response_time: profile.response_time || "غير محدد",
-      support_rate: profile.support_rate || "غير محدد",
+      response_time: profile.response_time?.trim() || "",
+      support_rate: profile.support_rate?.trim() || "",
     },
     orderMetrics,
     lastFinishedProject,

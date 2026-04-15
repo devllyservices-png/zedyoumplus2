@@ -135,19 +135,58 @@ export const fr = {
   howItWorks: {
     title: "Comment ça marche",
     subtitle: "Trois étapes simples pour commencer à utiliser notre plateforme",
+    heroIntro:
+      "Une plateforme qui met en relation acheteurs et prestataires : services professionnels, produits numériques et paiements sécurisés (locaux et internationaux).",
     steps: {
       createAccount: {
         title: "Créez votre compte",
         description: "Inscrivez-vous en tant qu'acheteur ou prestataire en quelques minutes",
+        detail:
+          "Création de compte en quelques étapes. Choisissez votre rôle (acheteur ou vendeur / prestataire). Vos données sont protégées et vous pouvez compléter votre profil plus tard.",
       },
       choose: {
         title: "Choisissez ce que vous voulez",
         description: "Parcourez les services ou produits numériques disponibles",
+        detail:
+          "Explorez les catégories, comparez les offres et les prix, et consultez les avis et délais de livraison avant de décider.",
       },
       pay: {
         title: "Payez facilement",
         description: "Avec des moyens de paiement locaux et internationaux fiables et sécurisés",
+        detail:
+          "Payez via Chargily, carte ou virement selon les options proposées. La transaction est sécurisée et vous pouvez suivre votre commande depuis votre espace.",
       },
+    },
+    featuresSectionTitle: "Pourquoi choisir notre plateforme ?",
+    featuresSectionSubtitle: "Une expérience qui combine sécurité, réactivité et clarté",
+    highlights: {
+      securePayment: {
+        title: "Paiement sécurisé",
+        description:
+          "Moyens de paiement locaux et internationaux reconnus, avec un suivi clair de la commande et du paiement.",
+      },
+      support: {
+        title: "Assistance",
+        description: "Une équipe pour répondre à vos questions et problèmes techniques dans la mesure du possible.",
+      },
+      fastDelivery: {
+        title: "Délais annoncés clairement",
+        description:
+          "Des délais de livraison visibles sur les offres, avec une attente cohérente avec ce qu’affiche le prestataire.",
+      },
+      quality: {
+        title: "Qualité et transparence",
+        description:
+          "Notes et commentaires pour vous aider à choisir un prestataire avant d’acheter.",
+      },
+    },
+    paymentMethodsSubtitle:
+      "Des moyens de paiement fiables, adaptés aux usages en Algérie et à l’international selon les options disponibles",
+    cta: {
+      title: "Prêt à commencer ?",
+      description: "Créez un compte gratuitement ou parcourez les services et passez commande quand vous voulez.",
+      register: "S’inscrire",
+      browseServices: "Voir les services",
     },
   },
 
@@ -224,7 +263,7 @@ export const fr = {
     features: {
       securePayment: {
         title: "Paiement sécurisé avec des moyens locaux et internationaux",
-        description: "Nous supportons tous les moyens de paiement locaux et internationaux : Chargily, CCP, CIB, Visa, Mastercard et virement bancaire",
+        description: "Nous supportons tous les moyens de paiement locaux et internationaux : Chargily, CCP, CIB, PayPal et virement bancaire",
       },
       support: {
         title: "Support technique rapide et réactif",
@@ -351,6 +390,7 @@ export const fr = {
       "Part des commandes non en attente marquées comme terminées",
     noData: "—",
     lastProject: "Dernier projet terminé",
+    lastProjectTitleFallback: "Commande terminée",
     finishedOn: "Terminé le",
     servicesSection: "Services",
     servicesCount: "{count} services",
@@ -466,7 +506,7 @@ export const fr = {
       },
       paymentMethods: {
         question: "Quels sont les moyens de paiement disponibles ?",
-        answer: "Nous acceptons tous les moyens de paiement locaux et internationaux : Chargily, CCP, CIB, Visa, Mastercard et cartes de crédit.",
+        answer: "Nous acceptons tous les moyens de paiement locaux et internationaux : Chargily, CCP, CIB, PayPal et cartes de crédit.",
       },
       becomeSeller: {
         question: "Comment puis-je devenir prestataire ?",
@@ -523,8 +563,7 @@ export const fr = {
       chargily: "Chargily",
       ccp: "CCP",
       cib: "CIB",
-      visa: "VISA",
-      mastercard: "Mastercard",
+      paypal: "PayPal",
       bankTransfer: "Virement bancaire",
     },
     copyright: "© 2024 Plateforme de services numériques. Tous droits réservés.",

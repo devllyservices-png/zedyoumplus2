@@ -135,19 +135,57 @@ export const en = {
   howItWorks: {
     title: "How It Works",
     subtitle: "Three simple steps to get started with our platform",
+    heroIntro:
+      "A marketplace that connects buyers and providers: professional services, digital products, and secure local and international payments.",
     steps: {
       createAccount: {
         title: "Create Your Account",
         description: "Sign up as a buyer or service provider in minutes",
+        detail:
+          "Sign up in a few steps. Pick your role (buyer or seller / provider). Your data is protected and you can finish your profile later.",
       },
       choose: {
         title: "Choose What You Want",
         description: "Browse available services or digital products",
+        detail:
+          "Explore categories, compare offers and prices, and read ratings and delivery times before you choose.",
       },
       pay: {
         title: "Pay Easily",
         description: "With reliable and secure local and international payment methods",
+        detail:
+          "Pay with Chargily, card, or bank transfer where available. Your payment is handled securely and you can track your order in your dashboard.",
       },
+    },
+    featuresSectionTitle: "Why choose our platform?",
+    featuresSectionSubtitle: "Security, clarity, and support in one place",
+    highlights: {
+      securePayment: {
+        title: "Secure payments",
+        description:
+          "Trusted local and international options, with clear tracking of your order and payment status.",
+      },
+      support: {
+        title: "Help when you need it",
+        description: "Support for your questions and technical issues, as far as we can assist.",
+      },
+      fastDelivery: {
+        title: "Clear delivery expectations",
+        description:
+          "Delivery times shown on service offers so you know what to expect from providers.",
+      },
+      quality: {
+        title: "Quality signals",
+        description: "Ratings and reviews to help you pick the right provider before you buy.",
+      },
+    },
+    paymentMethodsSubtitle:
+      "Reliable payment options for users in Algeria and abroad, depending on what is enabled",
+    cta: {
+      title: "Ready to start?",
+      description: "Create a free account or browse services and place an order whenever you like.",
+      register: "Register now",
+      browseServices: "Browse services",
     },
   },
 
@@ -224,7 +262,7 @@ export const en = {
     features: {
       securePayment: {
         title: "Secure Payment with Local and International Methods",
-        description: "We support all local and international payment methods: Chargily, CCP, CIB, Visa, Mastercard, and bank transfer",
+        description: "We support all local and international payment methods: Chargily, CCP, CIB, PayPal, and bank transfer",
       },
       support: {
         title: "Fast and Responsive Technical Support",
@@ -350,6 +388,7 @@ export const en = {
       "Share of non-pending orders that were completed successfully",
     noData: "—",
     lastProject: "Last completed project",
+    lastProjectTitleFallback: "Completed order",
     finishedOn: "Finished",
     servicesSection: "Services",
     servicesCount: "{count} services",
@@ -465,7 +504,7 @@ export const en = {
       },
       paymentMethods: {
         question: "What payment methods are available?",
-        answer: "We accept all local and international payment methods: Chargily, CCP, CIB, Visa, Mastercard, and credit cards.",
+        answer: "We accept all local and international payment methods: Chargily, CCP, CIB, PayPal, and credit cards.",
       },
       becomeSeller: {
         question: "How can I become a service provider?",
@@ -522,8 +561,7 @@ export const en = {
       chargily: "Chargily",
       ccp: "CCP",
       cib: "CIB",
-      visa: "VISA",
-      mastercard: "Mastercard",
+      paypal: "PayPal",
       bankTransfer: "Bank Transfer",
     },
     copyright: "© 2024 Digital Services Platform. All rights reserved.",

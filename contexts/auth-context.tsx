@@ -35,7 +35,7 @@ interface AuthContextType {
   register: (userData: RegisterData) => Promise<boolean>
   logout: () => Promise<void>
   refreshProfile: () => Promise<void>
-  refreshSession: () => Promise<void>
+  refreshSession: () => Promise<boolean>
   isLoading: boolean
   hasPermission: (resource: string, action: 'create' | 'read' | 'update' | 'delete') => boolean
 }
@@ -226,33 +226,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const refreshSession = async () => {
+  const refreshSession = async (): Promise<boolean> => {
     try {
       const response = await fetch("/api/profile/me", {
-        credentials: 'include',
+        credentials: "include",
       })
       if (response.ok) {
         const data = await response.json()
         setUser(data.user)
         setProfile(data.profile)
-        
-        // Load permissions based on user role
+
         if (data.user?.role) {
           const userPermissions = getPermissionsForRole(data.user.role)
           setPermissions(userPermissions)
         }
-      } else if (response.status === 401) {
-        // Clear any stale data on unauthorized
+        return true
+      }
+      if (response.status === 401) {
         setUser(null)
         setProfile(null)
         setPermissions({})
       }
+      return false
     } catch (error) {
       console.error("Session refresh error:", error)
-      // On error, clear any stale data
       setUser(null)
       setProfile(null)
       setPermissions({})
+      return false
     }
   }
 

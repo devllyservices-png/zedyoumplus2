@@ -27,42 +27,42 @@ export default function HowItWorksPage() {
       icon: UserPlus,
       title: t.howItWorks.steps.createAccount.title,
       description: t.howItWorks.steps.createAccount.description,
-      details: "قم بإنشاء حسابك في دقائق معدودة. اختر بين أن تكون مشترياً أو مقدم خدمة. عملية التسجيل بسيطة وآمنة تماماً.",
+      details: t.howItWorks.steps.createAccount.detail,
     },
     {
       icon: Search,
       title: t.howItWorks.steps.choose.title,
       description: t.howItWorks.steps.choose.description,
-      details: "استعرض آلاف الخدمات والمنتجات الرقمية المتاحة. استخدم فلاتر البحث للعثور على ما تبحث عنه بالضبط.",
+      details: t.howItWorks.steps.choose.detail,
     },
     {
       icon: CreditCard,
       title: t.howItWorks.steps.pay.title,
       description: t.howItWorks.steps.pay.description,
-      details: "ادفع بثقة باستخدام وسائل الدفع المحلية والدولية الموثوقة. جميع المعاملات محمية ومضمونة.",
+      details: t.howItWorks.steps.pay.detail,
     },
   ]
 
   const features = [
     {
       icon: Shield,
-      title: t.whyChooseUs.features.securePayment.title,
-      description: t.whyChooseUs.features.securePayment.description,
+      title: t.howItWorks.highlights.securePayment.title,
+      description: t.howItWorks.highlights.securePayment.description,
     },
     {
       icon: Headphones,
-      title: t.whyChooseUs.features.support.title,
-      description: t.whyChooseUs.features.support.description,
+      title: t.howItWorks.highlights.support.title,
+      description: t.howItWorks.highlights.support.description,
     },
     {
       icon: Clock,
-      title: "تسليم سريع",
-      description: "احصل على خدماتك ومنتجاتك في الوقت المحدد مع ضمان الجودة",
+      title: t.howItWorks.highlights.fastDelivery.title,
+      description: t.howItWorks.highlights.fastDelivery.description,
     },
     {
       icon: CheckCircle,
-      title: "ضمان الجودة",
-      description: "جميع الخدمات والمنتجات مفحوصة ومضمونة قبل التسليم",
+      title: t.howItWorks.highlights.quality.title,
+      description: t.howItWorks.highlights.quality.description,
     },
   ]
 
@@ -82,9 +82,7 @@ export default function HowItWorksPage() {
             >
               <h1 className="text-5xl font-bold mb-6">{t.howItWorks.title}</h1>
               <p className="text-xl text-white/90 mb-8">{t.howItWorks.subtitle}</p>
-              <p className="text-lg text-white/80">
-                {t.footer.description}
-              </p>
+              <p className="text-lg text-white/80">{t.howItWorks.heroIntro}</p>
             </motion.div>
           </div>
         </section>
@@ -129,10 +127,8 @@ export default function HowItWorksPage() {
               viewport={{ once: true }}
               className="text-center mb-16"
             >
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">لماذا تختار منصتنا؟</h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                نقدم لك تجربة فريدة ومميزة مع ضمان الجودة والأمان
-              </p>
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">{t.howItWorks.featuresSectionTitle}</h2>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">{t.howItWorks.featuresSectionSubtitle}</p>
             </motion.div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
@@ -167,9 +163,7 @@ export default function HowItWorksPage() {
               className="text-center mb-12"
             >
               <h2 className="text-4xl font-bold text-gray-900 mb-4">{t.footer.paymentMethods.title}</h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                وسائل دفع جزائرية موثوقة وآمنة 100%
-              </p>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">{t.howItWorks.paymentMethodsSubtitle}</p>
             </motion.div>
 
             <div className="flex justify-center items-center gap-6 flex-wrap max-w-4xl mx-auto">
@@ -177,8 +171,7 @@ export default function HowItWorksPage() {
                 t.footer.paymentMethods.chargily,
                 t.footer.paymentMethods.ccp,
                 t.footer.paymentMethods.cib,
-                t.footer.paymentMethods.visa,
-                t.footer.paymentMethods.mastercard,
+                t.footer.paymentMethods.paypal,
                 t.footer.paymentMethods.bankTransfer,
               ].map((method, index) => (
                 <motion.div
@@ -206,19 +199,21 @@ export default function HowItWorksPage() {
               viewport={{ once: true }}
               className="max-w-3xl mx-auto"
             >
-              <h2 className="text-4xl font-bold mb-6">جاهز للبدء؟</h2>
-              <p className="text-xl text-white/90 mb-8">
-                انضم إلى آلاف المستخدمين الراضين واستمتع بأفضل الخدمات والمنتجات الرقمية
-              </p>
+              <h2 className="text-4xl font-bold mb-6">{t.howItWorks.cta.title}</h2>
+              <p className="text-xl text-white/90 mb-8">{t.howItWorks.cta.description}</p>
               <div className="flex gap-4 justify-center flex-wrap">
                 <Link href="/register">
                   <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100 text-lg px-8 py-6">
-                    سجّل الآن
+                    {t.howItWorks.cta.register}
                   </Button>
                 </Link>
                 <Link href="/services">
-                  <Button size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white/10 text-lg px-8 py-6">
-                    استعرض الخدمات
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="border-2 border-white !bg-transparent text-white shadow-none hover:bg-white hover:text-gray-900 dark:hover:text-gray-900 text-lg px-8 py-6"
+                  >
+                    {t.howItWorks.cta.browseServices}
                   </Button>
                 </Link>
               </div>

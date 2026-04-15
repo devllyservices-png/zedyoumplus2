@@ -253,6 +253,15 @@ export default function ServicesListing({
   const spacing = compact ? "space-y-3" : "space-y-6"
   const toolbarPadding = compact ? "p-2.5" : "p-3 sm:p-4"
   const gridGap = compact ? "gap-3" : "gap-6"
+  const toolbarCardClass = compact
+    ? "border border-slate-200/90 bg-white shadow-sm"
+    : "border-0 shadow-xl bg-white/80 backdrop-blur-sm"
+  const listingCardClass = compact
+    ? "border border-slate-200/90 bg-white shadow-sm hover:border-slate-300/80 hover:shadow-md transition-all duration-300 ease-out"
+    : "border-0 shadow-xl bg-white/80 backdrop-blur-sm hover:shadow-2xl transition-all duration-500 ease-in-out"
+  const skeletonCardClass = compact
+    ? "overflow-hidden border border-slate-200/90 bg-white shadow-sm"
+    : "overflow-hidden border-0 shadow-xl bg-white/60"
 
   const enableLoadMore = totalServices > 20
   const canLoadMore = enableLoadMore && services.length < totalServices && currentPage < totalPages
@@ -260,17 +269,19 @@ export default function ServicesListing({
   return (
     <div className={spacing}>
       {(showSearch || showSort || resolvedShowCategoryFilter) && (
-        <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+        <Card className={toolbarCardClass}>
           <CardContent className={toolbarPadding}>
             <div className={`flex flex-col ${compact ? "gap-3" : "gap-4"} sm:flex-row sm:items-center`}>
               {showSearch && (
                 <div className={`${compact ? "flex-1" : "flex-1"} relative`}>
-                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Search
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 ${compact ? "text-slate-400" : "text-gray-400"}`}
+                  />
                   <Input
                     placeholder={t.servicesPage.searchPlaceholder}
                     value={searchDraft}
                     onChange={(e) => setSearchDraft(e.target.value)}
-                    className="pr-10 h-12"
+                    className={`pr-10 ${compact ? "h-11 border-slate-200/90 bg-slate-50/50 focus-visible:ring-indigo-500/30" : "h-12"}`}
                   />
                 </div>
               )}
@@ -320,7 +331,7 @@ export default function ServicesListing({
       {loading ? (
         <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${gridGap}`}>
           {Array.from({ length: 8 }).map((_, i) => (
-            <Card key={i} className="overflow-hidden border-0 shadow-xl bg-white/60">
+            <Card key={i} className={skeletonCardClass}>
               <div className="aspect-video bg-gray-200 animate-pulse" />
               <CardContent className="px-4 pb-4 pt-0">
                 <div className="h-4 bg-gray-200 rounded animate-pulse mb-2" />
@@ -363,7 +374,9 @@ export default function ServicesListing({
                   href={`/services/${service.id}`}
                   className="block"
                 >
-                  <Card className="group h-full flex flex-col border-0 shadow-xl bg-white/80 backdrop-blur-sm hover:shadow-2xl transition-all duration-500 ease-in-out overflow-hidden pt-0 cursor-pointer">
+                  <Card
+                    className={`group h-full flex flex-col overflow-hidden pt-0 cursor-pointer ${listingCardClass}`}
+                  >
                     <div className="relative">
                       <Image
                         src={service.primary_image || "/placeholder.svg"}
@@ -375,7 +388,13 @@ export default function ServicesListing({
 
                       {service.category && (
                         <div className="absolute top-3 left-3">
-                          <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0">
+                          <Badge
+                            className={
+                              compact
+                                ? "border-0 bg-slate-900/85 text-white backdrop-blur-sm"
+                                : "bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0"
+                            }
+                          >
                             {service.category}
                           </Badge>
                         </div>
@@ -386,7 +405,13 @@ export default function ServicesListing({
                         <span>{service.average_rating.toFixed(1)}</span>
                       </div>
 
-                      <div className="absolute bottom-3 right-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                      <div
+                        className={
+                          compact
+                            ? "absolute bottom-3 right-3 rounded-full bg-indigo-600 px-3 py-1 text-sm font-semibold text-white shadow-sm"
+                            : "absolute bottom-3 right-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-1 rounded-full text-sm font-semibold"
+                        }
+                      >
                         {t.services.startingFrom}{" "}
                         {price > 0 ? <Price amountDzd={price} /> : t.services.currency}
                       </div>
@@ -394,7 +419,13 @@ export default function ServicesListing({
 
                     <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6 flex flex-col flex-1">
                       <div className="min-h-[3.1rem] mb-3">
-                        <h3 className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
+                        <h3
+                          className={
+                            compact
+                              ? "text-base sm:text-lg font-semibold text-slate-900 line-clamp-2 transition-colors group-hover:text-indigo-700"
+                              : "text-lg sm:text-xl font-bold text-gray-900 line-clamp-2 transition-colors group-hover:text-blue-600"
+                          }
+                        >
                           {service.title}
                         </h3>
                       </div>

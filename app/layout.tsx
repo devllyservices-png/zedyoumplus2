@@ -5,6 +5,7 @@ import { AuthProvider } from "@/contexts/auth-context"
 import { NotificationProvider } from "@/contexts/notification-context"
 import { WhatsAppFloat } from "@/components/whatsapp-float"
 import { CurrencyProvider } from "@/contexts/currency-context"
+import { I18nProvider } from "@/contexts/i18n-context"
 import { siteMetadata } from "@/lib/seo/site-metadata"
 
 const cairo = Cairo({
@@ -21,16 +22,18 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ar" dir="rtl" className={cairo.variable}>
+    <html lang="ar" dir="rtl" suppressHydrationWarning className={cairo.variable}>
       <body className="font-cairo antialiased">
-        <AuthProvider>
-          <NotificationProvider>
-            <CurrencyProvider>
-              {children}
-              <WhatsAppFloat />
-            </CurrencyProvider>
-          </NotificationProvider>
-        </AuthProvider>
+        <I18nProvider>
+          <AuthProvider>
+            <NotificationProvider>
+              <CurrencyProvider>
+                {children}
+                <WhatsAppFloat />
+              </CurrencyProvider>
+            </NotificationProvider>
+          </AuthProvider>
+        </I18nProvider>
       </body>
     </html>
   )
