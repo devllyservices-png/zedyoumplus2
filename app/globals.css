@@ -2,6 +2,8 @@
 @import "tw-animate-css";
 @import "../styles/confetti.css";
 
+@custom-variant dark (&:is(.dark *));
+
 /* Line clamp utility */
 .line-clamp-2 {
   display: -webkit-box;
