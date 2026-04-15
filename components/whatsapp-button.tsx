@@ -34,6 +34,7 @@ export function WhatsAppButton({
           alt="واتساب"
           width={size}
           height={size}
+          loading="eager"
           className="rounded-full shadow-2xl hover:shadow-green-500/50 transition-shadow"
         />
       </Link>
@@ -53,6 +54,7 @@ export function WhatsAppButton({
         alt="واتساب"
         width={size}
         height={size}
+        loading="eager"
         className="rounded-full"
       />
     </Link>

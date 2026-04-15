@@ -57,7 +57,7 @@ function AdminLoginForm() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/">
-            <Image src="/images/logo-large.png" alt="شعار المنصة" width={120} height={40} className="mx-auto mb-4" />
+            <Image src="/images/logo-large.png" alt="شعار المنصة" width={120} height={40} loading="eager" style={{ height: "auto" }} className="mx-auto mb-4" />
           </Link>
           <div className="flex items-center justify-center gap-3 mb-4">
             <Shield className="w-8 h-8 text-purple-400" />
@@ -170,7 +170,7 @@ export default function AdminLoginPage() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Link href="/">
-              <Image src="/images/logo-large.png" alt="شعار المنصة" width={120} height={40} className="mx-auto mb-4" />
+              <Image src="/images/logo-large.png" alt="شعار المنصة" width={120} height={40} loading="eager" style={{ height: "auto" }} className="mx-auto mb-4" />
             </Link>
             <div className="flex items-center justify-center gap-3 mb-4">
               <Shield className="w-8 h-8 text-purple-400" />

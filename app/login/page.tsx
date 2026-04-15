@@ -36,7 +36,7 @@ function LoginForm() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Link href="/">
-              <Image src="/images/logo-large.png" alt={t.header.logoAlt} width={120} height={40} className="mx-auto mb-4" />
+              <Image src="/images/logo-large.png" alt={t.header.logoAlt} width={120} height={40} loading="eager" style={{ height: "auto" }} className="mx-auto mb-4" />
             </Link>
             <h1 className="text-2xl font-bold text-gray-900">{t.login.title}</h1>
             <p className="text-gray-600 mt-2">جاري التحميل...</p>
@@ -74,7 +74,7 @@ function LoginForm() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/">
-            <Image src="/images/logo-large.png" alt={t.header.logoAlt} width={120} height={40} className="mx-auto mb-4" />
+            <Image src="/images/logo-large.png" alt={t.header.logoAlt} width={120} height={40} loading="eager" style={{ height: "auto" }} className="mx-auto mb-4" />
           </Link>
           <h1 className="text-2xl font-bold text-gray-900">{t.login.title}</h1>
           <p className="text-gray-600 mt-2">{t.login.subtitle}</p>
@@ -206,7 +206,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Link href="/">
-              <Image src="/images/logo-large.png" alt="Logo" width={120} height={40} className="mx-auto mb-4" />
+              <Image src="/images/logo-large.png" alt="Logo" width={120} height={40} loading="eager" style={{ height: "auto" }} className="mx-auto mb-4" />
             </Link>
             <h1 className="text-2xl font-bold text-gray-900">Loading...</h1>
             <p className="text-gray-600 mt-2">جاري التحميل...</p>

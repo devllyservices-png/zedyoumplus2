@@ -11,7 +11,7 @@ type Props = { params: Promise<{ id: string }> }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
   const data = await getSellerStoreData(id)
-  const t = getServerTranslations()
+  const t = await getServerTranslations()
   if (!data) {
     return {
       title: `${t.sellerStore.notFound} | ${t.sellerStore.brandName}`,
@@ -33,7 +33,7 @@ export default async function SellerStorePage({ params }: Props) {
   const { id } = await params
   const data = await getSellerStoreData(id)
   if (!data) notFound()
-  const t = getServerTranslations()
+  const t = await getServerTranslations()
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">

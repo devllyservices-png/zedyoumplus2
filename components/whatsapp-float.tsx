@@ -44,6 +44,7 @@ export function WhatsAppFloat() {
           alt="واتساب"
           width={60}
           height={60}
+          loading="eager"
           className="rounded-full shadow-2xl hover:shadow-green-500/50 transition-shadow"
         />
       </Link>

@@ -8,7 +8,7 @@ import { pickCategoryLocale } from "@/lib/category-localized"
 type Props = { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const t = getServerTranslations()
+  const t = await getServerTranslations()
   const { slug } = await params
   const { data } = await supabase
     .from("service_categories")
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
   }
 
-  const lang = getServerLanguage()
+  const lang = await getServerLanguage()
   const { title, description } = pickCategoryLocale(data, lang)
 
   return {

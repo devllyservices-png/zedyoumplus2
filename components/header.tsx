@@ -76,6 +76,9 @@ export function Header() {
               alt={t.header.logoAlt}
               width={120}
               height={40}
+              loading="eager"
+              sizes="120px"
+              style={{ height: "auto" }}
               className="hidden md:block transition-all duration-300 hover:scale-105"
             />
             <Image
