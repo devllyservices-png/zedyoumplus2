@@ -72,6 +72,7 @@ export default function ProfileSettingsPage() {
 
   const [subscriptionLoading, setSubscriptionLoading] = useState(false)
   const [subscriptionData, setSubscriptionData] = useState<any>(null)
+  const [activePlans, setActivePlans] = useState<Array<{ id: string; name: string; price_eur: number; duration_months: number; is_default: boolean }>>([])
   const [subscriptionTab, setSubscriptionTab] = useState<"status" | "invoices">("status")
 
   useEffect(() => {
@@ -124,6 +125,20 @@ export default function ProfileSettingsPage() {
     }
 
     void loadSubscription()
+  }, [user])
+
+  useEffect(() => {
+    const loadPlans = async () => {
+      if (!user || user.role !== "seller") return
+      try {
+        const res = await fetch("/api/subscription-plans/active", { credentials: "include" })
+        const data = await res.json().catch(() => ({}))
+        if (res.ok && Array.isArray(data.plans)) {
+          setActivePlans(data.plans)
+        }
+      } catch {}
+    }
+    void loadPlans()
   }, [user])
 
   useEffect(() => {
@@ -445,7 +460,7 @@ export default function ProfileSettingsPage() {
                                   )}
                                   {subscriptionData?.pendingInvoice ? (
                                     <Badge className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-amber-900 hover:bg-amber-50">
-                                      بانتظار موافقة الإدارة / Pending admin approval
+                                      بانتظار الدفع/المراجعة / Awaiting payment/review
                                     </Badge>
                                   ) : null}
                                 </div>
@@ -473,8 +488,8 @@ export default function ProfileSettingsPage() {
                                   </div>
                                 ) : (
                                   <p className="text-sm text-gray-700 leading-relaxed">
-                                    لن يُفعّل متجرك وخدماتك حتى تدفع أو تجدد اشتراكك وتوافق الإدارة. / Your store and
-                                    services stay inactive until you pay or renew and get admin approval.
+                                    متجرك وخدماتك غير مفعّلة حالياً. ادفع/جدّد الاشتراك لتفعيلها مباشرة (PayPal) أو حسب
+                                    طريقة الدفع المختارة.
                                   </p>
                                 )}
 
@@ -504,10 +519,18 @@ export default function ProfileSettingsPage() {
                                 <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
                                   الاشتراك الأساسي / Basic plan
                                 </p>
-                                <p className="text-sm text-gray-800">
-                                  <span className="font-semibold">1 شهر</span> / 1 month —{" "}
-                                  <span className="font-semibold">20$</span>
-                                </p>
+                                {(() => {
+                                  const def = activePlans.find((p) => p.is_default) || activePlans[0]
+                                  return def ? (
+                                    <p className="text-sm text-gray-800">
+                                      <span className="font-semibold">{def.name}</span> —{" "}
+                                      <span className="font-semibold">{def.duration_months} شهر</span> —{" "}
+                                      <span className="font-semibold">{Number(def.price_eur).toFixed(2)} EUR</span>
+                                    </p>
+                                  ) : (
+                                    <p className="text-sm text-gray-800">لا توجد خطط مفعلة من الإدارة حالياً.</p>
+                                  )
+                                })()}
                                 <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
                                   <Button
                                     onClick={() => router.push("/subscriptions/checkout")}
@@ -551,12 +574,12 @@ export default function ProfileSettingsPage() {
                           <AlertDescription className="flex items-start gap-2 text-amber-950">
                             <Clock className="mt-0.5 h-4 w-4 shrink-0 text-amber-800" />
                             <span>
-                              لديك طلب اشتراك بانتظار موافقة الإدارة. / A subscription request is pending admin review.
+                              لديك فاتورة اشتراك قيد الانتظار.
                               الحالة / Status:{" "}
                               <span className="font-semibold">
                                 {subscriptionData.pendingInvoice.status === "paid"
-                                  ? "تم الدفع — بانتظار الموافقة / Paid — awaiting approval"
-                                  : "بانتظار الموافقة / Pending approval"}
+                                  ? "مدفوع"
+                                  : "معلق"}
                               </span>
                             </span>
                           </AlertDescription>

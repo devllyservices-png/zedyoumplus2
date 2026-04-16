@@ -63,9 +63,73 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "فشل في تحديث حالة الفاتورة" }, { status: 500 })
     }
 
+    // Manual renewal flow: once paid, activate/extend immediately.
+    const { data: approveResult, error: approveError } = await supabase.rpc(
+      "approve_subscription_invoice",
+      {
+        p_invoice_id: invoice.id,
+      }
+    )
+
+    if (approveError) {
+      // Fallback: activate manually if RPC is unavailable.
+      console.error("approve_subscription_invoice rpc error (from PayPal capture):", approveError)
+
+      const { data: invForFallback, error: invFallbackError } = await supabase
+        .from("seller_subscription_invoices")
+        .select("id, seller_id, duration_months")
+        .eq("id", invoice.id)
+        .single()
+
+      if (invFallbackError || !invForFallback) {
+        return NextResponse.json({ error: "فشل في تفعيل الاشتراك" }, { status: 500 })
+      }
+
+      const { data: latestSub } = await supabase
+        .from("seller_subscriptions")
+        .select("id, ends_at")
+        .eq("seller_id", invForFallback.seller_id)
+        .order("ends_at", { ascending: false })
+        .limit(1)
+
+      const now = new Date()
+      const latestEnd = latestSub?.[0]?.ends_at ? new Date(latestSub[0].ends_at) : null
+      const start = latestEnd && latestEnd.getTime() > now.getTime() ? latestEnd : now
+      const end = new Date(start)
+      end.setMonth(end.getMonth() + Math.max(1, Number(invForFallback.duration_months || 1)))
+
+      const { error: subInsertError } = await supabase.from("seller_subscriptions").insert({
+        seller_id: invForFallback.seller_id,
+        invoice_id: invForFallback.id,
+        starts_at: start.toISOString(),
+        ends_at: end.toISOString(),
+      })
+
+      if (subInsertError) {
+        console.error("Fallback subscription insert failed:", subInsertError)
+        return NextResponse.json({ error: "فشل في تفعيل الاشتراك" }, { status: 500 })
+      }
+
+      await supabase
+        .from("seller_subscription_invoices")
+        .update({
+          status: "approved",
+          approved_at: new Date().toISOString(),
+          period_start_at: start.toISOString(),
+          period_end_at: end.toISOString(),
+        })
+        .eq("id", invForFallback.id)
+
+      return NextResponse.json({
+        success: true,
+        subscriptionInvoiceId: invForFallback.id,
+      })
+    }
+
     return NextResponse.json({
       success: true,
       subscriptionInvoiceId: invoice.id,
+      result: Array.isArray(approveResult) ? approveResult[0] : approveResult,
     })
   } catch (error) {
     console.error("PayPal subscriptions capture error:", error)

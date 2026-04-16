@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
 import { Mail, Phone, MapPin, Calendar, ShoppingBag, Package, Star, DollarSign, CheckCircle, Clock, Eye, User, CreditCard, MessageSquare } from "lucide-react"
 import { Header } from "@/components/header"
@@ -34,6 +35,9 @@ export default function DashboardPage() {
   const [selectedOrder, setSelectedOrder] = useState<any>(null)
   const [showOrderDetails, setShowOrderDetails] = useState(false)
   const [showLanguageMenu, setShowLanguageMenu] = useState(false)
+  const [sellerSubscriptionActive, setSellerSubscriptionActive] = useState(true)
+  const [sellerSubscriptionDaysLeft, setSellerSubscriptionDaysLeft] = useState<number | null>(null)
+  const [subscriptionCheckLoading, setSubscriptionCheckLoading] = useState(false)
 
   useEffect(() => {
     if (authLoading) return
@@ -47,6 +51,40 @@ export default function DashboardPage() {
 
     fetchDashboardData()
   }, [user, router, refreshSession, authLoading])
+
+  useEffect(() => {
+    const loadSubscriptionGate = async () => {
+      if (!user || user.role !== "seller") {
+        setSellerSubscriptionActive(true)
+        return
+      }
+      setSubscriptionCheckLoading(true)
+      try {
+        const res = await fetch("/api/subscriptions/me", { credentials: "include" })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          setSellerSubscriptionActive(false)
+          return
+        }
+        const active = data?.activeSubscription
+        const endsAt = active?.endsAt ? new Date(active.endsAt).getTime() : 0
+        if (endsAt && endsAt > Date.now()) {
+          const dayMs = 24 * 60 * 60 * 1000
+          const left = Math.ceil((endsAt - Date.now()) / dayMs)
+          setSellerSubscriptionDaysLeft(left)
+        } else {
+          setSellerSubscriptionDaysLeft(null)
+        }
+        setSellerSubscriptionActive(Boolean(endsAt && endsAt > Date.now()))
+      } catch {
+        setSellerSubscriptionActive(false)
+        setSellerSubscriptionDaysLeft(null)
+      } finally {
+        setSubscriptionCheckLoading(false)
+      }
+    }
+    void loadSubscriptionGate()
+  }, [user])
 
   // Close language menu when clicking outside
   useEffect(() => {
@@ -251,6 +289,8 @@ export default function DashboardPage() {
     }
   }
 
+  const sellerLocked = user?.role === "seller" && !sellerSubscriptionActive
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -349,6 +389,41 @@ export default function DashboardPage() {
       </div>
 
       <div className="container mx-auto px-4 py-8">
+        {sellerLocked ? (
+          <Alert className="mb-6 border-red-200 bg-red-50">
+            <AlertDescription className="flex flex-col gap-3 text-red-900 sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                حساب البائع غير مفعّل للاستخدام التجاري حالياً. ادفع الاشتراك لتفعيل الخدمات والطلبات والعمليات الأساسية.
+              </span>
+              <Button
+                onClick={() => router.push("/subscriptions/checkout")}
+                className="btn-gradient text-white"
+                disabled={subscriptionCheckLoading}
+              >
+                ادفع / جدّد الاشتراك
+              </Button>
+            </AlertDescription>
+          </Alert>
+        ) : null}
+        {!sellerLocked &&
+        user?.role === "seller" &&
+        sellerSubscriptionDaysLeft !== null &&
+        sellerSubscriptionDaysLeft <= 7 ? (
+          <Alert className="mb-6 border-amber-200 bg-amber-50">
+            <AlertDescription className="flex flex-col gap-3 text-amber-900 sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                تبقى {sellerSubscriptionDaysLeft} يوم فقط على انتهاء اشتراكك. يرجى الدفع الآن لتجديد الاشتراك يدوياً قبل الانتهاء.
+              </span>
+              <Button
+                onClick={() => router.push("/subscriptions/checkout")}
+                className="btn-gradient text-white"
+                disabled={subscriptionCheckLoading}
+              >
+                جدّد الآن
+              </Button>
+            </AlertDescription>
+          </Alert>
+        ) : null}
         <div className="grid lg:grid-cols-4 gap-8">
           {/* Profile Sidebar */}
           <div className="lg:col-span-1">
@@ -405,9 +480,14 @@ export default function DashboardPage() {
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-3 space-y-8">
+          <div className={`lg:col-span-3 space-y-8 ${sellerLocked ? "pointer-events-none select-none" : ""}`}>
+            {sellerLocked ? (
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+                تم قفل الأنشطة الأساسية حتى يتم تفعيل الاشتراك.
+              </div>
+            ) : null}
             {/* Stats Cards */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className={`grid md:grid-cols-2 lg:grid-cols-4 gap-6 ${sellerLocked ? "blur-[2px] opacity-70" : ""}`}>
               {statsData.map((stat, index) => (
                 <Card key={index} className="shadow-lg border-0">
                   <CardContent className="p-6">
@@ -426,7 +506,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Recent Orders */}
-            <Card className="shadow-lg border-0">
+            <Card className={`shadow-lg border-0 ${sellerLocked ? "blur-[2px] opacity-70" : ""}`}>
               <CardHeader>
                 <CardTitle className="text-xl font-bold">
                   {user?.role === 'buyer' ? t.dashboard.orders.myOrders : t.dashboard.orders.title}
@@ -600,7 +680,7 @@ export default function DashboardPage() {
             </Card>
 
             {/* Quick Actions */}
-            <Card className="shadow-lg border-0">
+            <Card className={`shadow-lg border-0 ${sellerLocked ? "blur-[2px] opacity-70" : ""}`}>
               <CardHeader>
                 <CardTitle className="text-xl font-bold">{t.dashboard.quickActions.title}</CardTitle>
               </CardHeader>
@@ -643,7 +723,7 @@ export default function DashboardPage() {
 
         {/* Seller Services Section */}
         {user?.role === 'seller' && (
-          <div className="mt-8">
+          <div className={`mt-8 ${sellerLocked ? "pointer-events-none blur-[2px] opacity-70" : ""}`}>
             <SellerServices />
           </div>
         )}

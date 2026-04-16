@@ -19,7 +19,7 @@ async function getCurrentUser(request: NextRequest) {
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getCurrentUser(request)
@@ -28,7 +28,14 @@ export async function PATCH(
     }
 
     const { suspended } = await request.json()
-    const userId = params.id
+    if (typeof suspended !== "boolean") {
+      return NextResponse.json({ error: "Invalid suspended value" }, { status: 400 })
+    }
+
+    const { id: userId } = await params
+    if (!userId) {
+      return NextResponse.json({ error: "Missing user id" }, { status: 400 })
+    }
 
     // Update user suspension status
     const { data, error } = await supabase

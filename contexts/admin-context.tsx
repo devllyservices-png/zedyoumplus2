@@ -79,6 +79,19 @@ export interface CurrencyConfig {
   is_active: boolean
 }
 
+export interface SellerSubscriptionPlan {
+  id: string
+  name: string
+  description: string | null
+  price_eur: number
+  duration_months: number
+  is_active: boolean
+  is_default: boolean
+  paypal_product_id: string | null
+  paypal_plan_id: string | null
+  sort_order: number | null
+}
+
 export interface AdminUser {
   id: string
   email: string
@@ -111,6 +124,8 @@ interface AdminContextValue {
   ordersTotal: number
   currencies: CurrencyConfig[]
   isSavingCurrencies: boolean
+  subscriptionPlans: SellerSubscriptionPlan[]
+  isSavingSubscriptionPlans: boolean
   suspendingUser: AdminUser | null
   showSuspendDialog: boolean
   setShowSuspendDialog: (open: boolean) => void
@@ -131,6 +146,17 @@ interface AdminContextValue {
   ensureBaseCurrencies: () => void
   handleAddCustomCurrency: () => void
   handleSaveCurrencies: () => Promise<void>
+  loadSubscriptionPlans: () => Promise<void>
+  handleSubscriptionPlanFieldChange: (
+    index: number,
+    field: keyof SellerSubscriptionPlan,
+    value: string | number | boolean | null
+  ) => void
+  handleSetDefaultSubscriptionPlan: (id: string) => void
+  handleToggleSubscriptionPlanActive: (id: string) => void
+  handleAddSubscriptionPlan: () => void
+  handleSaveSubscriptionPlans: () => Promise<void>
+  syncSubscriptionPlanWithPayPal: (id: string) => Promise<void>
   handleSuspendUser: (user: AdminUser) => void
   confirmSuspendUser: () => Promise<void>
   handleOrderStatusChange: (orderId: string, newStatus: string) => Promise<void>
@@ -173,6 +199,8 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const [showDeleteServiceDialog, setShowDeleteServiceDialog] = useState(false)
   const [currencies, setCurrencies] = useState<CurrencyConfig[]>([])
   const [isSavingCurrencies, setIsSavingCurrencies] = useState(false)
+  const [subscriptionPlans, setSubscriptionPlans] = useState<SellerSubscriptionPlan[]>([])
+  const [isSavingSubscriptionPlans, setIsSavingSubscriptionPlans] = useState(false)
 
   const fetchOrders = useCallback(async (page: number) => {
     try {
@@ -230,6 +258,21 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         }
       } else if (currenciesResponse.status === 404) {
         console.warn("Currencies API not found yet")
+      }
+
+      // Load subscription plans (best-effort; may not exist yet)
+      try {
+        const plansResponse = await fetch("/api/admin/subscription-plans")
+        if (plansResponse.ok) {
+          const plansData = await plansResponse.json()
+          if (Array.isArray(plansData.plans)) {
+            setSubscriptionPlans(plansData.plans)
+          }
+        } else if (plansResponse.status === 404) {
+          console.warn("Subscription plans API not found yet")
+        }
+      } catch (err) {
+        console.error("Error fetching subscription plans:", err)
       }
     } catch (error) {
       console.error("Error fetching admin data:", error)
@@ -357,6 +400,136 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const loadSubscriptionPlans = async () => {
+    try {
+      const response = await fetch("/api/admin/subscription-plans")
+      if (!response.ok) {
+        if (response.status !== 404) {
+          console.error("Failed to load subscription plans")
+        }
+        return
+      }
+      const data = await response.json()
+      if (Array.isArray(data.plans)) {
+        setSubscriptionPlans(data.plans)
+      }
+    } catch (error) {
+      console.error("Error loading subscription plans:", error)
+    }
+  }
+
+  const handleSubscriptionPlanFieldChange = (
+    index: number,
+    field: keyof SellerSubscriptionPlan,
+    value: string | number | boolean | null
+  ) => {
+    setSubscriptionPlans((prev) =>
+      prev.map((plan, i) =>
+        i === index
+          ? {
+              ...plan,
+              [field]: value,
+            }
+          : plan
+      )
+    )
+  }
+
+  const handleSetDefaultSubscriptionPlan = (id: string) => {
+    setSubscriptionPlans((prev) =>
+      prev.map((p) => ({
+        ...p,
+        is_default: p.id === id,
+      }))
+    )
+  }
+
+  const handleToggleSubscriptionPlanActive = (id: string) => {
+    setSubscriptionPlans((prev) =>
+      prev.map((p) =>
+        p.id === id
+          ? {
+              ...p,
+              is_active: !p.is_active,
+            }
+          : p
+      )
+    )
+  }
+
+  const handleAddSubscriptionPlan = () => {
+    setSubscriptionPlans((prev) => [
+      ...prev,
+      {
+        id: "",
+        name: `Special PayPal offer ${prev.length + 1}`,
+        description: "",
+        price_eur: 0.01,
+        duration_months: 3,
+        is_active: true,
+        is_default: prev.length === 0,
+        paypal_product_id: null,
+        paypal_plan_id: null,
+        sort_order: (prev[prev.length - 1]?.sort_order || 0) + 1,
+      },
+    ])
+  }
+
+  const handleSaveSubscriptionPlans = async () => {
+    try {
+      setIsSavingSubscriptionPlans(true)
+      const trimmedPlans = subscriptionPlans.map((plan) => ({
+        ...plan,
+        name: (plan.name || "").trim(),
+      }))
+      const invalidPlan = trimmedPlans.find((plan) => !plan.name)
+      if (invalidPlan) {
+        console.error("Failed to save subscription plans: plan name is required")
+        alert("فشل الحفظ: كل خطة يجب أن تحتوي على اسم.")
+        return
+      }
+
+      const response = await fetch("/api/admin/subscription-plans", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ plans: trimmedPlans }),
+      })
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        console.error("Failed to save subscription plans:", data)
+        alert(data?.error || "فشل حفظ خطط الاشتراك")
+        return
+      }
+      const data = await response.json()
+      if (Array.isArray(data.plans)) {
+        setSubscriptionPlans(data.plans)
+      }
+    } catch (error) {
+      console.error("Error saving subscription plans:", error)
+    } finally {
+      setIsSavingSubscriptionPlans(false)
+    }
+  }
+
+  const syncSubscriptionPlanWithPayPal = async (id: string) => {
+    try {
+      const response = await fetch(`/api/admin/subscription-plans/${id}/sync-paypal`, {
+        method: "POST",
+        credentials: "include",
+      })
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        console.error("Failed to sync subscription plan with PayPal:", data)
+        alert(data?.error || "فشل مزامنة الخطة مع PayPal")
+        return
+      }
+      await loadSubscriptionPlans()
+    } catch (error) {
+      console.error("Error syncing subscription plan with PayPal:", error)
+    }
+  }
+
   const handleSuspendUser = (user: AdminUser) => {
     setSuspendingUser(user)
     setShowSuspendDialog(true)
@@ -372,6 +545,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ suspended: !suspendingUser.suspended }),
+          credentials: "include",
         }
       )
 
@@ -385,6 +559,9 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         )
         setShowSuspendDialog(false)
         setSuspendingUser(null)
+      } else {
+        const data = await response.json().catch(() => ({}))
+        console.error("Failed to update user status:", data)
       }
     } catch (error) {
       console.error("Error updating user status:", error)
@@ -510,6 +687,8 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     ordersTotal,
     currencies,
     isSavingCurrencies,
+    subscriptionPlans,
+    isSavingSubscriptionPlans,
     suspendingUser,
     showSuspendDialog,
     setShowSuspendDialog,
@@ -526,6 +705,13 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     ensureBaseCurrencies,
     handleAddCustomCurrency,
     handleSaveCurrencies,
+    loadSubscriptionPlans,
+    handleSubscriptionPlanFieldChange,
+    handleSetDefaultSubscriptionPlan,
+    handleToggleSubscriptionPlanActive,
+    handleAddSubscriptionPlan,
+    handleSaveSubscriptionPlans,
+    syncSubscriptionPlanWithPayPal,
     handleSuspendUser,
     confirmSuspendUser,
     handleOrderStatusChange,

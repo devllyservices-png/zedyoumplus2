@@ -212,6 +212,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'غير مصرح بإنشاء الخدمات' }, { status: 403 })
     }
 
+    // Seller subscription gating: block core seller activities unless active subscription exists.
+    if (user.role === "seller") {
+      const nowIso = new Date().toISOString()
+      const { data: activeSub, error: activeSubError } = await supabase
+        .from("seller_subscriptions")
+        .select("id, ends_at")
+        .eq("seller_id", user.userId)
+        .gt("ends_at", nowIso)
+        .order("ends_at", { ascending: false })
+        .limit(1)
+
+      if (activeSubError) {
+        console.error("Active subscription check failed for seller service create:", activeSubError)
+        return NextResponse.json({ error: "تعذر التحقق من حالة الاشتراك" }, { status: 500 })
+      }
+
+      if (!activeSub || activeSub.length === 0) {
+        return NextResponse.json(
+          {
+            error:
+              "يلزم اشتراك نشط لتفعيل الأنشطة الأساسية وإنشاء الخدمات. يرجى دفع/تجديد الاشتراك أولاً.",
+            requires_subscription: true,
+          },
+          { status: 403 }
+        )
+      }
+    }
+
     const body = await request.json()
     console.log('Service creation request body:', body)
     const { title, description, category, tags, packages, faq, images } = body

@@ -22,6 +22,14 @@ export function AdminSettingsSection() {
     ensureBaseCurrencies,
     handleAddCustomCurrency,
     handleSaveCurrencies,
+    subscriptionPlans,
+    isSavingSubscriptionPlans,
+    handleSubscriptionPlanFieldChange,
+    handleSetDefaultSubscriptionPlan,
+    handleToggleSubscriptionPlanActive,
+    handleAddSubscriptionPlan,
+    handleSaveSubscriptionPlans,
+    syncSubscriptionPlanWithPayPal,
   } = useAdmin()
 
   return (
@@ -282,6 +290,199 @@ export function AdminSettingsSection() {
                     disabled={isSavingCurrencies || currencies.length === 0}
                   >
                     {isSavingCurrencies ? "جاري الحفظ..." : "حفظ إعدادات العملة"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-gray-700 bg-gray-900">
+              <CardHeader>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <CardTitle className="text-base text-white">
+                    إعدادات اشتراكات البائعين (PayPal)
+                  </CardTitle>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="bg-purple-600 px-4 text-white hover:bg-purple-700"
+                    onClick={handleAddSubscriptionPlan}
+                  >
+                    إضافة خطة جديدة
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-gray-400">
+                  تحكم في خطط اشتراك البائعين، مثل العرض الخاص 0.01 EUR لمدة 3 أشهر عبر PayPal.
+                  يمكن تعيين خطة افتراضية واحدة فقط في كل مرة.
+                </p>
+
+                <AdminTableScroll
+                  className="max-h-none"
+                  tableMinWidthClassName="min-w-[720px]"
+                >
+                  <Table>
+                    <TableHeader className="sticky top-0 z-10 bg-gray-900 shadow-[0_1px_0_0_rgb(31_41_55)]">
+                      <TableRow className="border-gray-800 hover:bg-transparent">
+                        <TableHead className="text-right text-gray-300">
+                          الاسم
+                        </TableHead>
+                        <TableHead className="text-right text-gray-300">
+                          السعر (EUR)
+                        </TableHead>
+                        <TableHead className="text-right text-gray-300">
+                          المدة (أشهر)
+                        </TableHead>
+                        <TableHead className="text-center text-gray-300">
+                          مفعّلة
+                        </TableHead>
+                        <TableHead className="text-center text-gray-300">
+                          افتراضية
+                        </TableHead>
+                        <TableHead className="text-center text-gray-300">
+                          PayPal
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {subscriptionPlans.map((plan, index) => (
+                        <TableRow
+                          key={plan.id || `temp-${index}`}
+                          className="border-gray-800/60"
+                        >
+                          <TableCell>
+                            <input
+                              className="w-full rounded border border-gray-700 bg-gray-800 px-2 py-1 text-xs text-gray-100"
+                              value={plan.name}
+                              placeholder="Special PayPal offer"
+                              onChange={(e) =>
+                                handleSubscriptionPlanFieldChange(
+                                  index,
+                                  "name",
+                                  e.target.value
+                                )
+                              }
+                            />
+                            <input
+                              className="mt-1 w-full rounded border border-gray-700 bg-gray-800 px-2 py-1 text-xs text-gray-300"
+                              value={plan.description || ""}
+                              placeholder="وصف الخطة (اختياري)"
+                              onChange={(e) =>
+                                handleSubscriptionPlanFieldChange(
+                                  index,
+                                  "description",
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <input
+                              type="number"
+                              step="0.01"
+                              className="w-full rounded border border-gray-700 bg-gray-800 px-2 py-1 text-xs text-gray-100"
+                              value={plan.price_eur}
+                              onChange={(e) =>
+                                handleSubscriptionPlanFieldChange(
+                                  index,
+                                  "price_eur",
+                                  Number(e.target.value)
+                                )
+                              }
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <input
+                              type="number"
+                              min={1}
+                              className="w-full rounded border border-gray-700 bg-gray-800 px-2 py-1 text-xs text-gray-100"
+                              value={plan.duration_months}
+                              onChange={(e) =>
+                                handleSubscriptionPlanFieldChange(
+                                  index,
+                                  "duration_months",
+                                  Number(e.target.value)
+                                )
+                              }
+                            />
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleToggleSubscriptionPlanActive(plan.id)
+                              }
+                              className={`inline-flex h-8 min-w-[44px] items-center justify-center rounded-full text-xs ${
+                                plan.is_active
+                                  ? "bg-green-600 text-white"
+                                  : "bg-gray-700 text-gray-300"
+                              }`}
+                            >
+                              {plan.is_active ? "نعم" : "لا"}
+                            </button>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleSetDefaultSubscriptionPlan(plan.id)
+                              }
+                              className={`inline-flex items-center justify-center rounded-full px-2 py-1 text-xs ${
+                                plan.is_default
+                                  ? "bg-purple-600 text-white"
+                                  : "border border-gray-700 bg-gray-800 text-gray-300"
+                              }`}
+                            >
+                              {plan.is_default ? "افتراضية" : "تعيين كافتراضية"}
+                            </button>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex flex-col items-center gap-1 text-xs text-gray-300">
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="border-gray-500 bg-gray-800 text-gray-100 hover:bg-gray-700"
+                                onClick={() =>
+                                  syncSubscriptionPlanWithPayPal(plan.id)
+                                }
+                                disabled={!plan.id}
+                              >
+                                مزامنة مع PayPal
+                              </Button>
+                              <div className="text-[10px] text-gray-400">
+                                {plan.paypal_plan_id
+                                  ? "متزامنة"
+                                  : "غير متزامنة بعد"}
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {subscriptionPlans.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6}>
+                            <div className="py-6 text-center text-gray-300">
+                              لا توجد خطط بعد. اضغط على \"إضافة خطة جديدة\" للبدء.
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ) : null}
+                    </TableBody>
+                  </Table>
+                </AdminTableScroll>
+
+                <div className="mt-2 flex flex-wrap items-center justify-end gap-3 border-t border-gray-800 pt-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="bg-purple-600 px-4 text-white hover:bg-purple-700"
+                    onClick={() => void handleSaveSubscriptionPlans()}
+                    disabled={isSavingSubscriptionPlans}
+                  >
+                    {isSavingSubscriptionPlans
+                      ? "جاري الحفظ..."
+                      : "حفظ خطط الاشتراك"}
                   </Button>
                 </div>
               </CardContent>

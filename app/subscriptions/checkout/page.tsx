@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
@@ -22,6 +23,16 @@ import {
 
 type PaymentMethod = "bank_transfer" | "card_payment" | "cash" | "paypal"
 
+type ActivePlan = {
+  id: string
+  name: string
+  description?: string | null
+  price_eur: number
+  duration_months: number
+  is_active: boolean
+  is_default: boolean
+}
+
 export default function SubscriptionCheckoutPage() {
   const router = useRouter()
   const { user, isLoading } = useAuth()
@@ -33,6 +44,8 @@ export default function SubscriptionCheckoutPage() {
   const [error, setError] = useState("")
 
   const [notes, setNotes] = useState("")
+  const [activePlans, setActivePlans] = useState<ActivePlan[]>([])
+  const [selectedPlan, setSelectedPlan] = useState<ActivePlan | null>(null)
 
   useEffect(() => {
     if (isLoading) return
@@ -44,6 +57,28 @@ export default function SubscriptionCheckoutPage() {
       router.push("/dashboard")
     }
   }, [user, isLoading, router])
+
+  useEffect(() => {
+    const loadPlans = async () => {
+      try {
+        const res = await fetch("/api/subscription-plans/active", {
+          credentials: "include",
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok || !Array.isArray(data.plans)) {
+          setError(data?.error || "تعذر جلب خطط الاشتراك من الإدارة")
+          return
+        }
+        setActivePlans(data.plans)
+        const def = data.plans.find((p: ActivePlan) => p.is_default) || data.plans[0] || null
+        setSelectedPlan(def)
+      } catch (err) {
+        console.error("Failed to load active subscription plans:", err)
+      }
+    }
+
+    void loadPlans()
+  }, [])
 
   const handleFileUpload = (file: File | null) => {
     setPaymentProof(file)
@@ -57,6 +92,9 @@ export default function SubscriptionCheckoutPage() {
       const formData = new FormData()
       formData.append("payment_method", paymentMethod)
       formData.append("instructions", notes || "")
+      if (selectedPlan?.id) {
+        formData.append("plan_id", selectedPlan.id)
+      }
 
       if (paymentMethod === "bank_transfer") {
         if (!paymentProof) {
@@ -138,6 +176,33 @@ export default function SubscriptionCheckoutPage() {
                   <CardTitle>طريقة الدفع</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
+                  <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50/70 p-4">
+                    <Label className="block mb-2 font-semibold text-gray-700">
+                      اختر عرض الاشتراك قبل الدفع
+                    </Label>
+                    <Select
+                      value={selectedPlan?.id || ""}
+                      onValueChange={(id) => {
+                        const found = activePlans.find((p) => p.id === id) || null
+                        setSelectedPlan(found)
+                      }}
+                    >
+                      <SelectTrigger className="w-full bg-white">
+                        <SelectValue placeholder="اختر عرضاً من الإدارة" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {activePlans.map((plan) => (
+                          <SelectItem key={plan.id} value={plan.id}>
+                            {plan.name} — {plan.duration_months} شهر — {plan.price_eur.toFixed(2)} EUR
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="mt-2 text-xs text-gray-600">
+                      يجب اختيار العرض أولاً، ثم سيتم تحويلك إلى PayPal لإتمام الدفع.
+                    </p>
+                  </div>
+
                   <RadioGroup value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
                     <div className="space-y-6">
                       <div
@@ -316,13 +381,31 @@ export default function SubscriptionCheckoutPage() {
 
                   <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
                     <div className="text-sm text-gray-600">
-                      الاشتراك الأساسي: <span className="font-semibold">1 شهر</span> بسعر ثابت{" "}
-                      <span className="font-semibold">20$</span>
+                      {selectedPlan ? (
+                        <>
+                          خطة الاشتراك:{" "}
+                          <span className="font-semibold">{selectedPlan.name}</span>{" "}
+                          — المدة:{" "}
+                          <span className="font-semibold">
+                            {selectedPlan.duration_months} شهر
+                          </span>{" "}
+                          — السعر:{" "}
+                          <span className="font-semibold">
+                            {selectedPlan.price_eur.toFixed(2)} EUR
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          الاشتراك الأساسي:{" "}
+                          <span className="font-semibold">1 شهر</span> بسعر ثابت{" "}
+                          <span className="font-semibold">20$</span>
+                        </>
+                      )}
                     </div>
                     <Button
                       onClick={() => void onSubmit()}
                       className="btn-gradient text-white h-12 text-lg font-semibold"
-                      disabled={isProcessing}
+                      disabled={isProcessing || !selectedPlan}
                     >
                       {isProcessing ? "جاري المعالجة..." : "تأكيد الدفع"}
                     </Button>
@@ -340,14 +423,20 @@ export default function SubscriptionCheckoutPage() {
                   <div className="rounded-lg border p-4 bg-gray-50">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600">المدة</span>
-                      <span className="font-semibold">1 شهر</span>
+                      <span className="font-semibold">
+                        {selectedPlan ? `${selectedPlan.duration_months} شهر` : "1 شهر"}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-sm text-gray-600">السعر</span>
-                      <span className="font-semibold">20$</span>
+                      <span className="font-semibold">
+                        {selectedPlan
+                          ? `${selectedPlan.price_eur.toFixed(2)} EUR`
+                          : "20$"}
+                      </span>
                     </div>
                     <div className="mt-3 text-xs text-gray-500">
-                      بعد الدفع، يلزم موافقة الإدارة لتفعيل المتجر والخدمات.
+                      الدفع عبر PayPal يفعّل الاشتراك مباشرة. باقي الطرق قد تتطلب موافقة الإدارة.
                     </div>
                   </div>
 

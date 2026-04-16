@@ -54,10 +54,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "فشل في جلب الفواتير" }, { status: 500 })
     }
 
-    // Pending invoice = paid or pending, but not approved/rejected.
-    const pendingInvoice = (invoicesRows || []).find(
-      (inv) => inv.status === "pending" || inv.status === "paid"
-    )
+    // Pending invoice = only explicit pending state.
+    const pendingInvoice = (invoicesRows || []).find((inv) => inv.status === "pending")
 
     return NextResponse.json({
       activeSubscription: activePeriod

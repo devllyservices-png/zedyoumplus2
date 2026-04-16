@@ -49,34 +49,22 @@ async function convertImageToPreferredFormat(
   }
 }
 
-async function getSubscriptionAmountDzd() {
-  // Base price: 20 USD for 1 month.
-  const baseUsd = 20
+async function getSubscriptionAmountDzdFromEur(priceEur: number) {
   try {
-    const { data: usdCurrency } = await supabase
-      .from("currencies")
-      .select("rate_to_eur")
-      .eq("code", "USD")
-      .single()
-
     const { data: dzdCurrency } = await supabase
       .from("currencies")
       .select("rate_to_eur")
       .eq("code", "DZD")
       .single()
 
-    const usdRateToEur = Number(usdCurrency?.rate_to_eur) || 1.1 // 1 EUR = 1.1 USD
     const dzdRateToEur = Number(dzdCurrency?.rate_to_eur) || 150 // 1 EUR = 150 DZD
 
-    const eur = baseUsd / usdRateToEur
-    const amountDzd = eur * dzdRateToEur
+    const amountDzd = priceEur * dzdRateToEur
     return Math.round(amountDzd * 100) / 100
   } catch (e) {
     // Fallback if currencies table isn't configured yet.
-    const usdRateToEur = 1.1
     const dzdRateToEur = 150
-    const eur = baseUsd / usdRateToEur
-    const amountDzd = eur * dzdRateToEur
+    const amountDzd = priceEur * dzdRateToEur
     return Math.round(amountDzd * 100) / 100
   }
 }
@@ -104,8 +92,41 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "طريقة دفع غير صحيحة" }, { status: 400 })
     }
 
-    const amountDzd = await getSubscriptionAmountDzd()
-    const durationMonths = 1
+    // Determine plan strictly from admin-defined active plans.
+    const requestedPlanId = (formData.get("plan_id") as string | null) || null
+    let plan: any = null
+    if (requestedPlanId) {
+      const { data: byId } = await supabase
+        .from("seller_subscription_plans")
+        .select("id, name, description, price_eur, duration_months, is_active, is_default, paypal_plan_id")
+        .eq("id", requestedPlanId)
+        .eq("is_active", true)
+        .single()
+      plan = byId
+    }
+    if (!plan) {
+      const { data: plans } = await supabase
+        .from("seller_subscription_plans")
+        .select("id, name, description, price_eur, duration_months, is_active, is_default, paypal_plan_id")
+        .eq("is_active", true)
+        .order("is_default", { ascending: false })
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true })
+      if (plans && plans.length > 0) {
+        plan = plans[0]
+      }
+    }
+
+    if (!plan) {
+      return NextResponse.json(
+        { error: "لا توجد خطط اشتراك مفعّلة من الإدارة حالياً" },
+        { status: 400 }
+      )
+    }
+
+    const planPriceEur = Number(plan.price_eur)
+    const durationMonths = Number(plan.duration_months)
+    const amountDzd = await getSubscriptionAmountDzdFromEur(planPriceEur)
 
     // Create invoice row first (so provider metadata can reference it).
     const { data: invoice, error: invoiceError } = await supabase
@@ -114,6 +135,7 @@ export async function POST(request: NextRequest) {
         seller_id: sellerId,
         amount_dzd: amountDzd,
         duration_months: durationMonths,
+        plan_id: plan?.id || null,
         status: "pending",
         payment_method: paymentMethod,
         phone: (formData.get("phone") as string) || null,
@@ -236,23 +258,20 @@ export async function POST(request: NextRequest) {
     }
 
     if (paymentMethod === "paypal") {
-      // PayPal uses $20 as a fixed price for this flow.
-      const amountUsd = 20
       const returnUrl = `${origin}/payment/paypal/subscriptions/return`
       const cancelUrl = `${origin}/payment/paypal/subscriptions/cancel`
 
       const approvalData = await createPayPalOrder({
-        amount: amountUsd,
-        currency: "USD",
+        amount: Number(planPriceEur),
+        currency: "EUR",
         customId: String(invoice.id),
-        description: "Seller subscription (1 month)",
+        description: `Seller subscription (${durationMonths} month${durationMonths > 1 ? "s" : ""})`,
         returnUrl,
         cancelUrl,
       })
 
       const approvalUrl =
         (approvalData as any)?.links?.find((l: any) => l.rel === "approve")?.href || null
-
       const paypalOrderId = (approvalData as any)?.id as string | undefined
 
       const { error: updateErr } = await supabase
