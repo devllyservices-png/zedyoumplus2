@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { Suspense } from "react"
-import { useState, useEffect  } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -34,6 +34,7 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState("bank_transfer")
   const [paymentProof, setPaymentProof] = useState<File | null>(null)
   const [isCreatingPayPalOrder, setIsCreatingPayPalOrder] = useState(false)
+  const [paypalError, setPayPalError] = useState<string | null>(null)
 
   const [buyerInfo, setBuyerInfo] = useState({
     fullName: "",
@@ -44,13 +45,30 @@ export default function CheckoutPage() {
   const [additionalNotes, setAdditionalNotes] = useState("")
 
   // Get URL parameters
-  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '')
+  const searchParams = new URLSearchParams(
+    typeof window !== "undefined" ? window.location.search : ""
+  )
   const serviceId = searchParams.get('serviceId') || ''
   const packageType = searchParams.get('package') || 'basic'
   const notes = searchParams.get('notes') || ''
   const serviceTitle = searchParams.get('serviceTitle') || ''
   const price = searchParams.get('price') || '0'
   const sellerId = searchParams.get('sellerId') || ''
+
+  // Detect PayPal cancellation / failure flags from query.
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const sp = new URLSearchParams(window.location.search)
+    const paypalStatus = sp.get("paypalStatus")
+    if (paypalStatus === "canceled") {
+      setPayPalError("تم إلغاء عملية الدفع عبر PayPal. لم يتم إنشاء الطلب.")
+      // Clean the URL so the message doesn't persist on refresh.
+      sp.delete("paypalStatus")
+      const next = sp.toString()
+      const base = window.location.pathname
+      window.history.replaceState(null, "", next ? `${base}?${next}` : base)
+    }
+  }, [])
 
   // Fetch service data
   useEffect(() => {
@@ -318,6 +336,11 @@ export default function CheckoutPage() {
 
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
+          {paypalError && (
+            <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {paypalError}
+            </div>
+          )}
           <div className="flex items-center gap-4 mb-8">
             <Button variant="ghost" onClick={() => router.back()} className="p-2 hover:bg-white">
               <ArrowLeft className="w-5 h-5" />
