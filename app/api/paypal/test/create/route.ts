@@ -7,15 +7,16 @@ import {
 
 export async function POST(request: NextRequest) {
   try {
-    const origin = request.nextUrl.origin
+    const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim()
+    const baseUrl = (configuredSiteUrl || request.nextUrl.origin).replace(/\/+$/, "")
 
     const paypalOrder = await createPayPalOrder({
       amount: 0.01,
       currency: "EUR",
       customId: `public-test-${Date.now()}`,
       description: "Public PayPal test (0.01 EUR)",
-      returnUrl: `${origin}/paypal-test/success`,
-      cancelUrl: `${origin}/paypal-test?status=cancelled`,
+      returnUrl: `${baseUrl}/paypal-test/success`,
+      cancelUrl: `${baseUrl}/paypal-test?status=cancelled`,
     })
 
     const approvalUrl =
