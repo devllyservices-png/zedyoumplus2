@@ -23,6 +23,13 @@ function resolvePayPalApiBase() {
     if (u.hostname === "sandbox.paypal.com" || u.hostname === "www.sandbox.paypal.com") {
       return "https://api-m.sandbox.paypal.com"
     }
+    // REST v2 Checkout expects the "api-m" merchant API host, not legacy api.paypal.com.
+    if (u.hostname === "api.paypal.com") {
+      return "https://api-m.paypal.com"
+    }
+    if (u.hostname === "api.sandbox.paypal.com") {
+      return "https://api-m.sandbox.paypal.com"
+    }
     return `${u.protocol}//${u.host}`
   } catch {
     return fallback
@@ -31,11 +38,22 @@ function resolvePayPalApiBase() {
 
 const PAYPAL_API_BASE = resolvePayPalApiBase()
 
+/** For diagnostics (e.g. public test route). */
+export function getPayPalApiBase() {
+  return PAYPAL_API_BASE
+}
+
+export function getPayPalMode() {
+  return PAYPAL_MODE
+}
+
 let cachedAccessToken: string | null = null
 let cachedTokenExpiry = 0
 
 async function getAccessToken(): Promise<string> {
-  if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
+  const clientId = PAYPAL_CLIENT_ID?.trim()
+  const clientSecret = PAYPAL_CLIENT_SECRET?.trim()
+  if (!clientId || !clientSecret) {
     throw new Error("PayPal environment variables are not configured.")
   }
 
@@ -44,7 +62,7 @@ async function getAccessToken(): Promise<string> {
     return cachedAccessToken
   }
 
-  const creds = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`).toString("base64")
+  const creds = Buffer.from(`${clientId}:${clientSecret}`).toString("base64")
 
   const form = new URLSearchParams({
     grant_type: "client_credentials",
@@ -62,7 +80,8 @@ async function getAccessToken(): Promise<string> {
   if (!res.ok) {
     const text = await res.text()
     console.error("Failed to fetch PayPal access token:", res.status, text)
-    throw new Error(`Failed to fetch PayPal access token: ${res.status}`)
+    const preview = text.length > 800 ? `${text.slice(0, 800)}…` : text
+    throw new Error(`PayPal OAuth failed (${res.status}): ${preview}`)
   }
 
   const data = (await res.json()) as { access_token: string; expires_in: number }
@@ -114,7 +133,8 @@ export async function createPayPalOrder(params: {
   if (!res.ok) {
     const text = await res.text()
     console.error("Failed to create PayPal order:", res.status, text)
-    throw new Error("Failed to create PayPal order")
+    const preview = text.length > 800 ? `${text.slice(0, 800)}…` : text
+    throw new Error(`PayPal create order failed (${res.status}): ${preview}`)
   }
 
   return res.json()
@@ -134,7 +154,8 @@ export async function capturePayPalOrder(paypalOrderId: string) {
   if (!res.ok) {
     const text = await res.text()
     console.error("Failed to capture PayPal order:", res.status, text)
-    throw new Error("Failed to capture PayPal order")
+    const preview = text.length > 800 ? `${text.slice(0, 800)}…` : text
+    throw new Error(`PayPal capture failed (${res.status}): ${preview}`)
   }
 
   return res.json()

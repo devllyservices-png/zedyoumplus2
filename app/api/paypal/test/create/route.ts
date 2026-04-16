@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createPayPalOrder } from "@/lib/paypalClient"
+import {
+  createPayPalOrder,
+  getPayPalApiBase,
+  getPayPalMode,
+} from "@/lib/paypalClient"
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,7 +23,13 @@ export async function POST(request: NextRequest) {
 
     if (!approvalUrl) {
       return NextResponse.json(
-        { error: "Failed to get PayPal approval URL." },
+        {
+          error: "Failed to get PayPal approval URL.",
+          details: "Order was created but no approve link was returned.",
+          paypalOrderId: paypalOrder.id,
+          apiBase: getPayPalApiBase(),
+          mode: getPayPalMode(),
+        },
         { status: 500 }
       )
     }
@@ -31,8 +41,14 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error("PayPal public test create error:", error)
+    const details = error instanceof Error ? error.message : String(error)
     return NextResponse.json(
-      { error: "Could not create PayPal test order. Check credentials and mode." },
+      {
+        error: "Could not create PayPal test order.",
+        details,
+        apiBase: getPayPalApiBase(),
+        mode: getPayPalMode(),
+      },
       { status: 500 }
     )
   }

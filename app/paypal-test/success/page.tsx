@@ -36,14 +36,17 @@ export default function PayPalTestSuccessPage() {
         const data = await res.json()
 
         if (!res.ok) {
-          throw new Error(data?.error || "Capture failed.")
+          const parts = [data?.error, data?.details, data?.apiBase && `API: ${data.apiBase}`]
+            .filter(Boolean)
+            .join(" — ")
+          throw new Error(parts || "Capture failed.")
         }
 
         const status = String(data?.status || "")
         if (status === "COMPLETED") {
           setResult({
             ok: true,
-            message: "Sandbox payment captured successfully.",
+            message: "Payment captured successfully.",
             status,
           })
         } else {
@@ -71,11 +74,11 @@ export default function PayPalTestSuccessPage() {
       <div className="mx-auto max-w-2xl">
         <Card className="border-slate-200">
           <CardHeader>
-            <CardTitle className="text-2xl">PayPal Sandbox Result</CardTitle>
+            <CardTitle className="text-2xl">PayPal test result</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 text-sm text-slate-700">
             {loading ? (
-              <p>Capturing PayPal sandbox payment...</p>
+              <p>Capturing PayPal payment...</p>
             ) : (
               <div
                 className={`rounded-md px-3 py-2 ${

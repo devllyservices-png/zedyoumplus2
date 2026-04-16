@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { capturePayPalOrder } from "@/lib/paypalClient"
+import {
+  capturePayPalOrder,
+  getPayPalApiBase,
+  getPayPalMode,
+} from "@/lib/paypalClient"
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,8 +27,14 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error("PayPal public test capture error:", error)
+    const details = error instanceof Error ? error.message : String(error)
     return NextResponse.json(
-      { error: "Could not capture sandbox PayPal order." },
+      {
+        error: "Could not capture PayPal test order.",
+        details,
+        apiBase: getPayPalApiBase(),
+        mode: getPayPalMode(),
+      },
       { status: 500 }
     )
   }

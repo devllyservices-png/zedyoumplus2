@@ -36,7 +36,10 @@ export default function PayPalTestPage() {
       const data = await res.json()
 
       if (!res.ok || !data?.approvalUrl) {
-        throw new Error(data?.error || "Failed to start sandbox payment.")
+        const parts = [data?.error, data?.details, data?.apiBase && `API: ${data.apiBase}`, data?.mode && `mode: ${data.mode}`]
+          .filter(Boolean)
+          .join(" — ")
+        throw new Error(parts || "Failed to start PayPal payment.")
       }
 
       window.location.href = data.approvalUrl
