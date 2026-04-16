@@ -55,8 +55,8 @@ export default function PayPalTestPage() {
           </CardHeader>
           <CardContent className="space-y-4 text-sm text-slate-700">
             <p>
-              This page is public and requires no authentication. It creates a sandbox
-              PayPal order for exactly <strong>1 EUR</strong> so you can validate
+              This page is public and requires no authentication. It creates a
+              PayPal order for exactly <strong>0.01 EUR</strong> so you can validate
               credentials and callback flow.
             </p>
 
@@ -73,11 +73,12 @@ export default function PayPalTestPage() {
             )}
 
             <Button onClick={startTestPayment} disabled={loading} className="w-full">
-              {loading ? "Redirecting to PayPal..." : "Test PayPal Sandbox (1 EUR)"}
+              {loading ? "Redirecting to PayPal..." : "Test PayPal (0.01 EUR)"}
             </Button>
 
             <p className="text-xs text-slate-500">
-              Ensure <code>PAYPAL_MODE=sandbox</code> and sandbox credentials are set.
+              Ensure your <code>PAYPAL_MODE</code> and credentials match the intended
+              environment.
             </p>
           </CardContent>
         </Card>

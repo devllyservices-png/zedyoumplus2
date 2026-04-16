@@ -6,10 +6,10 @@ export async function POST(request: NextRequest) {
     const origin = request.nextUrl.origin
 
     const paypalOrder = await createPayPalOrder({
-      amount: 1,
+      amount: 0.01,
       currency: "EUR",
-      customId: `sandbox-test-${Date.now()}`,
-      description: "Public sandbox PayPal test (1 EUR)",
+      customId: `public-test-${Date.now()}`,
+      description: "Public PayPal test (0.01 EUR)",
       returnUrl: `${origin}/paypal-test/success`,
       cancelUrl: `${origin}/paypal-test?status=cancelled`,
     })
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("PayPal public test create error:", error)
     return NextResponse.json(
-      { error: "Could not create sandbox PayPal order. Check credentials and mode." },
+      { error: "Could not create PayPal test order. Check credentials and mode." },
       { status: 500 }
     )
   }

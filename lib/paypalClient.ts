@@ -1,9 +1,35 @@
 const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID
 const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET
 const PAYPAL_MODE = process.env.PAYPAL_MODE || "sandbox"
+const PAYPAL_API_URL = process.env.PAYPAL_API_URL
 
-const PAYPAL_API_BASE =
-  PAYPAL_MODE === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com"
+function resolvePayPalApiBase() {
+  const fallback =
+    PAYPAL_MODE === "live"
+      ? "https://api-m.paypal.com"
+      : "https://api-m.sandbox.paypal.com"
+
+  if (!PAYPAL_API_URL) return fallback
+
+  const raw = PAYPAL_API_URL.trim().replace(/\/+$/, "")
+  if (!raw) return fallback
+
+  try {
+    const u = new URL(raw.startsWith("http") ? raw : `https://${raw}`)
+    // Help common misconfigurations like paypal.com/sandbox.paypal.com by mapping to API hosts.
+    if (u.hostname === "paypal.com" || u.hostname === "www.paypal.com") {
+      return "https://api-m.paypal.com"
+    }
+    if (u.hostname === "sandbox.paypal.com" || u.hostname === "www.sandbox.paypal.com") {
+      return "https://api-m.sandbox.paypal.com"
+    }
+    return `${u.protocol}//${u.host}`
+  } catch {
+    return fallback
+  }
+}
+
+const PAYPAL_API_BASE = resolvePayPalApiBase()
 
 let cachedAccessToken: string | null = null
 let cachedTokenExpiry = 0
